@@ -1,0 +1,256 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* ---- 1줄: 로고 + 검색 + 로그인 ----
+   배경(민트)은 화면 끝까지 꽉 채우고, 안쪽 내용만 1600px 폭 안에서 좌우 여백을 둔다.
+   (공연일정 줄은 흰 배경 유지) */
+.header__top-bar {
+  width: 100%;
+  background-color: var(--color-surface);
+}
+
+.header__top {
+  max-width: 1600px;
+  margin: 0 auto;
+  height: var(--header-height);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* 로고 — 지금은 텍스트만 (아이콘은 나중에 다시 정하면 추가).
+   IBM Plex Sans KR은 700(Bold)이 최대 굵기라, 그보다 더 두꺼워 보이도록
+   같은 색으로 살짝 테두리(text-stroke)를 둘러서 획을 두껍게 보이게 함 */
+.header__logo {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2.25rem;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  -webkit-text-stroke: 0.6px var(--color-primary);
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+/* 둥근 검색창 */
+.header__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header__search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.header__search-input {
+  width: 260px;
+  padding: 14px 18px 14px 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-background);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.header__search-input::placeholder {
+  color: var(--color-text-muted);
+}
+.header__search-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-background);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* 로그인 버튼 (헤더 상단 + 메뉴 서랍 안에서 공용으로 사용) */
+.header__login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 30px;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(30, 158, 82, 0.35);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.header__login-btn:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: 0 4px 12px rgba(30, 158, 82, 0.45);
+  transform: translateY(-1px);
+}
+
+/* 메뉴 서랍 안에서는 좀 더 작게 */
+.header__login-btn--sm {
+  padding: 8px 18px;
+  font-size: var(--font-size-sm);
+}
+
+/* ---- 2줄: 햄버거 + 바로가기 메뉴 ---- */
+.header__subnav {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  box-sizing: border-box;
+}
+
+.header__menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.header__menu-btn svg {
+  width: 24px;
+  height: 24px;
+}
+.header__menu-btn:hover {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.header__subnav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xl);
+}
+
+.header__subnav-link {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text);
+}
+.header__subnav-link:hover {
+  color: var(--color-primary);
+}
+
+/* ---- 메뉴 서랍(drawer) ---- */
+.header__drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 27, 41, 0.4);
+  z-index: 200;
+  animation: fadeIn 0.15s ease;
+}
+
+.header__drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 360px;
+  max-width: 88vw;
+  background-color: var(--color-background);
+  box-shadow: 4px 0 24px rgba(28, 27, 41, 0.15);
+  z-index: 201;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.2s ease;
+}
+
+.header__drawer-close {
+  align-self: flex-end;
+  border: none;
+  background: none;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+}
+.header__drawer-close:hover {
+  color: var(--color-text);
+}
+
+.header__drawer-profile {
+  padding: var(--spacing-md) 0 var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-md);
+}
+
+.header__drawer-profile-text {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.header__drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.header__drawer-link {
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  color: var(--color-text);
+}
+.header__drawer-link:hover {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 640px) {
+  .header__search-input {
+    width: 160px;
+  }
+  .header__subnav {
+    gap: var(--spacing-md);
+  }
+  .header__subnav-links {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 420px) {
+  .header__search-input {
+    width: 120px;
+  }
+}

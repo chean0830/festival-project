@@ -1,0 +1,58 @@
+/*
+  디자인 토큰 (Design Tokens)
+  ---------------------------------
+  색상, 폰트, 간격을 여기서만 관리한다.
+  컴포넌트 CSS에서는 직접 색상 코드(#fff 등)를 쓰지 말고
+  아래 변수(var(--color-primary) 등)를 사용할 것.
+
+  아래 값은 예시 색상이다. 팀에서 확정한 브랜드 컬러로 교체하면 된다.
+*/
+
+:root {
+  /* ---- Color: Brand (진한 초록) ---- */
+  --color-primary: #1e9e52;        /* 메인 브랜드 컬러 (로고, 버튼, 강조) */
+  --color-primary-dark: #147a3e;   /* hover/active 시 사용 */
+  --color-primary-light: #b8e6c6;  /* 옅은 연두 (배경, hover 배경 등) */
+  --color-secondary: #ff8a3d;      /* 포인트 컬러 */
+
+  /* ---- Color: Neutral ---- */
+  --color-background: #ffffff;
+  --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
+  --color-border: #e2e8dd;
+
+  /* ---- Color: Text ---- */
+  --color-text: #1c1b29;
+  --color-text-muted: #6b6879;
+  --color-text-on-primary: #ffffff;
+
+  /* ---- Color: Status ---- */
+  --color-success: #2fb673;
+  --color-error: #e0435c;
+
+  /* ---- Font ---- */
+  --font-heading: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+  --font-size-xxl: 2.5rem;
+
+  /* ---- Spacing ---- */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+
+  /* ---- Radius / Shadow ---- */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --shadow-card: 0 4px 16px rgba(28, 27, 41, 0.08);
+
+  /* ---- Layout ---- */
+  --header-height: 104px;
+  --content-max-width: 1440px;
+}
