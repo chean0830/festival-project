@@ -80,6 +80,9 @@ CREATE TABLE venue (
     name VARCHAR(200) NOT NULL,
     address VARCHAR(300),
 
+    country VARCHAR(2) NOT NULL DEFAULT 'KR'
+        COMMENT 'ISO 3166-1 alpha-2 국가 코드. 국내/해외 뱃지 판별에 사용 (예: KR, US, JP)',
+
     latitude DECIMAL(10,7),
     longitude DECIMAL(10,7),
 

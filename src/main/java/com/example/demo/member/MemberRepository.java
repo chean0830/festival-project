@@ -1,0 +1,8 @@
+package com.example.demo.member;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MemberRepository extends JpaRepository<Member, Long> {
+
+    boolean existsByNicknameAndMemberIdNot(String nickname, Long memberId);
+}
