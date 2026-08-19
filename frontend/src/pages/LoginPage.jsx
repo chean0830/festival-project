@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { login } from '../api/authApi'
 import '../styles/login.css'
 
@@ -91,7 +91,6 @@ function ValidationMessage({ children, id }) {
 }
 
 function LoginPage() {
-  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -124,7 +123,6 @@ function LoginPage() {
     try {
       const member = await login({ email, password })
       setMessage(`${member.nickname}님, 로그인되었습니다.`)
-      navigate('/')
     } catch (requestError) {
       setError(requestError.message)
     } finally {
