@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Layout from '../../components/common/Layout/Layout'
 import {
   fetchProfile,
   updateNickname,
@@ -25,9 +27,10 @@ import './profile.css'
 /**
  * 프로필 담당 진입 컴포넌트.
  * 로그인 기능이 아직 없어 memberId를 prop으로 받는다.
- * 다른 팀원이 라우터/로그인 붙일 때, 실제 로그인한 사용자의 memberId를 여기로 넘겨주면 된다.
+ * 로그인 기능이 붙으면, 실제 로그인한 사용자의 memberId를 여기로 넘겨주면 된다.
  */
-export default function ProfilePage({ memberId, onNavigateToBadges }) {
+export default function ProfilePage({ memberId }) {
+  const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [artists, setArtists] = useState([])
   const [events, setEvents] = useState([])
@@ -72,7 +75,7 @@ export default function ProfilePage({ memberId, onNavigateToBadges }) {
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
-            onNavigateToBadges()
+            navigate('/profile/badges')
           }
         }
       } catch (err) {
@@ -90,21 +93,30 @@ export default function ProfilePage({ memberId, onNavigateToBadges }) {
   }, [memberId])
 
   if (loading) {
-    return <div className="profile-page">프로필을 불러오는 중입니다...</div>
+    return (
+      <Layout>
+        <div className="profile-page">프로필을 불러오는 중입니다...</div>
+      </Layout>
+    )
   }
 
   if (loadError) {
-    return <div className="profile-page profile-error-text">프로필을 불러오지 못했습니다: {loadError}</div>
+    return (
+      <Layout>
+        <div className="profile-page profile-error-text">프로필을 불러오지 못했습니다: {loadError}</div>
+      </Layout>
+    )
   }
 
   const earnedBadgeCount = badges.filter((badge) => badge.earned).length
 
   return (
-    <div className="profile-page">
+    <Layout>
+      <div className="profile-page">
       <div className="profile-content">
         <div className="profile-header-row">
           <h1>내 프로필</h1>
-          <button type="button" className="profile-badge-entry" onClick={onNavigateToBadges}>
+          <button type="button" className="profile-badge-entry" onClick={() => navigate('/profile/badges')}>
             🏅 나의 뱃지 {earnedBadgeCount}/{badges.length}
           </button>
         </div>
@@ -175,6 +187,7 @@ export default function ProfilePage({ memberId, onNavigateToBadges }) {
           </div>
         </section>
       </div>
-    </div>
+      </div>
+    </Layout>
   )
 }

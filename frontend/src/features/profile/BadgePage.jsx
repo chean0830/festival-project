@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Layout from '../../components/common/Layout/Layout'
 import { fetchMyBadges } from './api/profileApi'
 import './profile.css'
 
@@ -14,7 +16,8 @@ function ShareIcon() {
   )
 }
 
-export default function BadgePage({ memberId, onBack }) {
+export default function BadgePage({ memberId }) {
+  const navigate = useNavigate()
   const [badges, setBadges] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -65,21 +68,30 @@ export default function BadgePage({ memberId, onBack }) {
   }
 
   if (loading) {
-    return <div className="profile-page">뱃지를 불러오는 중입니다...</div>
+    return (
+      <Layout>
+        <div className="profile-page">뱃지를 불러오는 중입니다...</div>
+      </Layout>
+    )
   }
 
   if (loadError) {
-    return <div className="profile-page profile-error-text">뱃지를 불러오지 못했습니다: {loadError}</div>
+    return (
+      <Layout>
+        <div className="profile-page profile-error-text">뱃지를 불러오지 못했습니다: {loadError}</div>
+      </Layout>
+    )
   }
 
   const earnedCount = badges.filter((badge) => badge.earned).length
 
   return (
-    <div className="profile-page">
+    <Layout>
+      <div className="profile-page">
       <div className="profile-content">
         <div className="profile-header-row">
           <h1>나의 뱃지</h1>
-          <button type="button" className="profile-badge-entry" onClick={onBack}>
+          <button type="button" className="profile-badge-entry" onClick={() => navigate('/profile')}>
             ← 프로필로
           </button>
         </div>
@@ -126,6 +138,7 @@ export default function BadgePage({ memberId, onBack }) {
           ))}
         </ul>
       </div>
-    </div>
+      </div>
+    </Layout>
   )
 }

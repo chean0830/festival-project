@@ -1,17 +1,19 @@
 .profile-page {
-  --p-green: #1e9e52;
-  --p-green-dark: #167e42;
-  --p-green-light: #e6f6ec;
-  --p-text: #111827;
-  --p-muted: #6b7280;
-  --p-border: #e5e7eb;
-  --p-danger: #dc2626;
+  /* 팀 공용 디자인 토큰(frontend/src/styles/tokens.css)에 연결.
+     색상 값은 여기서 직접 정의하지 않고 tokens.css 쪽만 고치면 전체가 같이 바뀐다. */
+  --p-green: var(--color-primary);
+  --p-green-dark: var(--color-primary-dark);
+  --p-green-light: var(--color-primary-light);
+  --p-text: var(--color-text);
+  --p-muted: var(--color-text-muted);
+  --p-border: var(--color-border);
+  --p-danger: var(--color-error);
 
   width: 100%;
   min-height: 100svh;
   box-sizing: border-box;
-  background: #ffffff;
-  font-family: -apple-system, 'Segoe UI', system-ui, Roboto, sans-serif;
+  background: var(--color-background);
+  font-family: var(--font-body);
   color: var(--p-text);
 }
 
