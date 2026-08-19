@@ -74,18 +74,18 @@ public class ProfileService {
     public ProfileResponse updateNickname(Long memberId, NicknameUpdateRequest request) {
         Member member = getMemberOrThrow(memberId);
 
-        if (memberRepository.existsByNicknameAndMemberIdNot(request.nickname(), memberId)) {
+        if (memberRepository.existsByNicknameAndIdNot(request.nickname(), memberId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다.");
         }
 
-        member.setNickname(request.nickname());
+        member.changeNickname(request.nickname());
         return toProfileResponse(member);
     }
 
     @Transactional
     public ProfileResponse updateIntroduction(Long memberId, IntroductionUpdateRequest request) {
         Member member = getMemberOrThrow(memberId);
-        member.setIntroduction(request.introduction());
+        member.changeIntroduction(request.introduction());
         return toProfileResponse(member);
     }
 
@@ -105,7 +105,7 @@ public class ProfileService {
         String storedFileName = storeFile(file, memberId);
         String publicUrl = "/uploads/" + PROFILE_IMAGE_SUBDIR + "/" + storedFileName;
 
-        member.setProfileImage(publicUrl);
+        member.changeProfileImage(publicUrl);
         deletePhysicalFileIfExists(previousImageUrl);
 
         return new ProfileImageResponse(publicUrl);
@@ -115,7 +115,7 @@ public class ProfileService {
     public void deleteProfileImage(Long memberId) {
         Member member = getMemberOrThrow(memberId);
         String previousImageUrl = member.getProfileImage();
-        member.setProfileImage(null);
+        member.clearProfileImage();
         deletePhysicalFileIfExists(previousImageUrl);
     }
 
@@ -214,7 +214,7 @@ public class ProfileService {
 
     private ProfileResponse toProfileResponse(Member member) {
         return new ProfileResponse(
-                member.getMemberId(),
+                member.getId(),
                 member.getNickname(),
                 member.getProfileImage(),
                 member.getIntroduction()

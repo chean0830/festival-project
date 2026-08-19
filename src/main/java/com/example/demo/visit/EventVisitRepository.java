@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface EventVisitRepository extends JpaRepository<EventVisit, Long> {
 
-    @Query("SELECT ev FROM EventVisit ev JOIN FETCH ev.event e JOIN FETCH e.venue WHERE ev.member.memberId = :memberId ORDER BY e.startDate DESC")
+    @Query("SELECT ev FROM EventVisit ev JOIN FETCH ev.event e JOIN FETCH e.venue WHERE ev.member.id = :memberId ORDER BY e.startDate DESC")
     List<EventVisit> findAllByMemberIdWithEvent(@Param("memberId") Long memberId);
 
     /**

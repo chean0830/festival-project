@@ -2,73 +2,198 @@ package com.example.demo.member;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-/**
- * DB 스키마(database/festival.sql)의 member 테이블 전체를 매핑하는 공용 엔티티.
- * 프로필 담당 범위에서 필요한 필드(nickname, profileImage, introduction)만 실제로 사용하며,
- * 나머지 필드(role, status, 알림/설정 관련)는 다른 담당자(석철: 소셜로그인/설정)의 작업을 위해
- * 스키마와 어긋나지 않도록 매핑만 해둔 것이다.
- */
 @Entity
 @Table(name = "member")
-@Getter
-@Setter
-@NoArgsConstructor
 public class Member {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
-    private Long memberId;
+    private Long id;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password")
+    @Column(length = 255)
     private String password;
 
-    @Column(name = "nickname", nullable = false, unique = true, length = 50)
+    @Column(name = "phone_number", unique = true, length = 20)
+    private String phoneNumber;
+
+    @Column(name = "postal_code", length = 10)
+    private String postalCode;
+
+    @Column(name = "road_address", length = 255)
+    private String roadAddress;
+
+    @Column(name = "detail_address", length = 255)
+    private String detailAddress;
+
+    @Column(nullable = false, unique = true, length = 50)
     private String nickname;
 
     @Column(name = "profile_image", length = 500)
     private String profileImage;
 
-    @Column(name = "introduction", length = 500)
+    @Column(length = 500)
     private String introduction;
 
-    @Column(name = "role", nullable = false, length = 20)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberRole role;
 
-    @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status;
 
     @Column(name = "dark_mode", nullable = false)
-    private Boolean darkMode;
+    private boolean darkMode;
 
     @Column(name = "notification_enabled", nullable = false)
-    private Boolean notificationEnabled;
+    private boolean notificationEnabled;
 
     @Column(name = "marketing_agree", nullable = false)
-    private Boolean marketingAgree;
+    private boolean marketingAgree;
 
     @Column(name = "push_enabled", nullable = false)
-    private Boolean pushEnabled;
+    private boolean pushEnabled;
 
     @Column(name = "email_enabled", nullable = false)
-    private Boolean emailEnabled;
+    private boolean emailEnabled;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    protected Member() {
+    }
+
+    private Member(
+            String email,
+            String password,
+            String phoneNumber,
+            String postalCode,
+            String roadAddress,
+            String detailAddress,
+            String nickname,
+            String profileImage
+    ) {
+        this.email = email;
+        this.password = password;
+        this.phoneNumber = phoneNumber;
+        this.postalCode = postalCode;
+        this.roadAddress = roadAddress;
+        this.detailAddress = detailAddress;
+        this.nickname = nickname;
+        this.profileImage = profileImage;
+        this.role = MemberRole.USER;
+        this.status = MemberStatus.ACTIVE;
+        this.notificationEnabled = true;
+        this.pushEnabled = true;
+        this.emailEnabled = true;
+    }
+
+    public static Member emailMember(
+            String email,
+            String encodedPassword,
+            String phoneNumber,
+            String postalCode,
+            String roadAddress,
+            String detailAddress,
+            String nickname
+    ) {
+        return new Member(
+                email,
+                encodedPassword,
+                phoneNumber,
+                postalCode,
+                roadAddress,
+                detailAddress,
+                nickname,
+                null
+        );
+    }
+
+    public static Member socialMember(String email, String nickname, String profileImage) {
+        return new Member(email, null, null, null, null, null, nickname, profileImage);
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void updateSocialProfile(String nickname, String profileImage) {
+        if (nickname != null && !nickname.isBlank()) {
+            this.nickname = nickname;
+        }
+        if (profileImage != null && !profileImage.isBlank()) {
+            this.profileImage = profileImage;
+        }
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeIntroduction(String introduction) {
+        this.introduction = introduction;
+    }
+
+    public void changeProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void clearProfileImage() {
+        this.profileImage = null;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public String getIntroduction() {
+        return introduction;
+    }
+
+    public MemberRole getRole() {
+        return role;
+    }
+
+    public MemberStatus getStatus() {
+        return status;
+    }
 }

@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface MemberBadgeRepository extends JpaRepository<MemberBadge, Long> {
 
-    @Query("SELECT mb FROM MemberBadge mb WHERE mb.member.memberId = :memberId")
+    @Query("SELECT mb FROM MemberBadge mb WHERE mb.member.id = :memberId")
     List<MemberBadge> findAllByMemberId(@Param("memberId") Long memberId);
 }

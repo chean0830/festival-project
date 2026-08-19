@@ -34,3 +34,9 @@ build/
 
 ### Uploaded files (local dev) ###
 /uploads/
+
+### Local secrets ###
+.env
+.env.*
+!.env.example
+README.md
