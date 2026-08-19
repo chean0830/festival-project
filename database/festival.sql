@@ -23,6 +23,12 @@ CREATE TABLE member (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255),
 
+    phone_number VARCHAR(20) UNIQUE,
+
+    postal_code VARCHAR(10),
+    road_address VARCHAR(255),
+    detail_address VARCHAR(255),
+
     nickname VARCHAR(50) NOT NULL UNIQUE,
     profile_image VARCHAR(500),
     introduction VARCHAR(500),
@@ -66,6 +72,26 @@ CREATE TABLE social_account (
         REFERENCES member(member_id),
 
     UNIQUE (provider, provider_id)
+);
+
+
+-- ============================================================
+-- 2-1. PASSWORD RESET TOKEN
+-- 비밀번호 재설정용 1회성 토큰
+-- ============================================================
+
+CREATE TABLE password_reset_token (
+    password_reset_token_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    member_id BIGINT NOT NULL,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id)
+        ON DELETE CASCADE
 );
 
 
