@@ -9,15 +9,16 @@
 */
 
 :root {
-  /* ---- Color: Brand ---- */
-  --color-primary: #6c4bd6;       /* 메인 브랜드 컬러 (버튼, 강조) */
-  --color-primary-dark: #5638b0;  /* hover/active 시 사용 */
-  --color-secondary: #ff8a3d;     /* 포인트 컬러 */
+  /* ---- Color: Brand (진한 초록) ---- */
+  --color-primary: #1e9e52;        /* 메인 브랜드 컬러 (로고, 버튼, 강조) */
+  --color-primary-dark: #147a3e;   /* hover/active 시 사용 */
+  --color-primary-light: #b8e6c6;  /* 옅은 연두 (배경, hover 배경 등) */
+  --color-secondary: #ff8a3d;      /* 포인트 컬러 */
 
   /* ---- Color: Neutral ---- */
   --color-background: #ffffff;
-  --color-surface: #f7f6fb;       /* 카드, 섹션 배경 등 */
-  --color-border: #e4e2ee;
+  --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
+  --color-border: #e2e8dd;
 
   /* ---- Color: Text ---- */
   --color-text: #1c1b29;
@@ -29,8 +30,8 @@
   --color-error: #e0435c;
 
   /* ---- Font ---- */
-  --font-heading: "Pretendard", "Apple SD Gothic Neo", sans-serif;
-  --font-body: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  --font-heading: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -52,6 +53,6 @@
   --shadow-card: 0 4px 16px rgba(28, 27, 41, 0.08);
 
   /* ---- Layout ---- */
-  --header-height: 64px;
-  --content-max-width: 1200px;
+  --header-height: 104px;
+  --content-max-width: 1440px;
 }

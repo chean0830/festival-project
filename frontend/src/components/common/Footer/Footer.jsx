@@ -8,7 +8,7 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="footer__inner">
-        <div className="footer__brand">FESTIVAL</div>
+        <div className="footer__brand">FESTLOG</div>
 
         <div className="footer__info">
           <p>주최: OO팀 | 문의: contact@example.com</p>
