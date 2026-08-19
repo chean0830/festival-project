@@ -1,0 +1,53 @@
+.banner-notice {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* 텍스트끼리 서로 겹쳐서 자리 잡고, 활성화된 것만 페이드인 되는 방식 */
+.banner-notice__track {
+  position: relative;
+  width: 100%;
+  min-height: 1.6em;
+}
+
+.banner-notice__text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.banner-notice__text--active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.banner-notice__dots {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.banner-notice__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-border);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.banner-notice__dot--active {
+  background-color: var(--color-primary);
+  transform: scale(1.2);
+}
