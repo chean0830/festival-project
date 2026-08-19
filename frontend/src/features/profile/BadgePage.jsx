@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
+import useCurrentMember from './hooks/useCurrentMember'
+import RequireLogin from './components/RequireLogin'
 import { fetchMyBadges } from './api/profileApi'
 import './profile.css'
 
@@ -16,8 +18,10 @@ function ShareIcon() {
   )
 }
 
-export default function BadgePage({ memberId }) {
+export default function BadgePage() {
   const navigate = useNavigate()
+  const currentMember = useCurrentMember()
+  const memberId = currentMember?.memberId
   const [badges, setBadges] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -25,6 +29,10 @@ export default function BadgePage({ memberId }) {
   const [openBadgeId, setOpenBadgeId] = useState(null)
 
   useEffect(() => {
+    if (!memberId) {
+      return undefined
+    }
+
     let cancelled = false
 
     async function load() {
@@ -65,6 +73,18 @@ export default function BadgePage({ memberId }) {
       setSharedBadgeId(badge.badgeId)
       setTimeout(() => setSharedBadgeId((current) => (current === badge.badgeId ? null : current)), 1500)
     }
+  }
+
+  if (currentMember === undefined) {
+    return (
+      <Layout>
+        <div className="profile-page">확인 중입니다...</div>
+      </Layout>
+    )
+  }
+
+  if (currentMember === null) {
+    return <RequireLogin />
   }
 
   if (loading) {

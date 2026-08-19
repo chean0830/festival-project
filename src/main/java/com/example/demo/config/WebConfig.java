@@ -34,10 +34,12 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://localhost:5173")
                 .allowedMethods("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
 
         registry.addMapping("/uploads/**")
                 .allowedOrigins("http://localhost:5173")
-                .allowedMethods("GET");
+                .allowedMethods("GET")
+                .allowCredentials(true);
     }
 }

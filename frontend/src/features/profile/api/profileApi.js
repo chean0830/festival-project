@@ -1,4 +1,20 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+// authApi.js와 동일한 방식(vite dev 서버의 /api 프록시 + 세션 쿠키)을 사용한다.
+// CSRF 토큰 캐시는 여기서 별도로 들고 있음 (authApi.js 내부 상태를 export하지 않아서 중복 유지).
+let csrfToken
+let csrfHeaderName = 'X-XSRF-TOKEN'
+
+async function ensureCsrfToken() {
+  if (csrfToken) {
+    return
+  }
+  const response = await fetch('/api/auth/csrf', { credentials: 'include' })
+  if (!response.ok) {
+    throw new Error('요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.')
+  }
+  const data = await response.json()
+  csrfToken = data.token
+  csrfHeaderName = data.headerName
+}
 
 async function handleResponse(response) {
   if (response.status === 204) {
@@ -12,67 +28,80 @@ async function handleResponse(response) {
   return data
 }
 
+function getJson(path) {
+  return fetch(path, { credentials: 'include' }).then(handleResponse)
+}
+
+async function mutateJson(path, method, body) {
+  await ensureCsrfToken()
+  return fetch(path, {
+    method,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      [csrfHeaderName]: csrfToken,
+    },
+    body: JSON.stringify(body),
+  }).then(handleResponse)
+}
+
 export function fetchProfile(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/profile`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/profile`)
 }
 
 export function updateNickname(memberId, nickname) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/profile/nickname`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nickname }),
-  }).then(handleResponse)
+  return mutateJson(`/api/members/${memberId}/profile/nickname`, 'PATCH', { nickname })
 }
 
 export function updateIntroduction(memberId, introduction) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/profile/introduction`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ introduction }),
-  }).then(handleResponse)
+  return mutateJson(`/api/members/${memberId}/profile/introduction`, 'PATCH', { introduction })
 }
 
-export function uploadProfileImage(memberId, file) {
+export async function uploadProfileImage(memberId, file) {
+  await ensureCsrfToken()
   const formData = new FormData()
   formData.append('file', file)
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/profile/image`, {
+  return fetch(`/api/members/${memberId}/profile/image`, {
     method: 'POST',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
     body: formData,
   }).then(handleResponse)
 }
 
-export function deleteProfileImage(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/profile/image`, {
+export async function deleteProfileImage(memberId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/profile/image`, {
     method: 'DELETE',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
   }).then(handleResponse)
 }
 
 export function fetchInterestedArtists(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/interests/artists`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/interests/artists`)
 }
 
 export function fetchInterestedEvents(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/interests/events`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/interests/events`)
 }
 
 export function fetchAttendedEvents(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/events/attended`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/events/attended`)
 }
 
 export function fetchUpcomingEvents(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/events/upcoming`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/events/upcoming`)
 }
 
 export function fetchMyBadges(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/badges`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/badges`)
 }
 
 export function fetchProfileStats(memberId) {
-  return fetch(`${API_BASE_URL}/api/members/${memberId}/stats`).then(handleResponse)
+  return getJson(`/api/members/${memberId}/stats`)
 }
 
 export function resolveImageUrl(path) {
-  if (!path) return null
-  if (path.startsWith('http')) return path
-  return `${API_BASE_URL}${path}`
+  return path || null
 }

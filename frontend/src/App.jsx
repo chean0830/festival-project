@@ -13,16 +13,12 @@ import BadgePage from './features/profile/BadgePage'
  * - "/" : 메인 화면
  * - "/program" : 공연일정 페이지 (지금은 준비중 placeholder)
  * - "/login", "/signup", "/account/recovery", "/password/reset/confirm" : 인증 관련 페이지
- * - "/profile", "/profile/badges" : 내 프로필 / 나의 뱃지
+ * - "/profile", "/profile/badges" : 내 프로필 / 나의 뱃지 (로그인한 사용자 기준, 비로그인 시 로그인 안내)
  *
  * 커뮤니티/MD구매 등 다른 메뉴들은 아직 페이지가 없어서
  * 눌러도 흰 화면(라우트 없음)이 뜰 거야. 각 기능 브랜치가 합쳐지면
  * 여기에 Route를 하나씩 추가해주면 돼.
  */
-
-// TODO: 로그인 기능과 연결되면 실제 로그인한 사용자의 memberId로 교체
-const CURRENT_MEMBER_ID = 3
-
 function App() {
   return (
     <Routes>
@@ -34,8 +30,8 @@ function App() {
       <Route path="/account/recovery" element={<AccountRecoveryPage />} />
       <Route path="/password/reset/confirm" element={<ResetPasswordPage />} />
 
-      <Route path="/profile" element={<ProfilePage memberId={CURRENT_MEMBER_ID} />} />
-      <Route path="/profile/badges" element={<BadgePage memberId={CURRENT_MEMBER_ID} />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/profile/badges" element={<BadgePage />} />
     </Routes>
   )
 }

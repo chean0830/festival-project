@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
+import useCurrentMember from './hooks/useCurrentMember'
+import RequireLogin from './components/RequireLogin'
 import {
   fetchProfile,
   updateNickname,
@@ -26,11 +28,12 @@ import './profile.css'
 
 /**
  * 프로필 담당 진입 컴포넌트.
- * 로그인 기능이 아직 없어 memberId를 prop으로 받는다.
- * 로그인 기능이 붙으면, 실제 로그인한 사용자의 memberId를 여기로 넘겨주면 된다.
+ * useCurrentMember로 로그인한 사용자를 확인하고, 그 memberId로 내 프로필 데이터를 불러온다.
  */
-export default function ProfilePage({ memberId }) {
+export default function ProfilePage() {
   const navigate = useNavigate()
+  const currentMember = useCurrentMember()
+  const memberId = currentMember?.memberId
   const [profile, setProfile] = useState(null)
   const [artists, setArtists] = useState([])
   const [events, setEvents] = useState([])
@@ -49,6 +52,10 @@ export default function ProfilePage({ memberId }) {
   }
 
   useEffect(() => {
+    if (!memberId) {
+      return undefined
+    }
+
     let cancelled = false
 
     async function load() {
@@ -91,6 +98,18 @@ export default function ProfilePage({ memberId }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId])
+
+  if (currentMember === undefined) {
+    return (
+      <Layout>
+        <div className="profile-page">확인 중입니다...</div>
+      </Layout>
+    )
+  }
+
+  if (currentMember === null) {
+    return <RequireLogin />
+  }
 
   if (loading) {
     return (
