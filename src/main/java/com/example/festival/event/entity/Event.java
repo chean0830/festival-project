@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -45,7 +44,7 @@ public class Event {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "poster_image", length = 500)
