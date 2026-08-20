@@ -80,6 +80,18 @@ public class ProfileController {
         return profileService.getInterestedEvents(memberId);
     }
 
+    @DeleteMapping("/interests/artists/{artistId}")
+    public ResponseEntity<Void> removeInterestedArtist(@PathVariable Long memberId, @PathVariable Long artistId) {
+        profileService.removeInterestedArtist(memberId, artistId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/interests/events/{eventId}")
+    public ResponseEntity<Void> removeInterestedEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
+        profileService.removeInterestedEvent(memberId, eventId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/events/attended")
     public List<AttendedEventResponse> getAttendedEvents(@PathVariable Long memberId) {
         return profileService.getAttendedEvents(memberId);
