@@ -18,6 +18,7 @@
 .program-category-page__grid {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
 }

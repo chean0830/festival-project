@@ -195,6 +195,8 @@ CREATE TABLE event (
     end_date DATE NOT NULL,
 
     ticket_open_at DATETIME,
+    ticket_url VARCHAR(500)
+        COMMENT '예매 링크 (YES24)',
 
     status VARCHAR(20) NOT NULL DEFAULT 'UPCOMING'
         COMMENT 'UPCOMING, ONGOING, ENDED, CANCELED',

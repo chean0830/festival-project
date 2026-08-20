@@ -59,6 +59,9 @@ public class Event {
     @Column(name = "ticket_open_at")
     private LocalDateTime ticketOpenAt;
 
+    @Column(name = "ticket_url", length = 500)
+    private String ticketUrl;
+
     // UPCOMING, ONGOING, ENDED, CANCELED
     @Column(name = "status", nullable = false, length = 20)
     private String status;
