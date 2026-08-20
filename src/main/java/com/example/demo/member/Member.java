@@ -145,6 +145,22 @@ public class Member {
         }
     }
 
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeIntroduction(String introduction) {
+        this.introduction = introduction;
+    }
+
+    public void changeProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void clearProfileImage() {
+        this.profileImage = null;
+    }
+
     public Long getId() {
         return id;
     }
@@ -167,6 +183,10 @@ public class Member {
 
     public String getProfileImage() {
         return profileImage;
+    }
+
+    public String getIntroduction() {
+        return introduction;
     }
 
     public MemberRole getRole() {

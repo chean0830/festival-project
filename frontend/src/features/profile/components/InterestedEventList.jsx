@@ -1,0 +1,27 @@
+import { resolveImageUrl } from '../api/profileApi'
+
+export default function InterestedEventList({ events }) {
+  if (!events || events.length === 0) {
+    return <p className="profile-empty-text">아직 하트를 누른 관심 공연이 없습니다.</p>
+  }
+
+  return (
+    <ul className="profile-interest-list">
+      {events.map((event) => (
+        <li key={event.eventId} className="profile-interest-item">
+          {event.posterImageUrl ? (
+            <img src={resolveImageUrl(event.posterImageUrl)} alt={event.name} />
+          ) : (
+            <div className="profile-interest-thumb-placeholder" />
+          )}
+          <div>
+            <span>{event.name}</span>
+            <span className="profile-interest-date">
+              {event.startDate} ~ {event.endDate}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
