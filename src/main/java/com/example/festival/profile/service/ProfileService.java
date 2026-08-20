@@ -182,6 +182,24 @@ public class ProfileService {
                 .toList();
     }
 
+    @Transactional
+    public void removeInterestedArtist(Long memberId, Long artistId) {
+        getMemberOrThrow(memberId);
+        long deleted = memberArtistRepository.deleteByMember_IdAndArtist_ArtistId(memberId, artistId);
+        if (deleted == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 가수 등록 내역을 찾을 수 없습니다.");
+        }
+    }
+
+    @Transactional
+    public void removeInterestedEvent(Long memberId, Long eventId) {
+        getMemberOrThrow(memberId);
+        long deleted = memberEventRepository.deleteByMember_IdAndEvent_EventId(memberId, eventId);
+        if (deleted == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 공연 등록 내역을 찾을 수 없습니다.");
+        }
+    }
+
     public ProfileStatsResponse getProfileStats(Long memberId) {
         getMemberOrThrow(memberId);
 

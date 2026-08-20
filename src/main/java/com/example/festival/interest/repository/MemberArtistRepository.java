@@ -12,4 +12,6 @@ public interface MemberArtistRepository extends JpaRepository<MemberArtist, Long
 
     @Query("SELECT ma FROM MemberArtist ma JOIN FETCH ma.artist WHERE ma.member.id = :memberId ORDER BY ma.createdAt DESC")
     List<MemberArtist> findAllByMemberIdWithArtist(@Param("memberId") Long memberId);
+
+    long deleteByMember_IdAndArtist_ArtistId(Long memberId, Long artistId);
 }

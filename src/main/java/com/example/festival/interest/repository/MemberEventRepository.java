@@ -17,4 +17,6 @@ public interface MemberEventRepository extends JpaRepository<MemberEvent, Long> 
             + "WHERE me.member.id = :memberId AND me.status = 'PLANNED' AND e.endDate >= CURRENT_DATE "
             + "ORDER BY e.startDate ASC")
     List<MemberEvent> findUpcomingByMemberId(@Param("memberId") Long memberId);
+
+    long deleteByMember_IdAndEvent_EventId(Long memberId, Long eventId);
 }

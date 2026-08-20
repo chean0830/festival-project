@@ -11,6 +11,8 @@ import {
   deleteProfileImage,
   fetchInterestedArtists,
   fetchInterestedEvents,
+  removeInterestedArtist,
+  removeInterestedEvent,
   fetchAttendedEvents,
   fetchUpcomingEvents,
   fetchMyBadges,
@@ -174,7 +176,13 @@ export default function ProfilePage() {
 
         <section>
           <h2>관심 가수</h2>
-          <InterestedArtistList artists={artists} />
+          <InterestedArtistList
+            artists={artists}
+            onRemove={async (artistId) => {
+              await removeInterestedArtist(memberId, artistId)
+              setArtists((prev) => prev.filter((artist) => artist.artistId !== artistId))
+            }}
+          />
         </section>
 
         <section>
@@ -188,7 +196,13 @@ export default function ProfilePage() {
 
           <div className="profile-my-events-group">
             <h3>관심 공연</h3>
-            <InterestedEventList events={events} />
+            <InterestedEventList
+              events={events}
+              onRemove={async (eventId) => {
+                await removeInterestedEvent(memberId, eventId)
+                setEvents((prev) => prev.filter((event) => event.eventId !== eventId))
+              }}
+            />
           </div>
 
           <div className="profile-my-events-group" ref={attendedSectionRef}>

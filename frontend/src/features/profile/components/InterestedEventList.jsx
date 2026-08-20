@@ -1,6 +1,6 @@
 import { resolveImageUrl } from '../api/profileApi'
 
-export default function InterestedEventList({ events }) {
+export default function InterestedEventList({ events, onRemove }) {
   if (!events || events.length === 0) {
     return <p className="profile-empty-text">아직 하트를 누른 관심 공연이 없습니다.</p>
   }
@@ -20,6 +20,16 @@ export default function InterestedEventList({ events }) {
               {event.startDate} ~ {event.endDate}
             </span>
           </div>
+          {onRemove && (
+            <button
+              type="button"
+              className="profile-interest-remove"
+              onClick={() => onRemove(event.eventId)}
+              aria-label={`${event.name} 관심 해제`}
+            >
+              찜 해제
+            </button>
+          )}
         </li>
       ))}
     </ul>

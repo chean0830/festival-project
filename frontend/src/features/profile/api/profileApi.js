@@ -86,6 +86,24 @@ export function fetchInterestedEvents(memberId) {
   return getJson(`/api/members/${memberId}/interests/events`)
 }
 
+export async function removeInterestedArtist(memberId, artistId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/interests/artists/${artistId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+  }).then(handleResponse)
+}
+
+export async function removeInterestedEvent(memberId, eventId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/interests/events/${eventId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+  }).then(handleResponse)
+}
+
 export function fetchAttendedEvents(memberId) {
   return getJson(`/api/members/${memberId}/events/attended`)
 }
