@@ -15,4 +15,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.member.id = :memberId AND n.read = false")
     long countUnreadForMember(@Param("memberId") Long memberId);
+
+    boolean existsByMember_IdAndEvent_EventIdAndType(Long memberId, Long eventId, String type);
 }

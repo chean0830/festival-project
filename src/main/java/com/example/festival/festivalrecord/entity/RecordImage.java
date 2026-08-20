@@ -32,15 +32,23 @@ public class RecordImage {
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
 
+    @Column(name = "display_order", nullable = false)
+    private int displayOrder;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    private RecordImage(FestivalRecord record, String imageUrl) {
+    private RecordImage(FestivalRecord record, String imageUrl, int displayOrder) {
         this.record = record;
         this.imageUrl = imageUrl;
+        this.displayOrder = displayOrder;
     }
 
-    public static RecordImage of(FestivalRecord record, String imageUrl) {
-        return new RecordImage(record, imageUrl);
+    public static RecordImage of(FestivalRecord record, String imageUrl, int displayOrder) {
+        return new RecordImage(record, imageUrl, displayOrder);
+    }
+
+    public void changeDisplayOrder(int displayOrder) {
+        this.displayOrder = displayOrder;
     }
 }

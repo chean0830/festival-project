@@ -7,6 +7,8 @@ const TYPE_LABEL = {
   COMMUNITY: '커뮤니티',
   ORDER: '주문',
   NOTICE: '공지',
+  FESTIVAL_RECORD: '페스티벌 기록',
+  RECORD_REMINDER: '기록 남기기',
 }
 
 export default function NotificationList({ notifications, onRead }) {

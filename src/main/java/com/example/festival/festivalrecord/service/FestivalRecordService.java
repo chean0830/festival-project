@@ -21,6 +21,9 @@ import com.example.festival.festivalrecord.repository.RecordShareRepository;
 import com.example.festival.festivalrecord.repository.RecordSongRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
+import com.example.festival.notification.service.NotificationService;
+import com.example.festival.visit.entity.EventVisit;
+import com.example.festival.visit.repository.EventVisitRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,7 +35,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -41,6 +46,8 @@ public class FestivalRecordService {
 
     private static final String RECORD_IMAGE_SUBDIR = "festival-record";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+    private static final int FREE_POSTER_REGEN_LIMIT = 3;
+    private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
 
     private final FestivalRecordRepository festivalRecordRepository;
     private final RecordImageRepository recordImageRepository;
@@ -49,6 +56,8 @@ public class FestivalRecordService {
     private final RecordShareRepository recordShareRepository;
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
+    private final EventVisitRepository eventVisitRepository;
+    private final NotificationService notificationService;
     private final Path uploadRoot;
 
     public FestivalRecordService(
@@ -59,6 +68,8 @@ public class FestivalRecordService {
             RecordShareRepository recordShareRepository,
             MemberRepository memberRepository,
             EventRepository eventRepository,
+            EventVisitRepository eventVisitRepository,
+            NotificationService notificationService,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
@@ -68,6 +79,8 @@ public class FestivalRecordService {
         this.recordShareRepository = recordShareRepository;
         this.memberRepository = memberRepository;
         this.eventRepository = eventRepository;
+        this.eventVisitRepository = eventVisitRepository;
+        this.notificationService = notificationService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -96,6 +109,14 @@ public class FestivalRecordService {
         replaceSongs(record, request.songs());
         replaceFoods(record, request.foods());
 
+        notificationService.notifyMember(
+                memberId,
+                event.getEventId(),
+                "FESTIVAL_RECORD",
+                "새 페스티벌 기록이 저장됐어요!",
+                event.getName() + " 기록이 나의 페스티벌 기록에 추가됐어요."
+        );
+
         return toResponse(record);
     }
 
@@ -119,7 +140,7 @@ public class FestivalRecordService {
     public void deleteRecord(Long memberId, Long recordId) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
 
-        recordImageRepository.findAllByRecord_RecordIdOrderByImageIdAsc(record.getRecordId())
+        recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId())
                 .forEach(image -> deletePhysicalFileIfExists(image.getImageUrl()));
 
         recordImageRepository.deleteAllByRecord_RecordId(record.getRecordId());
@@ -143,7 +164,25 @@ public class FestivalRecordService {
 
         String storedFileName = storeFile(file, recordId);
         String publicUrl = "/uploads/" + RECORD_IMAGE_SUBDIR + "/" + storedFileName;
-        recordImageRepository.save(RecordImage.of(record, publicUrl));
+        int nextOrder = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId()).size();
+        recordImageRepository.save(RecordImage.of(record, publicUrl, nextOrder));
+
+        return toResponse(record);
+    }
+
+    @Transactional
+    public FestivalRecordResponse reorderImages(Long memberId, Long recordId, List<Long> orderedImageIds) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        List<RecordImage> images = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId());
+
+        if (orderedImageIds == null || orderedImageIds.size() != images.size()
+                || !orderedImageIds.containsAll(images.stream().map(RecordImage::getImageId).toList())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사진 목록이 올바르지 않습니다.");
+        }
+
+        for (RecordImage image : images) {
+            image.changeDisplayOrder(orderedImageIds.indexOf(image.getImageId()));
+        }
 
         return toResponse(record);
     }
@@ -159,11 +198,54 @@ public class FestivalRecordService {
     }
 
     @Transactional
+    public FestivalRecordResponse regeneratePoster(Long memberId, Long recordId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        if (record.getAiRegeneratedCount() >= FREE_POSTER_REGEN_LIMIT) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 재생성 횟수를 모두 사용했습니다.");
+        }
+        record.incrementAiRegeneratedCount();
+        return toResponse(record);
+    }
+
+    @Transactional
     public FestivalRecordResponse shareRecord(Long memberId, Long recordId, ShareRequest request) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
         recordShareRepository.save(RecordShare.of(record, request.platform(), request.shareUrl()));
         record.markShared();
         return toResponse(record);
+    }
+
+    /**
+     * 이미 끝난 공연에 다녀왔는데(event_visit) 아직 기록(festival_record)이 없는 회원에게
+     * "기록 남겨보세요" 알림을 보낸다. FestivalRecordReminderScheduler가 주기적으로 호출한다.
+     * 체크인(event_visit 생성) 자체는 담당 범위 밖이라 여기서는 읽기만 한다.
+     */
+    @Transactional
+    public void notifyUnrecordedVisits() {
+        List<EventVisit> visits = eventVisitRepository.findAllForEndedEvents();
+
+        Set<String> seen = new HashSet<>();
+        for (EventVisit visit : visits) {
+            Long memberId = visit.getMember().getId();
+            Long eventId = visit.getEvent().getEventId();
+            String dedupeKey = memberId + ":" + eventId;
+            if (!seen.add(dedupeKey)) {
+                continue;
+            }
+            if (festivalRecordRepository.existsByMember_IdAndEvent_EventId(memberId, eventId)) {
+                continue;
+            }
+            if (notificationService.hasNotified(memberId, eventId, RECORD_REMINDER_TYPE)) {
+                continue;
+            }
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    RECORD_REMINDER_TYPE,
+                    "다녀온 공연, 기록으로 남겨보세요!",
+                    visit.getEvent().getName() + " 기록을 아직 안 남기셨어요. 사진과 함께 나만의 페스티벌 기록을 만들어보세요."
+            );
+        }
     }
 
     private void replaceSongs(FestivalRecord record, List<SongInput> songs) {
@@ -172,7 +254,7 @@ public class FestivalRecordService {
             return;
         }
         List<RecordSong> entities = songs.stream()
-                .map(song -> RecordSong.of(record, song.songTitle(), song.artistName()))
+                .map(song -> RecordSong.of(record, song.songTitle(), song.artistName(), song.albumCoverUrl()))
                 .toList();
         recordSongRepository.saveAll(entities);
     }
@@ -214,7 +296,7 @@ public class FestivalRecordService {
                 record.getRecordId(),
                 event.getEventId(),
                 event.getName(),
-                event.getPosterImage(),
+                resolveThumbnail(record, event),
                 record.getTitle(),
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
@@ -222,14 +304,26 @@ public class FestivalRecordService {
         );
     }
 
+    /**
+     * 목록 카드 썸네일 = 사용자가 순서 1번(대표)으로 올린 본인 기록 사진.
+     * 아직 사진을 안 올렸으면 공연 포스터 이미지로 대체한다.
+     */
+    private String resolveThumbnail(FestivalRecord record, Event event) {
+        List<RecordImage> images = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId());
+        if (!images.isEmpty()) {
+            return images.get(0).getImageUrl();
+        }
+        return event.getPosterImage();
+    }
+
     private FestivalRecordResponse toResponse(FestivalRecord record) {
         Event event = record.getEvent();
 
-        List<RecordImageResponse> images = recordImageRepository.findAllByRecord_RecordIdOrderByImageIdAsc(record.getRecordId()).stream()
+        List<RecordImageResponse> images = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId()).stream()
                 .map(image -> new RecordImageResponse(image.getImageId(), image.getImageUrl()))
                 .toList();
         List<RecordSongResponse> songs = recordSongRepository.findAllByRecord_RecordId(record.getRecordId()).stream()
-                .map(song -> new RecordSongResponse(song.getSongId(), song.getSongTitle(), song.getArtistName()))
+                .map(song -> new RecordSongResponse(song.getSongId(), song.getSongTitle(), song.getArtistName(), song.getAlbumCoverUrl()))
                 .toList();
         List<String> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId()).stream()
                 .map(RecordFood::getFoodName)
@@ -247,6 +341,7 @@ public class FestivalRecordService {
                 record.getMemo(),
                 record.getHashtag(),
                 record.isShared(),
+                record.getAiRegeneratedCount(),
                 images,
                 songs,
                 foods,

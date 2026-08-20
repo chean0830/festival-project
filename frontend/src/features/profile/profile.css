@@ -344,6 +344,25 @@
   text-align: left;
 }
 
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profile-section-more {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--p-muted);
+  white-space: nowrap;
+}
+
+.profile-section-more:hover {
+  color: var(--p-green-dark);
+}
+
 .profile-my-events-group {
   margin-top: 28px;
 }

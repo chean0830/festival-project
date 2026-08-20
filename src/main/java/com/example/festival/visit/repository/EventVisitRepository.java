@@ -24,4 +24,11 @@ public interface EventVisitRepository extends JpaRepository<EventVisit, Long> {
             + "WHERE eg.event_id IN (SELECT DISTINCT event_id FROM event_visit WHERE member_id = :memberId)",
             nativeQuery = true)
     List<VisitedEventGenre> findGenresForVisitedEvents(@Param("memberId") Long memberId);
+
+    /**
+     * "다녀온 공연인데 아직 기록을 안 남겼으면 알림 보내기" 배치용 조회.
+     * 이미 끝난 공연에 대한 방문 기록을 전 회원 기준으로 훑는다 (읽기 전용, 체크인 생성은 담당 범위 밖).
+     */
+    @Query("SELECT ev FROM EventVisit ev JOIN FETCH ev.member JOIN FETCH ev.event e WHERE e.endDate < CURRENT_DATE")
+    List<EventVisit> findAllForEndedEvents();
 }

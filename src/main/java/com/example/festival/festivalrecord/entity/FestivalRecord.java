@@ -18,8 +18,9 @@ import java.time.LocalDateTime;
 
 /**
  * festival_record 테이블 매핑.
- * ai_diary/ai_summary/mood/ai_regenerated_count는 스키마상 존재하지만
- * AI 페스티벌 기록 기능(추후 작업)에서 채워지는 필드라 지금은 사용하지 않는다.
+ * ai_diary/ai_summary/mood는 스키마상 존재하지만 AI 페스티벌 기록 기능(추후 작업)에서 채워지는
+ * 필드라 지금은 사용하지 않는다. ai_regenerated_count는 포스터 무료 재생성 횟수(3회) 제한에
+ * 실제로 사용 중 — 프론트 state로만 두면 페이지를 나갔다 들어오면 초기화돼서 결제 유도가 무의미해지므로 DB에 저장한다.
  */
 @Entity
 @Table(name = "festival_record")
@@ -105,5 +106,9 @@ public class FestivalRecord {
 
     public void markShared() {
         this.shared = true;
+    }
+
+    public void incrementAiRegeneratedCount() {
+        this.aiRegeneratedCount += 1;
     }
 }

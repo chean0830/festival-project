@@ -27,6 +27,9 @@ import AttendedEventGallery from './components/AttendedEventGallery'
 import UpcomingEventList from './components/UpcomingEventList'
 import ProfileStats from './components/ProfileStats'
 import NotificationBell from '../notification/components/NotificationBell'
+import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
+import RecordCard from '../festivalrecord/components/RecordCard'
+import '../festivalrecord/festivalrecord.css'
 import './profile.css'
 
 /**
@@ -44,6 +47,7 @@ export default function ProfilePage() {
   const [upcomingEvents, setUpcomingEvents] = useState([])
   const [badges, setBadges] = useState([])
   const [stats, setStats] = useState(null)
+  const [festivalRecords, setFestivalRecords] = useState([])
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -65,15 +69,17 @@ export default function ProfilePage() {
       setLoading(true)
       setLoadError(null)
       try {
-        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData] = await Promise.all([
-          fetchProfile(memberId),
-          fetchInterestedArtists(memberId),
-          fetchInterestedEvents(memberId),
-          fetchAttendedEvents(memberId),
-          fetchUpcomingEvents(memberId),
-          fetchMyBadges(memberId),
-          fetchProfileStats(memberId),
-        ])
+        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData, recordData] =
+          await Promise.all([
+            fetchProfile(memberId),
+            fetchInterestedArtists(memberId),
+            fetchInterestedEvents(memberId),
+            fetchAttendedEvents(memberId),
+            fetchUpcomingEvents(memberId),
+            fetchMyBadges(memberId),
+            fetchProfileStats(memberId),
+            fetchFestivalRecords(memberId),
+          ])
         if (!cancelled) {
           setProfile(profileData)
           setArtists(artistData)
@@ -82,6 +88,7 @@ export default function ProfilePage() {
           setUpcomingEvents(upcomingData)
           setBadges(badgeData)
           setStats(statsData)
+          setFestivalRecords(recordData)
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
@@ -222,6 +229,25 @@ export default function ProfilePage() {
             <h3>예정된 공연</h3>
             <UpcomingEventList events={upcomingEvents} />
           </div>
+        </section>
+
+        <section>
+          <div className="profile-section-header">
+            <h2>나의 페스티벌 기록</h2>
+            <a href="/festival-log" className="profile-section-more">
+              전체보기 ›
+            </a>
+          </div>
+
+          {festivalRecords.length === 0 ? (
+            <p className="profile-empty-text">아직 작성한 페스티벌 기록이 없어요.</p>
+          ) : (
+            <div className="record-grid">
+              {festivalRecords.slice(0, 4).map((record) => (
+                <RecordCard key={record.recordId} record={record} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
       </div>

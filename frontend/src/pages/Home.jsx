@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
 import ProgramCarousel from "../components/home/ProgramCarousel/ProgramCarousel";
@@ -33,6 +34,8 @@ const programItems = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <Layout>
       {/* 1. 배너 — 공지사항 자리. 클릭하면 공지사항 페이지로 이동 (지금은 "/notice"로 임시 연결) */}
@@ -64,7 +67,9 @@ function Home() {
             </span>
           </h2>
           <p>나만의 페스티벌 기록을 만들어보세요!</p>
-          <Button variant="primary">기록 만들러 가기 →</Button>
+          <Button variant="primary" onClick={() => navigate("/festival-log/new")}>
+            기록 만들러 가기 →
+          </Button>
         </div>
         <div className="home__log-promo-image">예시 이미지</div>
       </section>
