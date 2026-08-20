@@ -1,0 +1,23 @@
+.program-category-page {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.program-category-page__back {
+  display: inline-block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+.program-category-page__back:hover {
+  color: var(--color-primary-dark);
+}
+
+.program-category-page__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}

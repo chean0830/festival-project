@@ -6,7 +6,9 @@
 }
 
 /* ---- 1줄: 로고 + 검색 + 로그인 ----
-   배경(민트)은 화면 끝까지 꽉 채우고, 안쪽 내용만 1600px 폭 안에서 좌우 여백을 둔다.
+   배경(민트)은 화면 끝까지 꽉 채우고, 안쪽 내용만 페이지 콘텐츠(layout__content)랑
+   같은 폭(--content-max-width) 안에서 좌우 여백을 둔다 — 그래야 화면 크기가 바뀌어도
+   로고/헤더 줄이 아래쪽 페이지 콘텐츠(배너 등)랑 항상 같은 지점에서 시작한다.
    (공연일정 줄은 흰 배경 유지) */
 .header__top-bar {
   width: 100%;
@@ -14,10 +16,10 @@
 }
 
 .header__top {
-  max-width: 1600px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
   height: var(--header-height);
-  padding: 0 32px;
+  padding: 0 var(--spacing-md);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -49,19 +51,27 @@
   align-items: center;
 }
 
+.header__search form {
+  display: flex;
+  align-items: center;
+}
+
 .header__search-icon {
   position: absolute;
+  top: 50%;
   left: 14px;
+  transform: translateY(-50%);
   color: var(--color-text-muted);
   pointer-events: none;
 }
 
 .header__search-input {
-  width: 260px;
-  padding: 14px 18px 14px 44px;
+  width: 200px;
+  padding: 10px 16px 10px 40px;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background-color: var(--color-background);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #fafafa, #f0f0f0);
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
   font-size: var(--font-size-sm);
   color: var(--color-text);
   outline: none;
@@ -71,9 +81,9 @@
   color: var(--color-text-muted);
 }
 .header__search-input:focus {
-  border-color: var(--color-primary);
-  background-color: var(--color-background);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  border-color: #c4c4c4;
+  background: linear-gradient(180deg, #ffffff, #f5f5f5);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
 /* 로그인 버튼 (헤더 상단 + 메뉴 서랍 안에서 공용으로 사용) */
@@ -81,33 +91,29 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 14px 30px;
-  border-radius: 999px;
-  background-color: var(--color-primary);
-  color: var(--color-text-on-primary);
-  font-size: var(--font-size-md);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
   font-weight: 700;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(30, 158, 82, 0.35);
-  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  transition: color 0.15s ease;
 }
 .header__login-btn:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: 0 4px 12px rgba(30, 158, 82, 0.45);
-  transform: translateY(-1px);
+  color: var(--color-text);
 }
 
-/* 메뉴 서랍 안에서는 좀 더 작게 */
 .header__login-btn--sm {
-  padding: 8px 18px;
   font-size: var(--font-size-sm);
 }
 
 /* ---- 2줄: 햄버거 + 바로가기 메뉴 ---- */
 .header__subnav {
-  max-width: 1600px;
+  max-width: var(--content-max-width);
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 var(--spacing-md);
   height: 72px;
   display: flex;
   align-items: center;
