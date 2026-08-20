@@ -8,7 +8,24 @@ import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AccountRecoveryPage from './pages/AccountRecoveryPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import ProfilePage from './features/profile/ProfilePage'
+import BadgePage from './features/profile/BadgePage'
+import NotificationPage from './features/notification/NotificationPage'
+import FestivalRecordListPage from './features/festivalrecord/FestivalRecordListPage'
+import FestivalRecordFormPage from './features/festivalrecord/FestivalRecordFormPage'
+import FestivalRecordDetailPage from './features/festivalrecord/FestivalRecordDetailPage'
 
+/**
+ * 페이지 라우팅
+ * - "/" : 메인 화면
+ * - "/program" : 공연일정 페이지 (지금은 준비중 placeholder)
+ * - "/login", "/signup", "/account/recovery", "/password/reset/confirm" : 인증 관련 페이지
+ * - "/profile", "/profile/badges" : 내 프로필 / 나의 뱃지 (로그인한 사용자 기준, 비로그인 시 로그인 안내)
+ *
+ * 커뮤니티/MD구매 등 다른 메뉴들은 아직 페이지가 없어서
+ * 눌러도 흰 화면(라우트 없음)이 뜰 거야. 각 기능 브랜치가 합쳐지면
+ * 여기에 Route를 하나씩 추가해주면 돼.
+ */
 function App() {
   return (
     <Routes>
@@ -21,10 +38,16 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/account/recovery" element={<AccountRecoveryPage />} />
-      <Route
-        path="/password/reset/confirm"
-        element={<ResetPasswordPage />}
-      />
+      <Route path="/password/reset/confirm" element={<ResetPasswordPage />} />
+
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/profile/badges" element={<BadgePage />} />
+      <Route path="/notifications" element={<NotificationPage />} />
+
+      <Route path="/festival-log" element={<FestivalRecordListPage />} />
+      <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
+      <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
+      <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
     </Routes>
   )
 }

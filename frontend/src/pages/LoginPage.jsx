@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { login } from '../api/authApi'
 import '../styles/login.css'
 
@@ -91,6 +91,7 @@ function ValidationMessage({ children, id }) {
 }
 
 function LoginPage() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -108,6 +109,12 @@ function LoginPage() {
   const showEmailError = emailTouched && emailInvalid
   const loginDisabled = loading || trimmedEmail === '' || password === ''
 
+  useEffect(() => {
+    if (oauthSuccess) {
+      navigate('/', { replace: true })
+    }
+  }, [navigate, oauthSuccess])
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setEmailTouched(true)
@@ -121,8 +128,8 @@ function LoginPage() {
     setMessage('')
 
     try {
-      const member = await login({ email, password })
-      setMessage(`${member.nickname}님, 로그인되었습니다.`)
+      await login({ email, password })
+      navigate('/', { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {
