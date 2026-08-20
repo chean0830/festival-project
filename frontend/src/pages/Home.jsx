@@ -14,24 +14,16 @@ const CAROUSEL_MAX_COUNT = 5;
 /**
  * 메인 화면
  * 스케치 기준으로 4개 섹션을 배치함:
- * 1. 배너 (공지사항/알림 노출용 — 자동으로 넘어가는 공지 텍스트가 들어감)
+ * 1. 배너 (공지사항 — event_news 중 newsType이 NOTICE인 것만 자동으로 넘어가며 보여줌)
  * 2. 공연일정 캐러셀 (가운데 카드가 가장 크고, 시간이 지나면 자동으로 옆으로 넘어감) — GET /api/home/events
  * 3. 페스티벌 기록 홍보 (나만의 기록 만들기 유도)
- * 4. 뉴스 (아티스트 신곡/공연 발표/MD 발표 등 소식) — GET /api/home/news
- *
- * 배너 공지(noticeItems)는 아직 API가 없어서 더미 데이터야.
+ * 4. 뉴스 (NOTICE를 제외한 나머지 소식 — 아티스트 신곡/공연 발표/MD 발표 등) — GET /api/home/news
  */
-
-const noticeItems = [
-  { id: 1, text: "FESTLOG 공식 홈페이지가 오픈했습니다." },
-  { id: 2, text: "8월 29일(토) 티켓 예매가 시작됩니다." },
-  { id: 3, text: "라인업 1차 공개! 지금 확인해보세요." },
-  { id: 4, text: "공식 굿즈(MD) 사전 예약이 곧 시작됩니다." },
-];
 
 function Home() {
   const navigate = useNavigate();
   const [programItems, setProgramItems] = useState([]);
+  const [noticeItems, setNoticeItems] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
 
   useEffect(() => {
@@ -56,10 +48,19 @@ function Home() {
 
     getRecentNews()
       .then((news) => {
-        if (!cancelled) setNewsItems(news);
+        if (cancelled) return;
+        setNoticeItems(
+          news
+            .filter((item) => item.newsType === "NOTICE")
+            .map((item) => ({ id: item.id, text: item.title }))
+        );
+        setNewsItems(news.filter((item) => item.newsType !== "NOTICE"));
       })
       .catch(() => {
-        if (!cancelled) setNewsItems([]);
+        if (!cancelled) {
+          setNoticeItems([]);
+          setNewsItems([]);
+        }
       });
 
     return () => {
