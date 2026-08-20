@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { getEventsByDate } from "../../../data/eventCalendarMockData";
+import { useEffect, useState } from "react";
+import { getUpcomingEvents } from "../../../api/eventApi";
 import "./EventCalendar.css";
 
 /**
@@ -7,7 +7,26 @@ import "./EventCalendar.css";
  * - 이전/다음 달 이동
  * - 공연 있는 날짜에 점(dot) 표시
  * - 그 날짜에 마우스를 올리면(hover) 그 날 공연 목록이 툴팁으로 뜸
+ * - GET /api/home/events로 받아온 실제 DB 데이터를 날짜별로 묶어서 씀
  */
+
+// events를 날짜(dateKey)별로 묶는다. start~end 사이 모든 날짜에 표시한다.
+function buildEventsByDate(events) {
+  const map = {};
+
+  events.forEach((event) => {
+    const cursor = new Date(event.startDate);
+    const end = new Date(event.endDate);
+
+    while (cursor <= end) {
+      const key = toDateKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+      (map[key] ??= []).push({ id: event.id, name: event.name });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  });
+
+  return map;
+}
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -45,6 +64,23 @@ function EventCalendar() {
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [hoveredDateKey, setHoveredDateKey] = useState(null);
+  const [eventsByDate, setEventsByDate] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getUpcomingEvents()
+      .then((events) => {
+        if (!cancelled) setEventsByDate(buildEventsByDate(events));
+      })
+      .catch(() => {
+        if (!cancelled) setEventsByDate({});
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const cells = buildCalendarCells(viewYear, viewMonth);
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -69,7 +105,7 @@ function EventCalendar() {
     }
   }
 
-  const hoveredEvents = hoveredDateKey ? getEventsByDate(hoveredDateKey) : [];
+  const hoveredEvents = hoveredDateKey ? eventsByDate[hoveredDateKey] ?? [] : [];
 
   return (
     <div className="event-calendar">
@@ -103,7 +139,7 @@ function EventCalendar() {
 
       <div className="event-calendar__grid">
         {cells.map((cell, index) => {
-          const events = cell.dateKey ? getEventsByDate(cell.dateKey) : [];
+          const events = cell.dateKey ? eventsByDate[cell.dateKey] ?? [] : [];
           const hasEvents = events.length > 0;
 
           return (
@@ -129,9 +165,6 @@ function EventCalendar() {
                 <div className="event-calendar__tooltip">
                   {hoveredEvents.map((event) => (
                     <p key={event.id} className="event-calendar__tooltip-item">
-                      <span className="event-calendar__tooltip-time">
-                        {event.time}
-                      </span>
                       {event.name}
                     </p>
                   ))}

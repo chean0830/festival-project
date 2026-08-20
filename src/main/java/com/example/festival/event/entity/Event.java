@@ -41,6 +41,10 @@ public class Event {
     @Column(name = "event_type", length = 20)
     private String eventType;
 
+    // 출연 아티스트 국적 (venue.country와 별개, 국내공연/내한공연 구분용)
+    @Column(name = "artist_country", nullable = false, length = 2)
+    private String artistCountry;
+
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
@@ -58,6 +62,9 @@ public class Event {
 
     @Column(name = "ticket_open_at")
     private LocalDateTime ticketOpenAt;
+
+    @Column(name = "ticket_url", length = 500)
+    private String ticketUrl;
 
     // UPCOMING, ONGOING, ENDED, CANCELED
     @Column(name = "status", nullable = false, length = 20)

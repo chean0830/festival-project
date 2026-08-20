@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import ProgramCard from "../components/program/ProgramCard/ProgramCard";
-import { CATEGORIES, PROGRAM_ITEMS, sortPrograms } from "../data/programListMockData";
+import { CATEGORIES, sortPrograms } from "../data/programListMockData";
+import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
 import "./Program.css";
 
 const SORT_OPTIONS = [
@@ -12,8 +13,8 @@ const SORT_OPTIONS = [
 
 const PREVIEW_COUNT = 3;
 
-function previewByCategory(category, sortBy) {
-  const filtered = PROGRAM_ITEMS.filter(
+function previewByCategory(items, category, sortBy) {
+  const filtered = items.filter(
     (item) => item.region === category.region && item.kind === category.kind
   );
   return sortPrograms(filtered, sortBy).slice(0, PREVIEW_COUNT);
@@ -24,9 +25,29 @@ function previewByCategory(category, sortBy) {
  * - 오른쪽 위: 캘린더 링크 + 최신/인기 정렬
  * - 탭 4개: 누르면 해당 카테고리 전용 페이지로 이동
  * - 아래: 국내공연/내한공연/국내페스티벌/해외페스티벌 2x2 그리드로 미리보기 카드
+ *
+ * 목록은 GET /api/home/events로 받아온 실제 DB 데이터를 씀.
+ * (인기순 정렬은 아직 DB에 인기도 데이터가 없어서 실질적으로는 최신순과 동일하게 동작함)
  */
 function Program() {
   const [sortBy, setSortBy] = useState("latest");
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getUpcomingEvents()
+      .then((events) => {
+        if (!cancelled) setItems(events.map(toProgramItem));
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Layout>
@@ -79,7 +100,7 @@ function Program() {
                 {category.label}
               </Link>
               <div className="program-page__cards">
-                {previewByCategory(category, sortBy).map((item) => (
+                {previewByCategory(items, category, sortBy).map((item) => (
                   <ProgramCard key={item.id} item={item} />
                 ))}
               </div>

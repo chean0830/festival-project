@@ -45,6 +45,9 @@
 
 .program-calendar-page__hot-item {
   position: relative;
+}
+
+.program-calendar-page__hot-link {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -52,6 +55,9 @@
   color: var(--color-text);
   font-size: var(--font-size-sm);
   font-weight: 500;
+}
+.program-calendar-page__hot-link:hover {
+  color: var(--color-primary-dark);
 }
 .program-calendar-page__hot-item::after {
   content: "";
