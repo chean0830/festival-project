@@ -9,6 +9,9 @@ public record SongInput(
         String songTitle,
 
         @Size(max = 100)
-        String artistName
+        String artistName,
+
+        @Size(max = 500)
+        String albumCoverUrl
 ) {
 }

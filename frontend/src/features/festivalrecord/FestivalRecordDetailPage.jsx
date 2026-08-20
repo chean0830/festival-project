@@ -8,9 +8,11 @@ import {
   deleteFestivalRecord,
   deleteRecordImage,
   fetchFestivalRecord,
+  reorderRecordImages,
   shareFestivalRecord,
 } from './api/festivalRecordApi'
 import StarRating from './components/StarRating'
+import { photoSlotLabel } from './photoSlots'
 import './festivalrecord.css'
 
 const SHARE_PLATFORMS = [
@@ -83,6 +85,19 @@ export default function FestivalRecordDetailPage() {
     }
   }
 
+  async function handleImageMove(index, direction) {
+    const target = index + direction
+    if (target < 0 || target >= record.images.length) return
+    const reordered = [...record.images]
+    ;[reordered[index], reordered[target]] = [reordered[target], reordered[index]]
+    setRecord((prev) => ({ ...prev, images: reordered }))
+    try {
+      await reorderRecordImages(memberId, recordId, reordered.map((img) => img.imageId))
+    } catch (err) {
+      setActionError(err.message)
+    }
+  }
+
   async function handleShare(platform) {
     try {
       const updated = await shareFestivalRecord(memberId, recordId, { platform, shareUrl: null })
@@ -125,6 +140,9 @@ export default function FestivalRecordDetailPage() {
           <div className="record-header-row">
             <h1>{record.title || '제목 없는 기록'}</h1>
             <div className="record-header-actions">
+              <Link to={`/festival-log/${record.recordId}/poster`} className="record-btn-primary">
+                📖 포스터 만들기
+              </Link>
               <Link to={`/festival-log/${record.recordId}/edit`} className="record-btn-ghost">
                 수정
               </Link>
@@ -141,13 +159,34 @@ export default function FestivalRecordDetailPage() {
 
           <section className="record-detail-section">
             <h2>사진</h2>
+            <p className="record-form-photo-hint">
+              사진 순서가 곧 책 페이지예요 — <strong>1번째 대표(공연 정보)</strong> · <strong>2번째 노래 페이지</strong> ·{' '}
+              <strong>3번째 음식 페이지</strong> · 이후는 사진 갤러리.
+            </p>
             <div className="record-image-grid">
-              {record.images.map((image) => (
+              {record.images.map((image, index) => (
                 <div key={image.imageId} className="record-image-item">
+                  <span
+                    className={`record-form-photo-slot-badge${index === 0 ? ' record-form-photo-slot-badge--main' : ''}`}
+                  >
+                    {photoSlotLabel(index)}
+                  </span>
                   <img src={image.imageUrl} alt="기록 사진" />
-                  <button type="button" onClick={() => handleImageDelete(image.imageId)}>
-                    삭제
-                  </button>
+                  <div className="record-image-item-actions">
+                    <button type="button" disabled={index === 0} onClick={() => handleImageMove(index, -1)}>
+                      ‹
+                    </button>
+                    <button type="button" onClick={() => handleImageDelete(image.imageId)}>
+                      삭제
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === record.images.length - 1}
+                      onClick={() => handleImageMove(index, 1)}
+                    >
+                      ›
+                    </button>
+                  </div>
                 </div>
               ))}
               <button type="button" className="record-image-add" onClick={() => fileInputRef.current?.click()}>
@@ -166,11 +205,14 @@ export default function FestivalRecordDetailPage() {
           {record.songs.length > 0 && (
             <section className="record-detail-section">
               <h2>들은 노래</h2>
-              <ul className="record-detail-list">
+              <ul className="record-detail-list record-detail-song-list">
                 {record.songs.map((song) => (
                   <li key={song.songId}>
-                    {song.songTitle}
-                    {song.artistName ? ` - ${song.artistName}` : ''}
+                    {song.albumCoverUrl && <img src={song.albumCoverUrl} alt="" />}
+                    <span>
+                      {song.songTitle}
+                      {song.artistName ? ` - ${song.artistName}` : ''}
+                    </span>
                   </li>
                 ))}
               </ul>

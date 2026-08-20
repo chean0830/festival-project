@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import Program from './pages/Program'
+import ProgramCalendar from './pages/ProgramCalendar'
+import ProgramCategory from './pages/ProgramCategory'
+import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import AccountRecoveryPage from './pages/AccountRecoveryPage'
@@ -14,6 +17,7 @@ import FestivalRecordDetailPage from './features/festivalrecord/FestivalRecordDe
 import LiveListPage from './features/live/LiveListPage'
 import LiveCreatePage from './features/live/LiveCreatePage'
 import LiveWatchPage from './features/live/LiveWatchPage'
+import FestivalRecordBookPage from './features/festivalrecord/FestivalRecordBookPage'
 
 /**
  * 페이지 라우팅
@@ -31,6 +35,9 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/program" element={<Program />} />
+      <Route path="/program/calendar" element={<ProgramCalendar />} />
+      <Route path="/program/:category" element={<ProgramCategory />} />
+      <Route path="/search" element={<Search />} />
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
@@ -45,10 +52,11 @@ function App() {
       <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
       <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
       <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
+<Route path="/festival-log/:recordId/poster" element={<FestivalRecordBookPage />} />
 
-      <Route path="/live" element={<LiveListPage />} />
-      <Route path="/live/new" element={<LiveCreatePage />} />
-      <Route path="/live/:streamId" element={<LiveWatchPage />} />
+<Route path="/live" element={<LiveListPage />} />
+<Route path="/live/new" element={<LiveCreatePage />} />
+<Route path="/live/:streamId" element={<LiveWatchPage />} />
     </Routes>
   )
 }

@@ -3,6 +3,7 @@ package com.example.festival.festivalrecord.controller;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
 import com.example.festival.festivalrecord.dto.FestivalRecordResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordSummaryResponse;
+import com.example.festival.festivalrecord.dto.ReorderImagesRequest;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.service.FestivalRecordService;
 import jakarta.validation.Valid;
@@ -77,6 +78,20 @@ public class FestivalRecordController {
     ) {
         festivalRecordService.deleteImage(memberId, recordId, imageId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{recordId}/images/order")
+    public FestivalRecordResponse reorderImages(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody ReorderImagesRequest request
+    ) {
+        return festivalRecordService.reorderImages(memberId, recordId, request.imageIds());
+    }
+
+    @PostMapping("/{recordId}/poster/regenerate")
+    public FestivalRecordResponse regeneratePoster(@PathVariable Long memberId, @PathVariable Long recordId) {
+        return festivalRecordService.regeneratePoster(memberId, recordId);
     }
 
     @PostMapping("/{recordId}/share")

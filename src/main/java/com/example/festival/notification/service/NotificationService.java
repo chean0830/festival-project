@@ -79,6 +79,14 @@ public class NotificationService {
         notificationRepository.save(Notification.broadcast(type, title, content));
     }
 
+    /**
+     * 특정 회원에게 특정 공연 관련 알림(type)을 이미 보낸 적 있는지 확인한다.
+     * 배치/스케줄러가 같은 알림을 중복으로 쌓지 않게 막는 용도.
+     */
+    public boolean hasNotified(Long memberId, Long eventId, String type) {
+        return notificationRepository.existsByMember_IdAndEvent_EventIdAndType(memberId, eventId, type);
+    }
+
     private Member getMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));

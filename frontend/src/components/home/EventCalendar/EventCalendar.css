@@ -1,0 +1,142 @@
+.event-calendar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #ffffff 0%, #e2e2e2 100%);
+  box-shadow: 0 24px 48px rgba(28, 27, 41, 0.16), 0 8px 16px rgba(28, 27, 41, 0.08);
+}
+
+.event-calendar__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.event-calendar__title {
+  min-width: 120px;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin: 0;
+}
+
+.event-calendar__nav-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+}
+.event-calendar__nav-btn:hover {
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+}
+
+.event-calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.event-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.event-calendar__cell {
+  position: relative;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
+}
+/* 두 번째 주부터 위쪽에 아주 연한 선을 그어서 주(week) 단위로 구분한다 */
+.event-calendar__cell:nth-child(n + 8) {
+  border-top: 1px solid rgba(28, 27, 41, 0.06);
+}
+.event-calendar__cell:not(.event-calendar__cell--muted):hover {
+  background-color: rgba(28, 27, 41, 0.06);
+}
+
+.event-calendar__cell--muted {
+  color: var(--color-text-muted);
+  opacity: 0.4;
+}
+
+.event-calendar__cell--today .event-calendar__day {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.event-calendar__cell--has-events {
+  cursor: pointer;
+}
+.event-calendar__cell--has-events .event-calendar__day {
+  color: var(--color-secondary);
+  font-weight: 700;
+}
+
+.event-calendar__day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: var(--font-size-sm);
+}
+
+.event-calendar__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-secondary);
+}
+
+.event-calendar__tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  width: max-content;
+  max-width: 220px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-text);
+  box-shadow: var(--shadow-card);
+}
+
+.event-calendar__tooltip-item {
+  margin: 0;
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.event-calendar__tooltip-item + .event-calendar__tooltip-item {
+  margin-top: 4px;
+}
+
+.event-calendar__tooltip-time {
+  color: var(--color-primary-light);
+  margin-right: 6px;
+}
+
+@media (max-width: 640px) {
+  .event-calendar__cell {
+    height: 44px;
+  }
+}
+

@@ -44,6 +44,41 @@
 
 /* ---------- List / grid ---------- */
 
+.record-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.record-list-search {
+  flex: 1;
+  min-width: 160px;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text);
+  outline: none;
+}
+
+.record-list-search:focus {
+  border-color: var(--color-primary);
+}
+
+.record-list-toolbar select {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
 .record-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -192,6 +227,63 @@
   margin-top: 6px;
 }
 
+.record-form-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.record-form-photo-item {
+  position: relative;
+}
+
+.record-form-photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.record-form-photo-item-actions {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.record-form-photo-item-actions button {
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.record-form-photo-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.record-form-photo-add {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .record-form-actions {
   display: flex;
   justify-content: flex-end;
@@ -237,6 +329,15 @@
 .record-btn-ghost:hover {
   border-color: var(--color-text-muted);
   color: var(--color-text);
+}
+
+.record-btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.record-btn-ghost:disabled:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Detail ---------- */
@@ -307,10 +408,17 @@
   border: 1px solid var(--color-border);
 }
 
-.record-image-item button {
+.record-image-item-actions {
   position: absolute;
-  top: 4px;
+  bottom: 4px;
+  left: 4px;
   right: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.record-image-item-actions button {
   border: none;
   border-radius: 999px;
   background: rgba(17, 24, 39, 0.65);
@@ -318,6 +426,53 @@
   font-size: 10px;
   padding: 3px 8px;
   cursor: pointer;
+}
+
+.record-image-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.record-form-photo-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.record-form-photo-hint strong {
+  color: var(--color-text);
+}
+
+.record-form-photo-slot-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.record-form-photo-slot-badge--main {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.record-detail-song-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-detail-song-list img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 .record-image-add {
@@ -334,4 +489,542 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* ================= 페스티벌 다이어리 북 / 포스터 ================= */
+
+.fr-book-page-wrap .record-content {
+  max-width: 780px;
+}
+
+/* ---- 페이지 플립북 (react-pageflip) ---- */
+
+.fr-flipbook-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.fr-flipbook {
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.25));
+}
+
+.fr-flip-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fffdf8;
+  box-sizing: border-box;
+  padding: 28px 22px 36px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+}
+
+.fr-flip-page-number {
+  position: absolute;
+  bottom: 10px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* 표지(앞/뒤) — 얇은 낱장이 아니라 두꺼운 "하드커버"처럼 보이도록 진한 배경 사용.
+   react-pageflip이 data-density="hard"인 페이지는 실제로 더 두껍게 넘겨준다. */
+.fr-flip-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #1c1b29 0%, #33314a 100%);
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.fr-flip-cover-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 28px;
+  text-align: center;
+}
+
+.fr-flip-cover-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.fr-flip-cover-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.fr-flip-cover-event {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.fr-flip-cover-hint {
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.fr-page-content h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.fr-page-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.fr-page-cover-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.fr-page-event-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 8px 0 6px;
+}
+
+.fr-page-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.fr-page-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.fr-page-photo-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.fr-page-side-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.fr-page-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.fr-page-song-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fr-page-song-cover {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.fr-page-song-note {
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.fr-page-food-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.fr-page-food-tags span {
+  font-size: 12px;
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.fr-page-memo {
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.fr-page-review {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.fr-page-hashtag {
+  font-size: 12px;
+  color: var(--color-primary-dark);
+}
+
+.fr-page-ai-placeholder {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* 마지막 내지: 스크랩북처럼 사진을 아무렇게나 모아둔 느낌 (인터랙션 없음) */
+.fr-page-collage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 10px;
+  padding-top: 6px;
+}
+
+.fr-page-collage img {
+  width: calc(50% - 8px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.fr-page-collage-photo--0 {
+  transform: rotate(-3deg);
+}
+.fr-page-collage-photo--1 {
+  transform: rotate(2deg);
+}
+.fr-page-collage-photo--2 {
+  transform: rotate(3deg);
+}
+.fr-page-collage-photo--3 {
+  transform: rotate(-2deg);
+}
+
+.fr-book-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.fr-book-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- 책 다음: 포스터 생성 CTA ---- */
+
+.fr-poster-cta {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.fr-poster-cta p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fr-poster-cta-hint {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--color-text-muted);
+  margin-bottom: 8px !important;
+}
+
+.fr-poster-cta .record-btn-primary {
+  margin-top: 4px;
+}
+
+/* ---- 완성 포스터 ---- */
+
+.fr-poster-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.fr-poster {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
+  --fr-poster-accent: var(--color-primary);
+  --fr-poster-bg: #2c2c3a;
+}
+
+.fr-poster--rock {
+  --fr-poster-accent: #e0435c;
+  --fr-poster-bg: #1a1a1a;
+}
+.fr-poster--indie {
+  --fr-poster-accent: #ff8a3d;
+  --fr-poster-bg: #2c2418;
+}
+.fr-poster--summer {
+  --fr-poster-accent: #1e9e52;
+  --fr-poster-bg: #113a2c;
+}
+.fr-poster--sensitive {
+  --fr-poster-accent: #8a7fd6;
+  --fr-poster-bg: #241f36;
+}
+
+.fr-poster-photos {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  background: var(--fr-poster-bg);
+}
+
+.fr-poster-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.fr-poster-photo-empty {
+  grid-column: span 2;
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  text-align: center;
+  padding: 20px;
+}
+
+.fr-poster-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 20px;
+  background: linear-gradient(180deg, transparent 0%, var(--fr-poster-bg) 85%);
+  color: #fff;
+}
+
+.fr-poster-event {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--fr-poster-accent);
+  font-weight: 700;
+}
+
+.fr-poster-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.fr-poster-review {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+.fr-poster-hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.fr-poster-hashtags span {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.fr-poster-ai-note {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+  max-width: 380px;
+}
+
+.fr-poster-styles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.fr-poster-styles > span {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.fr-poster-style-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.fr-poster-style-btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.fr-poster-style-btn--active {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+}
+
+.fr-poster-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.fr-poster-share-message {
+  font-size: 12px;
+  color: var(--color-primary-dark);
+}
+
+.fr-poster-regen-limit {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.fr-poster-regen-limit button {
+  margin-top: 8px;
+}
+
+/* ---- 곡 자동완성 행 ---- */
+
+.record-form-song-row {
+  align-items: flex-start;
+}
+
+.record-form-song-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.record-form-song-cover--empty {
+  background: var(--color-surface);
+}
+
+.record-form-song-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.record-form-song-autocomplete {
+  position: relative;
+}
+
+.record-form-song-autocomplete input {
+  width: 100%;
+}
+
+.record-form-song-loading {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.record-form-song-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.record-form-song-suggestions li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.record-form-song-suggestions li:hover {
+  background: var(--color-surface);
+}
+
+.record-form-song-suggestions img {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.record-form-song-suggestion-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.record-form-song-suggestion-artist {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
 }

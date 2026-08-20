@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface RecordImageRepository extends JpaRepository<RecordImage, Long> {
 
-    List<RecordImage> findAllByRecord_RecordIdOrderByImageIdAsc(Long recordId);
+    List<RecordImage> findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(Long recordId);
 
     Optional<RecordImage> findByImageIdAndRecord_RecordId(Long imageId, Long recordId);
 

@@ -1,0 +1,46 @@
+.program-card {
+  width: 180px;
+  flex-shrink: 0;
+  text-align: center;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.program-card__poster {
+  aspect-ratio: 3 / 4;
+  border-radius: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+.program-card:hover .program-card__poster {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.program-card__name {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.program-card__time {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin: 0;
+}

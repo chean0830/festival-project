@@ -33,13 +33,17 @@ public class RecordSong {
     @Column(name = "artist_name", length = 100)
     private String artistName;
 
-    private RecordSong(FestivalRecord record, String songTitle, String artistName) {
+    @Column(name = "album_cover_url", length = 500)
+    private String albumCoverUrl;
+
+    private RecordSong(FestivalRecord record, String songTitle, String artistName, String albumCoverUrl) {
         this.record = record;
         this.songTitle = songTitle;
         this.artistName = artistName;
+        this.albumCoverUrl = albumCoverUrl;
     }
 
-    public static RecordSong of(FestivalRecord record, String songTitle, String artistName) {
-        return new RecordSong(record, songTitle, artistName);
+    public static RecordSong of(FestivalRecord record, String songTitle, String artistName, String albumCoverUrl) {
+        return new RecordSong(record, songTitle, artistName, albumCoverUrl);
     }
 }

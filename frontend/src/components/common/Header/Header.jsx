@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { searchItems } from "../../../data/searchMockData";
+import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
 import "./Header.css";
@@ -31,12 +34,48 @@ const drawerMenuItems = [
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef(null);
+  const navigate = useNavigate();
+
   const currentMember = useCurrentMember();
   const isLoggedIn = Boolean(currentMember?.memberId);
 
   async function handleLogout() {
     await logout();
     window.location.href = "/";
+  }
+
+  // 검색창 바깥을 클릭하면 드롭다운을 닫는다.
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const searchResults = searchTerm.trim() ? searchItems(searchTerm) : [];
+
+  function goToSearchPage(term) {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+    setIsSearchOpen(false);
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+  }
+
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+    goToSearchPage(searchTerm);
+  }
+
+  function handleSelectResult(item) {
+    setSearchTerm(item.name);
+    goToSearchPage(item.name);
   }
 
   return (
@@ -50,25 +89,44 @@ function Header() {
           </a>
 
           <div className="header__actions">
-            <div className="header__search">
-              <svg
-                className="header__search-icon"
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                className="header__search-input"
-                placeholder="검색어를 입력하세요"
-              />
+            <div className="header__search" ref={searchRef}>
+              <form onSubmit={handleSearchSubmit}>
+                <svg
+                  className="header__search-icon"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  className="header__search-input"
+                  placeholder="검색어를 입력하세요"
+                  value={searchTerm}
+                  onChange={(event) => {
+                    setSearchTerm(event.target.value);
+                    setIsSearchOpen(true);
+                  }}
+                  onFocus={() => {
+                    if (searchTerm.trim()) setIsSearchOpen(true);
+                  }}
+                />
+              </form>
+
+              {isSearchOpen && searchTerm.trim() && (
+                <SearchDropdown
+                  results={searchResults}
+                  query={searchTerm}
+                  onSelect={handleSelectResult}
+                  onViewAll={() => goToSearchPage(searchTerm)}
+                />
+              )}
             </div>
 
             {isLoggedIn ? (

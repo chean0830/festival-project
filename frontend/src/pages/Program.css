@@ -1,0 +1,112 @@
+.program-page {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.program-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-md);
+}
+
+.program-page__calendar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+.program-page__calendar-link:hover {
+  color: var(--color-text);
+}
+
+.program-page__sort {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.program-page__sort-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  cursor: pointer;
+}
+.program-page__sort-btn:hover {
+  color: var(--color-text);
+}
+.program-page__sort-btn--active {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.program-page__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.program-page__tab-list {
+  display: flex;
+  gap: var(--spacing-xl);
+}
+
+.program-page__tab {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+.program-page__tab:hover {
+  color: var(--color-primary-dark);
+}
+
+.program-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+}
+
+.program-page__group {
+  margin-bottom: var(--spacing-md);
+}
+
+.program-page__group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-sm);
+}
+
+.program-page__group-dot {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--color-text);
+}
+.program-page__group-label:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.program-page__cards {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
