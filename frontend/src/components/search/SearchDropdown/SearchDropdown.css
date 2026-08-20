@@ -43,6 +43,20 @@
   background-color: var(--color-surface);
 }
 
+.search-dropdown__item-thumb {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+.search-dropdown__item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .search-dropdown__item-type {
   flex-shrink: 0;
   padding: 3px 7px;

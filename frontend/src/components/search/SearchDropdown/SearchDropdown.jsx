@@ -1,4 +1,4 @@
-import { SEARCH_TYPE_LABEL } from "../../../data/searchMockData";
+import { SEARCH_TYPE_LABEL } from "../../../api/searchApi";
 import "./SearchDropdown.css";
 
 /**
@@ -25,6 +25,9 @@ function SearchDropdown({ results, query, onSelect, onViewAll }) {
                 className="search-dropdown__item"
                 onClick={() => onSelect(item)}
               >
+                <span className="search-dropdown__item-thumb">
+                  {item.image && <img src={item.image} alt="" />}
+                </span>
                 <span
                   className={`search-dropdown__item-type search-dropdown__item-type--${item.type}`}
                 >

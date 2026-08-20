@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
-import { SEARCH_TYPE_LABEL, searchItems } from "../data/searchMockData";
+import { SEARCH_TYPE_LABEL, search } from "../api/searchApi";
 import "./Search.css";
 
 // 결과를 어떤 순서로 묶어서 보여줄지
@@ -9,7 +10,28 @@ const SECTION_TYPES = ["artist", "festival", "event"];
 function Search() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  const results = searchItems(query);
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!query.trim()) {
+      setResults([]);
+      return undefined;
+    }
+
+    search(query)
+      .then((data) => {
+        if (!cancelled) setResults(data);
+      })
+      .catch(() => {
+        if (!cancelled) setResults([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
 
   return (
     <Layout>
@@ -33,6 +55,9 @@ function Search() {
                 <ul className="search-page__list">
                   {items.map((item) => (
                     <li key={item.id} className="search-page__item">
+                      <span className="search-page__item-thumb">
+                        {item.image && <img src={item.image} alt="" />}
+                      </span>
                       <span className="search-page__item-name">{item.name}</span>
                       <span className="search-page__item-subtitle">
                         {item.subtitle}
