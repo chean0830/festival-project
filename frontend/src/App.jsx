@@ -7,6 +7,7 @@ import AccountRecoveryPage from './pages/AccountRecoveryPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfilePage from './features/profile/ProfilePage'
 import BadgePage from './features/profile/BadgePage'
+import NotificationPage from './features/notification/NotificationPage'
 
 /**
  * 페이지 라우팅
@@ -32,6 +33,7 @@ function App() {
 
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/badges" element={<BadgePage />} />
+      <Route path="/notifications" element={<NotificationPage />} />
     </Routes>
   )
 }

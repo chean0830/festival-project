@@ -26,6 +26,7 @@ import InterestedEventList from './components/InterestedEventList'
 import AttendedEventGallery from './components/AttendedEventGallery'
 import UpcomingEventList from './components/UpcomingEventList'
 import ProfileStats from './components/ProfileStats'
+import NotificationBell from '../notification/components/NotificationBell'
 import './profile.css'
 
 /**
@@ -137,9 +138,12 @@ export default function ProfilePage() {
       <div className="profile-content">
         <div className="profile-header-row">
           <h1>내 프로필</h1>
-          <button type="button" className="profile-badge-entry" onClick={() => navigate('/profile/badges')}>
-            🏅 나의 뱃지 {earnedBadgeCount}/{badges.length}
-          </button>
+          <div className="profile-header-actions">
+            <NotificationBell />
+            <button type="button" className="profile-badge-entry" onClick={() => navigate('/profile/badges')}>
+              🏅 나의 뱃지 {earnedBadgeCount}/{badges.length}
+            </button>
+          </div>
         </div>
 
         <div className="profile-top">
