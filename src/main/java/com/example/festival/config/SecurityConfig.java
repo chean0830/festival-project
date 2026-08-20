@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -42,7 +43,14 @@ public class SecurityConfig {
                                 "/api/auth/password-reset/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
+                                "/api/youtube/oauth/callback",
                                 "/error"
+                        ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/live-streams",
+                                "/api/live-streams/events",
+                                "/api/live-streams/watch/*"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

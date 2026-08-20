@@ -3,6 +3,8 @@ package com.example.festival.auth.controller;
 import com.example.festival.auth.security.MemberPrincipal;
 import com.example.festival.auth.service.AccountRecoveryService;
 import com.example.festival.auth.service.AuthService;
+import com.example.festival.live.service.LiveStreamService;
+import com.example.festival.youtube.service.YouTubeService;
 
 import com.example.festival.auth.dto.AuthMemberResponse;
 import com.example.festival.auth.dto.FindEmailRequest;
@@ -15,12 +17,14 @@ import com.example.festival.auth.dto.SignupRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,17 +42,23 @@ public class AuthController {
     private final AccountRecoveryService accountRecoveryService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
+    private final LiveStreamService liveStreamService;
+    private final YouTubeService youTubeService;
 
     public AuthController(
             AuthService authService,
             AccountRecoveryService accountRecoveryService,
             AuthenticationManager authenticationManager,
-            SecurityContextRepository securityContextRepository
+            SecurityContextRepository securityContextRepository,
+            LiveStreamService liveStreamService,
+            YouTubeService youTubeService
     ) {
         this.authService = authService;
         this.accountRecoveryService = accountRecoveryService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
+        this.liveStreamService = liveStreamService;
+        this.youTubeService = youTubeService;
     }
 
     @GetMapping("/csrf")
@@ -103,11 +113,24 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public MessageResponse logout(HttpServletRequest request) {
+    public MessageResponse logout(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            HttpServletRequest request
+    ) {
+        boolean liveStreamEnded = false;
+        if (principal != null) {
+            List<String> broadcastIds = liveStreamService.endActiveStreamsForLogout(principal.getMemberId());
+            liveStreamEnded = !broadcastIds.isEmpty();
+            youTubeService.completeBroadcastsOnLogout(principal.getMemberId(), broadcastIds);
+        }
         if (request.getSession(false) != null) {
             request.getSession(false).invalidate();
         }
         SecurityContextHolder.clearContext();
-        return new MessageResponse("로그아웃되었습니다.");
+        return new MessageResponse(
+                liveStreamEnded
+                        ? "라이브 방송이 종료되었습니다. OBS에서도 방송 중지 버튼을 눌러 주세요."
+                        : "로그아웃되었습니다."
+        );
     }
 }

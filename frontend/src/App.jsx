@@ -11,6 +11,9 @@ import NotificationPage from './features/notification/NotificationPage'
 import FestivalRecordListPage from './features/festivalrecord/FestivalRecordListPage'
 import FestivalRecordFormPage from './features/festivalrecord/FestivalRecordFormPage'
 import FestivalRecordDetailPage from './features/festivalrecord/FestivalRecordDetailPage'
+import LiveListPage from './features/live/LiveListPage'
+import LiveCreatePage from './features/live/LiveCreatePage'
+import LiveWatchPage from './features/live/LiveWatchPage'
 
 /**
  * 페이지 라우팅
@@ -42,6 +45,10 @@ function App() {
       <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
       <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
       <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
+
+      <Route path="/live" element={<LiveListPage />} />
+      <Route path="/live/new" element={<LiveCreatePage />} />
+      <Route path="/live/:streamId" element={<LiveWatchPage />} />
     </Routes>
   )
 }
