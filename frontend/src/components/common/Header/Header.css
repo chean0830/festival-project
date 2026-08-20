@@ -103,6 +103,49 @@
   font-size: var(--font-size-sm);
 }
 
+/* 로그인 상태: 헤더 상단의 내 프로필 + 로그아웃 */
+.header__account {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.header__profile-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 14px 30px;
+  border-radius: 999px;
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(30, 158, 82, 0.35);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.header__profile-btn:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: 0 4px 12px rgba(30, 158, 82, 0.45);
+  transform: translateY(-1px);
+}
+
+.header__logout-btn {
+  padding: 14px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-background);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.header__logout-btn:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
 /* ---- 2줄: 햄버거 + 바로가기 메뉴 ---- */
 .header__subnav {
   max-width: 1600px;

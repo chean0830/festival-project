@@ -1,4 +1,6 @@
 import { useState } from "react";
+import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
+import { logout } from "../../../api/authApi";
 import "./Header.css";
 
 /**
@@ -27,11 +29,15 @@ const drawerMenuItems = [
   { label: "라이브", href: "/live" },
 ];
 
-// TODO: feature/auth 붙으면 실제 로그인 상태로 교체
-const isLoggedIn = false;
-
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const currentMember = useCurrentMember();
+  const isLoggedIn = Boolean(currentMember?.memberId);
+
+  async function handleLogout() {
+    await logout();
+    window.location.href = "/";
+  }
 
   return (
     <header className="header">
@@ -65,22 +71,33 @@ function Header() {
               />
             </div>
 
-            <a href="/login" className="header__login-btn">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M20 21a8 8 0 0 0-16 0" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              Login
-            </a>
+            {isLoggedIn ? (
+              <div className="header__account">
+                <a href="/profile" className="header__profile-btn">
+                  내 프로필
+                </a>
+                <button type="button" className="header__logout-btn" onClick={handleLogout}>
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <a href="/login" className="header__login-btn">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 21a8 8 0 0 0-16 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                Login
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -128,7 +145,22 @@ function Header() {
 
             <div className="header__drawer-profile">
               {isLoggedIn ? (
-                <p className="header__drawer-profile-text">내 프로필</p>
+                <>
+                  <a
+                    href="/profile"
+                    className="header__drawer-profile-text"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    내 프로필
+                  </a>
+                  <button
+                    type="button"
+                    className="header__logout-btn header__login-btn--sm"
+                    onClick={handleLogout}
+                  >
+                    로그아웃
+                  </button>
+                </>
               ) : (
                 <>
                   <p className="header__drawer-profile-text">로그인이 필요해요</p>
