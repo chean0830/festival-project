@@ -4,7 +4,14 @@ import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import RequireLogin from '../profile/components/RequireLogin'
 import { fetchAttendedEvents } from '../profile/api/profileApi'
-import { createFestivalRecord, fetchFestivalRecord, updateFestivalRecord } from './api/festivalRecordApi'
+import {
+  addRecordImage,
+  createFestivalRecord,
+  deleteRecordImage,
+  fetchFestivalRecord,
+  reorderRecordImages,
+  updateFestivalRecord,
+} from './api/festivalRecordApi'
 import RecordForm from './components/RecordForm'
 import './festivalrecord.css'
 
@@ -17,6 +24,7 @@ export default function FestivalRecordFormPage() {
   const memberId = currentMember?.memberId
   const [eligibleEvents, setEligibleEvents] = useState([])
   const [initialValues, setInitialValues] = useState(isEditMode ? null : undefined)
+  const [existingImages, setExistingImages] = useState([])
   const [loadError, setLoadError] = useState(null)
 
   useEffect(() => {
@@ -34,6 +42,7 @@ export default function FestivalRecordFormPage() {
         if (!cancelled) {
           setEligibleEvents(events)
           setInitialValues(record)
+          setExistingImages(record?.images ?? [])
         }
       } catch (err) {
         if (!cancelled) setLoadError(err.message)
@@ -58,11 +67,26 @@ export default function FestivalRecordFormPage() {
     return <RequireLogin />
   }
 
-  async function handleSubmit(payload) {
+  async function handleSubmit(payload, photoFiles) {
     const result = isEditMode
       ? await updateFestivalRecord(memberId, recordId, payload)
       : await createFestivalRecord(memberId, payload)
+
+    for (const file of photoFiles) {
+      await addRecordImage(memberId, result.recordId, file)
+    }
+
     navigate(`/festival-log/${result.recordId}`)
+  }
+
+  async function handleDeleteExistingImage(imageId) {
+    await deleteRecordImage(memberId, recordId, imageId)
+    setExistingImages((prev) => prev.filter((image) => image.imageId !== imageId))
+  }
+
+  async function handleReorderExistingImages(reorderedImages) {
+    setExistingImages(reorderedImages)
+    await reorderRecordImages(memberId, recordId, reorderedImages.map((image) => image.imageId))
   }
 
   const isLoadingInitialValues = initialValues === null
@@ -85,6 +109,9 @@ export default function FestivalRecordFormPage() {
             <RecordForm
               eligibleEvents={eligibleEvents}
               initialValues={initialValues}
+              existingImages={existingImages}
+              onDeleteExistingImage={isEditMode ? handleDeleteExistingImage : undefined}
+              onReorderExistingImages={isEditMode ? handleReorderExistingImages : undefined}
               onSubmit={handleSubmit}
               onCancel={() => navigate(-1)}
               submitLabel={isEditMode ? '수정 완료' : '작성 완료'}

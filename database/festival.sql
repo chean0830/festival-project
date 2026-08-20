@@ -463,7 +463,7 @@ CREATE TABLE notification (
     event_id BIGINT NULL,
 
     type VARCHAR(30) NOT NULL
-        COMMENT 'TICKET_OPEN, ARTIST_EVENT, EVENT_UPCOMING, WEATHER, RECOMMENDATION, COMMUNITY, ORDER, NOTICE',
+        COMMENT 'TICKET_OPEN, ARTIST_EVENT, EVENT_UPCOMING, WEATHER, RECOMMENDATION, COMMUNITY, ORDER, NOTICE, FESTIVAL_RECORD, RECORD_REMINDER',
 
     title VARCHAR(200) NOT NULL,
 
@@ -606,6 +606,8 @@ CREATE TABLE record_image (
     record_id BIGINT NOT NULL,
 
     image_url VARCHAR(500) NOT NULL,
+    display_order INT NOT NULL DEFAULT 0
+        COMMENT '사용자가 조정하는 사진 순서. 0번(가장 작은 값)이 대표 사진.',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -626,6 +628,8 @@ CREATE TABLE record_song (
 
     song_title VARCHAR(200) NOT NULL,
     artist_name VARCHAR(100),
+    album_cover_url VARCHAR(500)
+        COMMENT '곡 검색 자동완성(iTunes Search API 등)으로 가져온 앨범 커버 이미지 URL',
 
     FOREIGN KEY (record_id)
         REFERENCES festival_record(record_id)

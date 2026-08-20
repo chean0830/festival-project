@@ -15,6 +15,7 @@ public record FestivalRecordResponse(
         String memo,
         String hashtag,
         boolean shared,
+        int aiRegeneratedCount,
         List<RecordImageResponse> images,
         List<RecordSongResponse> songs,
         List<String> foods,

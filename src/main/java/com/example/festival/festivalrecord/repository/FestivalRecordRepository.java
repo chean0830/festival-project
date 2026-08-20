@@ -12,4 +12,6 @@ public interface FestivalRecordRepository extends JpaRepository<FestivalRecord, 
 
     @Query("SELECT fr FROM FestivalRecord fr JOIN FETCH fr.event WHERE fr.member.id = :memberId ORDER BY fr.createdAt DESC")
     List<FestivalRecord> findAllByMemberIdWithEvent(@Param("memberId") Long memberId);
+
+    boolean existsByMember_IdAndEvent_EventId(Long memberId, Long eventId);
 }

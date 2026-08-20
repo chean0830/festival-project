@@ -90,6 +90,14 @@ export function deleteRecordImage(memberId, recordId, imageId) {
   return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/images/${imageId}`, 'DELETE')
 }
 
+export function reorderRecordImages(memberId, recordId, imageIds) {
+  return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/images/order`, 'PATCH', { imageIds })
+}
+
 export function shareFestivalRecord(memberId, recordId, request) {
   return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/share`, 'POST', request)
+}
+
+export function regeneratePoster(memberId, recordId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/regenerate`, 'POST')
 }
