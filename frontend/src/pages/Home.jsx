@@ -1,19 +1,22 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
 import ProgramCarousel from "../components/home/ProgramCarousel/ProgramCarousel";
 import BannerNotice from "../components/home/BannerNotice/BannerNotice";
+import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
 import "./Home.css";
+
+const CAROUSEL_MAX_COUNT = 5;
 
 /**
  * 메인 화면
  * 스케치 기준으로 3개 섹션을 배치함:
  * 1. 배너 (공지사항/알림 노출용 — 자동으로 넘어가는 공지 텍스트가 들어감)
- * 2. 공연일정 캐러셀 (가운데 카드가 가장 크고, 시간이 지나면 자동으로 옆으로 넘어감)
+ * 2. 공연일정 캐러셀 (가운데 카드가 가장 크고, 시간이 지나면 자동으로 옆으로 넘어감) — GET /api/home/events
  * 3. 페스티벌 기록 홍보 (나만의 기록 만들기 유도)
  *
- * 지금은 전부 더미(placeholder) 데이터야. 실제 공지/공연 정보가 정해지면
- * noticeItems, programItems 배열만 교체하면 돼.
+ * 배너 공지(noticeItems)는 아직 API가 없어서 더미 데이터야.
  */
 
 const noticeItems = [
@@ -23,18 +26,26 @@ const noticeItems = [
   { id: 4, text: "공식 굿즈(MD) 사전 예약이 곧 시작됩니다." },
 ];
 
-const programItems = [
-  { id: 1, name: "OO 페스티벌 1일차", time: "8/29 (토) 18:00" },
-  { id: 2, name: "OO 페스티벌 2일차", time: "8/29 (토) 19:30" },
-  { id: 3, name: "OO 페스티벌 3일차", time: "8/29 (토) 21:00" },
-  { id: 4, name: "OO 페스티벌 4일차", time: "8/30 (일) 18:00" },
-  { id: 5, name: "OO 페스티벌 5일차", time: "8/30 (일) 19:30" },
-  { id: 6, name: "OO 페스티벌 6일차", time: "8/30 (일) 21:00" },
-  { id: 7, name: "OO 페스티벌 7일차", time: "8/31 (월) 18:00" },
-];
-
 function Home() {
   const navigate = useNavigate();
+  const [programItems, setProgramItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getUpcomingEvents()
+      .then((events) => {
+        if (cancelled) return;
+        setProgramItems(events.slice(0, CAROUSEL_MAX_COUNT).map(toProgramItem));
+      })
+      .catch(() => {
+        if (!cancelled) setProgramItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Layout>
