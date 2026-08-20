@@ -8,6 +8,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfilePage from './features/profile/ProfilePage'
 import BadgePage from './features/profile/BadgePage'
 import NotificationPage from './features/notification/NotificationPage'
+import FestivalRecordListPage from './features/festivalrecord/FestivalRecordListPage'
+import FestivalRecordFormPage from './features/festivalrecord/FestivalRecordFormPage'
+import FestivalRecordDetailPage from './features/festivalrecord/FestivalRecordDetailPage'
 
 /**
  * 페이지 라우팅
@@ -34,6 +37,11 @@ function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/badges" element={<BadgePage />} />
       <Route path="/notifications" element={<NotificationPage />} />
+
+      <Route path="/festival-log" element={<FestivalRecordListPage />} />
+      <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
+      <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
+      <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
     </Routes>
   )
 }
