@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/find-email",
                                 "/api/auth/password-reset/**",
+                                "/api/home/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/error"
