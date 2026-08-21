@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from './hooks/useCurrentMember'
 import RequireLogin from './components/RequireLogin'
@@ -32,6 +32,8 @@ import ProfileStats from './components/ProfileStats'
 import NotificationBell from '../notification/components/NotificationBell'
 import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
 import RecordCard from '../festivalrecord/components/RecordCard'
+import { cancelMdOrder, fetchMyMdOrders } from '../../api/mdShopApi'
+import MdOrderHistoryList from './components/MdOrderHistoryList'
 import '../festivalrecord/festivalrecord.css'
 import './profile.css'
 
@@ -41,6 +43,7 @@ import './profile.css'
  */
 export default function ProfilePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const currentMember = useCurrentMember()
   const memberId = currentMember?.memberId
   const [profile, setProfile] = useState(null)
@@ -51,11 +54,13 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState([])
   const [stats, setStats] = useState(null)
   const [festivalRecords, setFestivalRecords] = useState([])
+  const [mdOrders, setMdOrders] = useState([])
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [addModalTarget, setAddModalTarget] = useState(null) // null | 'attended' | 'upcoming'
   const attendedSectionRef = useRef(null)
+  const mdOrdersSectionRef = useRef(null)
 
   function goToAttendedSection(expandAll) {
     if (expandAll) setAttendedExpanded(true)
@@ -78,6 +83,11 @@ export default function ProfilePage() {
     })
   }
 
+  async function handleCancelMdOrder(orderId) {
+    const canceled = await cancelMdOrder(memberId, orderId)
+    setMdOrders((prev) => prev.map((order) => (order.orderId === canceled.orderId ? canceled : order)))
+  }
+
   useEffect(() => {
     if (!memberId) {
       return undefined
@@ -89,7 +99,7 @@ export default function ProfilePage() {
       setLoading(true)
       setLoadError(null)
       try {
-        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData, recordData] =
+        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData, recordData, mdOrderData] =
           await Promise.all([
             fetchProfile(memberId),
             fetchInterestedArtists(memberId),
@@ -99,6 +109,7 @@ export default function ProfilePage() {
             fetchMyBadges(memberId),
             fetchProfileStats(memberId),
             fetchFestivalRecords(memberId),
+            fetchMyMdOrders(memberId),
           ])
         if (!cancelled) {
           setProfile(profileData)
@@ -109,6 +120,7 @@ export default function ProfilePage() {
           setBadges(badgeData)
           setStats(statsData)
           setFestivalRecords(recordData)
+          setMdOrders(mdOrderData)
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
@@ -128,6 +140,12 @@ export default function ProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId])
+
+  useEffect(() => {
+    if (!loading && location.state?.scrollTo === 'mdOrders') {
+      mdOrdersSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [loading, location.state])
 
   if (currentMember === undefined) {
     return (
@@ -283,6 +301,16 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
+        </section>
+
+        <section ref={mdOrdersSectionRef}>
+          <div className="profile-section-header">
+            <h2>MD 사전예약 내역</h2>
+            <a href="/shop/preorder" className="profile-section-more">
+              MD 사전예약 가기 ›
+            </a>
+          </div>
+          <MdOrderHistoryList orders={mdOrders} onCancel={handleCancelMdOrder} />
         </section>
       </div>
       </div>

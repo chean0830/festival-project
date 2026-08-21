@@ -1,0 +1,112 @@
+.md-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-align: left;
+}
+
+.md-product-card__poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.md-product-card:hover .md-product-card__poster {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.md-product-card__poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.md-product-card__deadline {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.md-product-card__deadline--closed {
+  background: var(--color-text-muted);
+}
+
+.md-product-card__event {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.md-product-card__name {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.md-product-card__price {
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+  margin: 0 0 2px;
+}
+
+.md-product-card__stock {
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  margin: 0 0 var(--spacing-sm);
+}
+
+.md-product-card__cta {
+  width: 100%;
+  margin-top: auto;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-radius: 6px;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.md-product-card__cta:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.md-product-card__cta:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

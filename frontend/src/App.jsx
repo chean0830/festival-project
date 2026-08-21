@@ -5,6 +5,11 @@ import Program from './pages/Program'
 import ProgramCalendar from './pages/ProgramCalendar'
 import ProgramCategory from './pages/ProgramCategory'
 import ProgramEventDetail from './pages/ProgramEventDetail'
+import MdPreorderPage from './pages/MdPreorderPage'
+import MdOrderShippingPage from './pages/MdOrderShippingPage'
+import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
+import MdOrderCompletePage from './pages/MdOrderCompletePage'
+import MdOrderPayPage from './pages/MdOrderPayPage'
 import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -39,6 +44,11 @@ function App() {
         <Route path="/program/calendar" element={<ProgramCalendar />} />
         <Route path="/program/:category" element={<ProgramCategory />} />
         <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
+        <Route path="/shop/preorder" element={<MdPreorderPage />} />
+        <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
+        <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
+        <Route path="/shop/preorder/:productId/complete" element={<MdOrderCompletePage />} />
+        <Route path="/shop/preorder/order/:orderId/pay" element={<MdOrderPayPage />} />
         <Route path="/search" element={<Search />} />
 
         <Route path="/login" element={<LoginPage />} />
