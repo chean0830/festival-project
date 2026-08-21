@@ -14,13 +14,21 @@ function PostCard({ post }) {
 
   return (
     <button type="button" className="post-card" onClick={() => navigate(`/community/${post.id}`)}>
-      <span className="post-card__cat-badge" style={{ background: `${color}1f`, color }}>
-        <span className="post-card__cat-dot" style={{ background: color }} />
-        {categoryLabel(post.category)}
-      </span>
+      <div className="post-card__top">
+        <div className="post-card__text">
+          <span className="post-card__cat-badge" style={{ background: `${color}1f`, color }}>
+            <span className="post-card__cat-dot" style={{ background: color }} />
+            {categoryLabel(post.category)}
+          </span>
 
-      <h3 className="post-card__title">{post.title}</h3>
-      {post.content && <p className="post-card__body">{post.content}</p>}
+          <h3 className="post-card__title">{post.title}</h3>
+          {post.content && <p className="post-card__body">{post.content}</p>}
+        </div>
+
+        {post.imageUrl && (
+          <img className="post-card__thumb" src={post.imageUrl} alt="" />
+        )}
+      </div>
 
       <div className="post-card__meta">
         <div className="post-card__author">

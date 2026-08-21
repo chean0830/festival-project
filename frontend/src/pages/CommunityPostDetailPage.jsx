@@ -202,6 +202,9 @@ function CommunityPostDetailPage() {
           </div>
         </div>
 
+        {post.imageUrl && (
+          <img className="community-detail-page__image" src={post.imageUrl} alt="" />
+        )}
         <p className="community-detail-page__content">{post.content}</p>
 
         <div className="community-detail-page__actions">

@@ -41,6 +41,18 @@ async function mutateJson(path, method, body, fallbackMessage) {
   }).then((response) => handleResponse(response, fallbackMessage))
 }
 
+export async function uploadPostImage(memberId, file) {
+  await ensureCsrfToken()
+  const formData = new FormData()
+  formData.append('file', file)
+  return fetch(`/api/members/${memberId}/posts/image`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+    body: formData,
+  }).then((response) => handleResponse(response, '이미지 업로드에 실패했습니다.'))
+}
+
 export function getPosts({ category, keyword } = {}) {
   const params = new URLSearchParams()
   if (category) params.set('category', category)
