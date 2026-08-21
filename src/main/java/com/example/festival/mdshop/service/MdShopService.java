@@ -1,0 +1,247 @@
+package com.example.festival.mdshop.service;
+
+import com.example.festival.event.entity.Event;
+import com.example.festival.mdshop.dto.MdOrderRequest;
+import com.example.festival.mdshop.dto.MdOrderResponse;
+import com.example.festival.mdshop.dto.MdProductResponse;
+import com.example.festival.mdshop.entity.MdOrder;
+import com.example.festival.mdshop.entity.MdProduct;
+import com.example.festival.mdshop.repository.MdOrderRepository;
+import com.example.festival.mdshop.repository.MdProductRepository;
+import com.example.festival.member.entity.Member;
+import com.example.festival.member.repository.MemberRepository;
+import com.example.festival.notification.service.NotificationService;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * MD 사전예약 상품 조회 + 주문(예약) 생성.
+ * 실제 결제(PG) 연동 전이라, 주문 생성 시 결제는 이루어지지 않고 status=PAYMENT_WAIT으로만 기록한다.
+ */
+@Service
+@Transactional(readOnly = true)
+public class MdShopService {
+
+    private static final String PREORDER_STATUS = "PREORDER";
+    private static final String SOLD_OUT_STATUS = "SOLD_OUT";
+    private static final String ORDER_INITIAL_STATUS = "PAYMENT_WAIT";
+    private static final String ORDER_PAID_STATUS = "PAID";
+    private static final String ORDER_CANCELED_STATUS = "CANCELED";
+    private static final int MAX_QUANTITY_PER_PERSON = 4;
+    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    private static final String NOTIFICATION_TYPE_ORDER = "MD_ORDER";
+    private static final String NOTIFICATION_TYPE_PAID = "MD_PAID";
+    private static final String NOTIFICATION_TYPE_CANCELED = "MD_CANCELED";
+
+    private final MdProductRepository mdProductRepository;
+    private final MdOrderRepository mdOrderRepository;
+    private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
+
+    public MdShopService(
+            MdProductRepository mdProductRepository,
+            MdOrderRepository mdOrderRepository,
+            MemberRepository memberRepository,
+            NotificationService notificationService
+    ) {
+        this.mdProductRepository = mdProductRepository;
+        this.mdOrderRepository = mdOrderRepository;
+        this.memberRepository = memberRepository;
+        this.notificationService = notificationService;
+    }
+
+    public List<MdProductResponse> getPreorderProducts() {
+        return mdProductRepository.findAllByStatusInWithEvent(List.of(PREORDER_STATUS, SOLD_OUT_STATUS)).stream()
+                .map(this::toProductResponse)
+                .toList();
+    }
+
+    public MdProductResponse getProduct(Long productId) {
+        return toProductResponse(getProductOrThrow(productId));
+    }
+
+    @Transactional
+    public MdOrderResponse createOrder(Long memberId, MdOrderRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+        MdProduct product = getProductOrThrow(request.productId());
+
+        if (!PREORDER_STATUS.equals(product.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사전예약 가능한 상품이 아닙니다.");
+        }
+        if (product.getPreorderDeadline() != null
+                && product.getPreorderDeadline().isBefore(LocalDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "사전예약이 마감된 상품입니다.");
+        }
+
+        int alreadyOrdered = mdOrderRepository.sumQuantityByMemberAndProductExcludingCanceled(memberId, product.getProductId());
+        if (alreadyOrdered + request.quantity() > MAX_QUANTITY_PER_PERSON) {
+            int remaining = Math.max(0, MAX_QUANTITY_PER_PERSON - alreadyOrdered);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "이 상품은 1인당 최대 " + MAX_QUANTITY_PER_PERSON + "개까지만 예약할 수 있어요. (이미 예약한 수량 "
+                            + alreadyOrdered + "개, 추가로 예약 가능한 수량 " + remaining + "개)"
+            );
+        }
+        if (product.getStock() < request.quantity()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "재고가 부족해요. (남은 재고 " + product.getStock() + "개)"
+            );
+        }
+
+        BigDecimal totalPrice = product.getPrice().multiply(BigDecimal.valueOf(request.quantity()));
+
+        MdOrder order = new MdOrder(
+                product,
+                member,
+                generateOrderNumber(),
+                request.quantity(),
+                totalPrice,
+                request.recipientName(),
+                request.address(),
+                request.phone(),
+                ORDER_INITIAL_STATUS
+        );
+
+        product.decreaseStock(request.quantity());
+        if (product.getStock() <= 0) {
+            product.changeStatus(SOLD_OUT_STATUS);
+        }
+
+        mdOrderRepository.save(order);
+
+        notificationService.notifyMember(
+                memberId,
+                product.getEvent().getEventId(),
+                NOTIFICATION_TYPE_ORDER,
+                "MD 사전예약이 완료됐어요!",
+                product.getName() + " 사전예약이 접수됐어요. 예약번호 " + order.getOrderNumber()
+        );
+
+        return toOrderResponse(order);
+    }
+
+    public List<MdOrderResponse> getMyOrders(Long memberId) {
+        return mdOrderRepository.findAllByMemberIdWithProduct(memberId).stream()
+                .map(this::toOrderResponse)
+                .toList();
+    }
+
+    public MdOrderResponse getOrder(Long memberId, Long orderId) {
+        return toOrderResponse(getOrderOrThrow(memberId, orderId));
+    }
+
+    /**
+     * 실제 PG 연동 전이라 진짜 결제는 일어나지 않고, "결제 대기" 예약을 "결제 완료" 상태로만 전환한다.
+     */
+    @Transactional
+    public MdOrderResponse payOrder(Long memberId, Long orderId) {
+        MdOrder order = getOrderOrThrow(memberId, orderId);
+        if (!ORDER_INITIAL_STATUS.equals(order.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 대기 상태의 예약만 결제할 수 있습니다.");
+        }
+        order.changeStatus(ORDER_PAID_STATUS);
+
+        notificationService.notifyMember(
+                memberId,
+                order.getProduct().getEvent().getEventId(),
+                NOTIFICATION_TYPE_PAID,
+                "MD 사전예약 결제가 완료됐어요",
+                order.getProduct().getName() + " (예약번호 " + order.getOrderNumber() + ") 결제가 완료됐어요."
+        );
+
+        return toOrderResponse(order);
+    }
+
+    @Transactional
+    public MdOrderResponse cancelOrder(Long memberId, Long orderId) {
+        MdOrder order = getOrderOrThrow(memberId, orderId);
+        if (ORDER_CANCELED_STATUS.equals(order.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 취소된 예약입니다.");
+        }
+        if ("SHIPPED".equals(order.getStatus()) || "COMPLETED".equals(order.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 배송이 진행된 예약은 취소할 수 없습니다.");
+        }
+        order.changeStatus(ORDER_CANCELED_STATUS);
+
+        MdProduct product = order.getProduct();
+        product.increaseStock(order.getQuantity());
+        if (SOLD_OUT_STATUS.equals(product.getStatus()) && product.getStock() > 0) {
+            product.changeStatus(PREORDER_STATUS);
+        }
+
+        notificationService.notifyMember(
+                memberId,
+                product.getEvent().getEventId(),
+                NOTIFICATION_TYPE_CANCELED,
+                "MD 사전예약이 취소됐어요",
+                product.getName() + " (예약번호 " + order.getOrderNumber() + ") 예약이 취소됐어요."
+        );
+
+        return toOrderResponse(order);
+    }
+
+    private MdOrder getOrderOrThrow(Long memberId, Long orderId) {
+        MdOrder order = mdOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "예약 내역을 찾을 수 없습니다."));
+        if (!order.getMember().getId().equals(memberId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 예약만 확인할 수 있습니다.");
+        }
+        return order;
+    }
+
+    private MdProduct getProductOrThrow(Long productId) {
+        return mdProductRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."));
+    }
+
+    private String generateOrderNumber() {
+        String datePart = LocalDate.now().format(ORDER_NUMBER_DATE_FORMAT);
+        String randomPart = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        return "MD" + datePart + randomPart;
+    }
+
+    private MdProductResponse toProductResponse(MdProduct product) {
+        Event event = product.getEvent();
+        return new MdProductResponse(
+                product.getProductId(),
+                product.getName(),
+                product.getCategory(),
+                product.getPrice(),
+                product.getStock(),
+                product.getImageUrl(),
+                product.getStatus(),
+                product.getPreorderDeadline(),
+                event.getName()
+        );
+    }
+
+    private MdOrderResponse toOrderResponse(MdOrder order) {
+        MdProduct product = order.getProduct();
+        return new MdOrderResponse(
+                order.getOrderId(),
+                order.getOrderNumber(),
+                product.getProductId(),
+                product.getName(),
+                product.getImageUrl(),
+                order.getQuantity(),
+                order.getTotalPrice(),
+                order.getShippingName(),
+                order.getShippingAddress(),
+                order.getShippingPhone(),
+                order.getStatus(),
+                order.getCreatedAt()
+        );
+    }
+}

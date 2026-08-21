@@ -42,6 +42,8 @@ public class SecurityConfig {
                                 "/api/auth/password-reset/**",
                                 "/api/home/**",
                                 "/api/search",
+                                "/api/md/products",
+                                "/api/md/products/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/error"
