@@ -12,6 +12,8 @@ public record EventSummaryDto(
         String venueName,
         LocalDate startDate,
         LocalDate endDate,
-        String posterImage
+        String posterImage,
+        String region,
+        String kind
 ) {
 }

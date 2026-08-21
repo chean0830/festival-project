@@ -187,6 +187,9 @@ CREATE TABLE event (
     event_type VARCHAR(20) NOT NULL
         COMMENT 'FESTIVAL, CONCERT',
 
+    artist_country VARCHAR(2) NOT NULL DEFAULT 'KR'
+        COMMENT '출연 아티스트 국적 (venue.country와 별개, 국내공연/내한공연 구분용)',
+
     name VARCHAR(200) NOT NULL,
     description TEXT,
     poster_image VARCHAR(500),
@@ -195,6 +198,8 @@ CREATE TABLE event (
     end_date DATE NOT NULL,
 
     ticket_open_at DATETIME,
+    ticket_url VARCHAR(500)
+        COMMENT '예매 링크 (YES24)',
 
     status VARCHAR(20) NOT NULL DEFAULT 'UPCOMING'
         COMMENT 'UPCOMING, ONGOING, ENDED, CANCELED',
@@ -500,6 +505,8 @@ CREATE TABLE event_news (
         COMMENT 'LINEUP, SCHEDULE, NOTICE, PERFORMANCE, MD, ARTIST',
 
     image_url VARCHAR(500),
+    source_url VARCHAR(500)
+        COMMENT '실제 기사 원문 링크',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
