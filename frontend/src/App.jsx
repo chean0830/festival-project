@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import ScrollToTop from './components/common/ScrollToTop'
 import Home from './pages/Home'
 import Program from './pages/Program'
 import ProgramCalendar from './pages/ProgramCalendar'
@@ -30,29 +31,32 @@ import FestivalRecordBookPage from './features/festivalrecord/FestivalRecordBook
  */
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/program" element={<Program />} />
-      <Route path="/program/calendar" element={<ProgramCalendar />} />
-      <Route path="/program/:category" element={<ProgramCategory />} />
-      <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
-      <Route path="/search" element={<Search />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/program" element={<Program />} />
+        <Route path="/program/calendar" element={<ProgramCalendar />} />
+        <Route path="/program/:category" element={<ProgramCategory />} />
+        <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
+        <Route path="/search" element={<Search />} />
 
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/account/recovery" element={<AccountRecoveryPage />} />
-      <Route path="/password/reset/confirm" element={<ResetPasswordPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/account/recovery" element={<AccountRecoveryPage />} />
+        <Route path="/password/reset/confirm" element={<ResetPasswordPage />} />
 
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/profile/badges" element={<BadgePage />} />
-      <Route path="/notifications" element={<NotificationPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/badges" element={<BadgePage />} />
+        <Route path="/notifications" element={<NotificationPage />} />
 
-      <Route path="/festival-log" element={<FestivalRecordListPage />} />
-      <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
-      <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
-      <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
-      <Route path="/festival-log/:recordId/poster" element={<FestivalRecordBookPage />} />
-    </Routes>
+        <Route path="/festival-log" element={<FestivalRecordListPage />} />
+        <Route path="/festival-log/new" element={<FestivalRecordFormPage />} />
+        <Route path="/festival-log/:recordId" element={<FestivalRecordDetailPage />} />
+        <Route path="/festival-log/:recordId/edit" element={<FestivalRecordFormPage />} />
+        <Route path="/festival-log/:recordId/poster" element={<FestivalRecordBookPage />} />
+      </Routes>
+    </>
   )
 }
 
