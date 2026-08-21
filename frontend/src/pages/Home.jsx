@@ -7,6 +7,7 @@ import BannerNotice from "../components/home/BannerNotice/BannerNotice";
 import NewsSection from "../components/home/NewsSection/NewsSection";
 import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
 import { getRecentNews } from "../api/newsApi";
+import bannerPhoto from "../assets/home/banner-b.png";
 import "./Home.css";
 
 const CAROUSEL_MAX_COUNT = 5;
@@ -70,12 +71,14 @@ function Home() {
 
   return (
     <Layout>
-      {/* 1. 배너 — 공지사항 자리. 클릭하면 공지사항 페이지로 이동 (지금은 "/notice"로 임시 연결) */}
-      <a href="/notice" className="home__banner">
+      {/* 1. 배너 — 공지사항 자리. 무대 조명 사진을 배경으로 깔아둔 순수 디스플레이용 배너, 클릭 안 됨 */}
+      <div className="home__banner">
+        <img src={bannerPhoto} alt="" className="home__banner-photo" />
+        <div className="home__banner-overlay" />
         <div className="home__banner-inner">
-          <BannerNotice items={noticeItems} />
+          <BannerNotice items={noticeItems} intervalMs={7000} />
         </div>
-      </a>
+      </div>
 
       {/* 2. 공연일정 미리보기 */}
       <section className="home__section">
