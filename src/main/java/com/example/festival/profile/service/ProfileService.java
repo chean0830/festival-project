@@ -4,6 +4,7 @@ import com.example.festival.interest.entity.MemberEvent;
 import com.example.festival.interest.repository.MemberEventRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
+import com.example.festival.notification.service.NotificationService;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
@@ -44,11 +45,14 @@ public class ProfileService {
     private static final String PROFILE_IMAGE_SUBDIR = "profile";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final String EVENT_PLANNED_STATUS = "PLANNED";
+    private static final String NOTIFICATION_TYPE_UPCOMING_EVENT = "UPCOMING_EVENT_REMINDER";
+    private static final int UPCOMING_EVENT_REMINDER_DAYS_BEFORE = 3;
 
     private final MemberRepository memberRepository;
     private final MemberEventRepository memberEventRepository;
     private final EventVisitRepository eventVisitRepository;
     private final EventRepository eventRepository;
+    private final NotificationService notificationService;
     private final Path uploadRoot;
 
     public ProfileService(
@@ -56,12 +60,14 @@ public class ProfileService {
             MemberEventRepository memberEventRepository,
             EventVisitRepository eventVisitRepository,
             EventRepository eventRepository,
+            NotificationService notificationService,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.memberRepository = memberRepository;
         this.memberEventRepository = memberEventRepository;
         this.eventVisitRepository = eventVisitRepository;
         this.eventRepository = eventRepository;
+        this.notificationService = notificationService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -193,6 +199,36 @@ public class ProfileService {
             if (!alreadyVisited) {
                 eventVisitRepository.save(new EventVisit(member, event, now, false, false));
             }
+        }
+    }
+
+    /**
+     * "예정된 공연"(PLANNED)의 시작일이 임박(D-3 이내)한 회원들에게 마감 임박 알림을 보낸다.
+     * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
+     * UpcomingEventReminderScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void notifyUpcomingEventReminders() {
+        LocalDate deadline = LocalDate.now().plusDays(UPCOMING_EVENT_REMINDER_DAYS_BEFORE);
+
+        for (MemberEvent memberEvent : memberEventRepository.findAllPlannedStartingSoon(deadline)) {
+            Long memberId = memberEvent.getMember().getId();
+            Event event = memberEvent.getEvent();
+            Long eventId = event.getEventId();
+
+            if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_UPCOMING_EVENT)) {
+                continue;
+            }
+
+            long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+            String dDayText = dDay <= 0 ? "오늘" : dDay + "일 후";
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    NOTIFICATION_TYPE_UPCOMING_EVENT,
+                    "예정된 공연이 곧 시작해요",
+                    event.getName() + " 공연이 " + dDayText + " 시작해요."
+            );
         }
     }
 

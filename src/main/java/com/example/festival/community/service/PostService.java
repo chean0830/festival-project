@@ -49,20 +49,21 @@ public class PostService {
         List<Post> posts = postRepository.search(normalizedCategory, normalizedKeyword);
 
         return posts.stream()
-                .map(post -> new PostSummaryResponse(
-                        post.getPostId(),
-                        post.getCategory(),
-                        post.getTitle(),
-                        post.getContent(),
-                        post.getImageUrl(),
-                        post.getMember().getId(),
-                        post.getMember().getNickname(),
-                        post.getMember().getProfileImage(),
-                        post.getViewCount(),
-                        postLikeRepository.countByPost_PostId(post.getPostId()),
-                        postCommentRepository.countByPost_PostId(post.getPostId()),
-                        post.getCreatedAt()
-                ))
+                .map(this::toSummaryResponse)
+                .toList();
+    }
+
+    // 프로필 - 내가 쓴 글
+    public List<PostSummaryResponse> getMyPosts(Long memberId) {
+        return postRepository.findByMember_IdOrderByCreatedAtDesc(memberId).stream()
+                .map(this::toSummaryResponse)
+                .toList();
+    }
+
+    // 프로필 - 좋아요 누른 글
+    public List<PostSummaryResponse> getLikedPosts(Long memberId) {
+        return postLikeRepository.findByMember_IdWithPostOrderByCreatedAtDesc(memberId).stream()
+                .map(like -> toSummaryResponse(like.getPost()))
                 .toList();
     }
 
@@ -158,6 +159,23 @@ public class PostService {
         }
         int dotIndex = originalFilename.lastIndexOf('.');
         return dotIndex >= 0 ? originalFilename.substring(dotIndex) : "";
+    }
+
+    private PostSummaryResponse toSummaryResponse(Post post) {
+        return new PostSummaryResponse(
+                post.getPostId(),
+                post.getCategory(),
+                post.getTitle(),
+                post.getContent(),
+                post.getImageUrl(),
+                post.getMember().getId(),
+                post.getMember().getNickname(),
+                post.getMember().getProfileImage(),
+                post.getViewCount(),
+                postLikeRepository.countByPost_PostId(post.getPostId()),
+                postCommentRepository.countByPost_PostId(post.getPostId()),
+                post.getCreatedAt()
+        );
     }
 
     private PostDetailResponse toDetailResponse(Post post, boolean liked) {

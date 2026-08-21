@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,14 @@ public interface MemberEventRepository extends JpaRepository<MemberEvent, Long> 
     List<MemberEvent> findAllPlannedWithEndedEvent();
 
     long deleteByMember_IdAndEvent_EventId(Long memberId, Long eventId);
+
+    /**
+     * "예정된 공연"으로 등록해뒀고, 시작일이 deadline(오늘 포함) 이내로 임박한 공연들 (전 회원 기준).
+     * UpcomingEventReminderScheduler가 마감 임박 알림을 보낼 때 사용한다.
+     */
+    @Query("SELECT me FROM MemberEvent me JOIN FETCH me.member JOIN FETCH me.event e "
+            + "WHERE me.status = 'PLANNED' AND e.startDate >= CURRENT_DATE AND e.startDate <= :deadline")
+    List<MemberEvent> findAllPlannedStartingSoon(@Param("deadline") LocalDate deadline);
 
     // 인기순 정렬용: 공연별 찜(관심 등록) 수
     @Query("SELECT me.event.eventId AS eventId, COUNT(me) AS count "

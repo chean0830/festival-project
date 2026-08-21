@@ -14,4 +14,7 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
     long countByPost_PostId(Long postId);
 
     boolean existsByParent_CommentId(Long parentCommentId);
+
+    // 프로필 - 내가 쓴 댓글
+    List<PostComment> findByMember_IdOrderByCreatedAtDesc(Long memberId);
 }
