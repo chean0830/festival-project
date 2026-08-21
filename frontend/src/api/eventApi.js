@@ -15,6 +15,7 @@ export function toProgramItem(event) {
     poster: event.posterImage,
     region: event.region,
     kind: event.kind,
+    popularity: event.popularity,
   }
 }
 

@@ -6,13 +6,16 @@ import com.example.festival.event.repository.EventScheduleRepository;
 import com.example.festival.home.dto.EventDetailDto;
 import com.example.festival.home.dto.EventSummaryDto;
 import com.example.festival.home.dto.LineupArtistDto;
+import com.example.festival.interest.repository.MemberEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final EventScheduleRepository eventScheduleRepository;
+    private final MemberEventRepository memberEventRepository;
 
     public EventDetailDto getEventDetail(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -62,6 +66,11 @@ public class EventService {
 
     public List<EventSummaryDto> getUpcomingEvents() {
         List<Event> events = eventRepository.findByStatusOrderByStartDateAsc("UPCOMING");
+        Map<Long, Long> popularityByEventId = memberEventRepository.countByEventGroupByEvent().stream()
+                .collect(Collectors.toMap(
+                        MemberEventRepository.EventInterestCount::getEventId,
+                        MemberEventRepository.EventInterestCount::getCount
+                ));
 
         return events.stream()
                 .map(event -> new EventSummaryDto(
@@ -72,7 +81,8 @@ public class EventService {
                         event.getEndDate(),
                         event.getPosterImage(),
                         toRegion(event),
-                        toKind(event)
+                        toKind(event),
+                        popularityByEventId.getOrDefault(event.getEventId(), 0L)
                 ))
                 .toList();
     }

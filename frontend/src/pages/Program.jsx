@@ -27,7 +27,7 @@ function previewByCategory(items, category, sortBy) {
  * - 아래: 국내공연/내한공연/국내페스티벌/해외페스티벌 2x2 그리드로 미리보기 카드
  *
  * 목록은 GET /api/home/events로 받아온 실제 DB 데이터를 씀.
- * (인기순 정렬은 아직 DB에 인기도 데이터가 없어서 실질적으로는 최신순과 동일하게 동작함)
+ * 인기순 정렬은 공연별 찜(관심 등록, member_event) 수 기준으로 동작한다.
  */
 function Program() {
   const [sortBy, setSortBy] = useState("latest");

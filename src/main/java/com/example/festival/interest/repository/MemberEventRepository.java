@@ -30,4 +30,14 @@ public interface MemberEventRepository extends JpaRepository<MemberEvent, Long> 
     List<MemberEvent> findAllPlannedWithEndedEvent();
 
     long deleteByMember_IdAndEvent_EventId(Long memberId, Long eventId);
+
+    // 인기순 정렬용: 공연별 찜(관심 등록) 수
+    @Query("SELECT me.event.eventId AS eventId, COUNT(me) AS count "
+            + "FROM MemberEvent me GROUP BY me.event.eventId")
+    List<EventInterestCount> countByEventGroupByEvent();
+
+    interface EventInterestCount {
+        Long getEventId();
+        long getCount();
+    }
 }
