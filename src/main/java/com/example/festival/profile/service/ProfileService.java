@@ -1,14 +1,11 @@
 package com.example.festival.profile.service;
 
-import com.example.festival.interest.repository.MemberArtistRepository;
 import com.example.festival.interest.entity.MemberEvent;
 import com.example.festival.interest.repository.MemberEventRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
-import com.example.festival.profile.dto.InterestedArtistResponse;
-import com.example.festival.profile.dto.InterestedEventResponse;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
@@ -46,20 +43,17 @@ public class ProfileService {
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
 
     private final MemberRepository memberRepository;
-    private final MemberArtistRepository memberArtistRepository;
     private final MemberEventRepository memberEventRepository;
     private final EventVisitRepository eventVisitRepository;
     private final Path uploadRoot;
 
     public ProfileService(
             MemberRepository memberRepository,
-            MemberArtistRepository memberArtistRepository,
             MemberEventRepository memberEventRepository,
             EventVisitRepository eventVisitRepository,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.memberRepository = memberRepository;
-        this.memberArtistRepository = memberArtistRepository;
         this.memberEventRepository = memberEventRepository;
         this.eventVisitRepository = eventVisitRepository;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
@@ -119,33 +113,6 @@ public class ProfileService {
         deletePhysicalFileIfExists(previousImageUrl);
     }
 
-    public List<InterestedArtistResponse> getInterestedArtists(Long memberId) {
-        getMemberOrThrow(memberId);
-        return memberArtistRepository.findAllByMemberIdWithArtist(memberId).stream()
-                .map(ma -> new InterestedArtistResponse(
-                        ma.getArtist().getArtistId(),
-                        ma.getArtist().getName(),
-                        ma.getArtist().getArtistType(),
-                        ma.getArtist().getProfileImage()
-                ))
-                .toList();
-    }
-
-    public List<InterestedEventResponse> getInterestedEvents(Long memberId) {
-        getMemberOrThrow(memberId);
-        return memberEventRepository.findAllByMemberIdWithEvent(memberId).stream()
-                .map(me -> new InterestedEventResponse(
-                        me.getEvent().getEventId(),
-                        me.getEvent().getName(),
-                        me.getEvent().getPosterImage(),
-                        me.getEvent().getStartDate(),
-                        me.getEvent().getEndDate(),
-                        me.getEvent().getStatus(),
-                        me.getStatus()
-                ))
-                .toList();
-    }
-
     public List<AttendedEventResponse> getAttendedEvents(Long memberId) {
         getMemberOrThrow(memberId);
 
@@ -180,24 +147,6 @@ public class ProfileService {
                         ChronoUnit.DAYS.between(today, event.getStartDate())
                 ))
                 .toList();
-    }
-
-    @Transactional
-    public void removeInterestedArtist(Long memberId, Long artistId) {
-        getMemberOrThrow(memberId);
-        long deleted = memberArtistRepository.deleteByMember_IdAndArtist_ArtistId(memberId, artistId);
-        if (deleted == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 가수 등록 내역을 찾을 수 없습니다.");
-        }
-    }
-
-    @Transactional
-    public void removeInterestedEvent(Long memberId, Long eventId) {
-        getMemberOrThrow(memberId);
-        long deleted = memberEventRepository.deleteByMember_IdAndEvent_EventId(memberId, eventId);
-        if (deleted == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 공연 등록 내역을 찾을 수 없습니다.");
-        }
     }
 
     public ProfileStatsResponse getProfileStats(Long memberId) {

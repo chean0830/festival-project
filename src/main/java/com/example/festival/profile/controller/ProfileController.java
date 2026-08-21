@@ -3,8 +3,6 @@ package com.example.festival.profile.controller;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.BadgeResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
-import com.example.festival.profile.dto.InterestedArtistResponse;
-import com.example.festival.profile.dto.InterestedEventResponse;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
@@ -67,28 +65,6 @@ public class ProfileController {
     @DeleteMapping("/profile/image")
     public ResponseEntity<Void> deleteProfileImage(@PathVariable Long memberId) {
         profileService.deleteProfileImage(memberId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/interests/artists")
-    public List<InterestedArtistResponse> getInterestedArtists(@PathVariable Long memberId) {
-        return profileService.getInterestedArtists(memberId);
-    }
-
-    @GetMapping("/interests/events")
-    public List<InterestedEventResponse> getInterestedEvents(@PathVariable Long memberId) {
-        return profileService.getInterestedEvents(memberId);
-    }
-
-    @DeleteMapping("/interests/artists/{artistId}")
-    public ResponseEntity<Void> removeInterestedArtist(@PathVariable Long memberId, @PathVariable Long artistId) {
-        profileService.removeInterestedArtist(memberId, artistId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/interests/events/{eventId}")
-    public ResponseEntity<Void> removeInterestedEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
-        profileService.removeInterestedEvent(memberId, eventId);
         return ResponseEntity.noContent().build();
     }
 

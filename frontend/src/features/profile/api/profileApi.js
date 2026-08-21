@@ -86,6 +86,19 @@ export function fetchInterestedEvents(memberId) {
   return getJson(`/api/members/${memberId}/interests/events`)
 }
 
+export function fetchInterestedEventStatus(memberId, eventId) {
+  return getJson(`/api/members/${memberId}/interests/events/${eventId}`)
+}
+
+export async function addInterestedEvent(memberId, eventId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/interests/events/${eventId}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+  }).then(handleResponse)
+}
+
 export async function removeInterestedArtist(memberId, artistId) {
   await ensureCsrfToken()
   return fetch(`/api/members/${memberId}/interests/artists/${artistId}`, {
