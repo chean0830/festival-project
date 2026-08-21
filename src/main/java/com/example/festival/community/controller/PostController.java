@@ -1,6 +1,7 @@
 package com.example.festival.community.controller;
 
 import com.example.festival.community.dto.PostDetailResponse;
+import com.example.festival.community.dto.PostImageUploadResponse;
 import com.example.festival.community.dto.PostLikeResponse;
 import com.example.festival.community.dto.PostRequest;
 import com.example.festival.community.dto.PostSummaryResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -50,6 +52,11 @@ public class PostController {
     @PostMapping("/api/members/{memberId}/posts")
     public PostDetailResponse createPost(@PathVariable Long memberId, @Valid @RequestBody PostRequest request) {
         return postService.createPost(memberId, request);
+    }
+
+    @PostMapping("/api/members/{memberId}/posts/image")
+    public PostImageUploadResponse uploadImage(@PathVariable Long memberId, @RequestParam("file") MultipartFile file) {
+        return new PostImageUploadResponse(postService.uploadImage(memberId, file));
     }
 
     @PatchMapping("/api/members/{memberId}/posts/{postId}")

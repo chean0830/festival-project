@@ -12,22 +12,35 @@ import com.example.festival.community.repository.PostRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PostService {
 
+    private static final String POST_IMAGE_SUBDIR = "community";
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+
     private final PostRepository postRepository;
     private final PostCommentRepository postCommentRepository;
     private final PostLikeRepository postLikeRepository;
     private final MemberRepository memberRepository;
+
+    @Value("${file.upload-dir:uploads}")
+    private String uploadDir;
 
     public List<PostSummaryResponse> getPosts(String category, String keyword) {
         String normalizedCategory = (category == null || category.isBlank()) ? null : category;
@@ -106,6 +119,45 @@ public class PostService {
         findPost(postId);
         postLikeRepository.deleteByPost_PostIdAndMember_Id(postId, memberId);
         return new PostLikeResponse(postLikeRepository.countByPost_PostId(postId), false);
+    }
+
+    public String uploadImage(Long memberId, MultipartFile file) {
+        findMember(memberId);
+
+        if (file == null || file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지 파일이 비어 있습니다.");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "jpg, png, webp, gif 형식의 이미지만 등록할 수 있습니다.");
+        }
+
+        return "/uploads/" + POST_IMAGE_SUBDIR + "/" + storeFile(file, memberId);
+    }
+
+    private String storeFile(MultipartFile file, Long memberId) {
+        try {
+            Path uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
+            Path targetDir = uploadRoot.resolve(POST_IMAGE_SUBDIR);
+            Files.createDirectories(targetDir);
+
+            String extension = extractExtension(file.getOriginalFilename());
+            String fileName = memberId + "_" + UUID.randomUUID() + extension;
+            Path targetPath = targetDir.resolve(fileName).normalize();
+
+            file.transferTo(targetPath);
+            return fileName;
+        } catch (IOException e) {
+            throw new UncheckedIOException("게시글 이미지 저장에 실패했습니다.", e);
+        }
+    }
+
+    private String extractExtension(String originalFilename) {
+        if (originalFilename == null) {
+            return "";
+        }
+        int dotIndex = originalFilename.lastIndexOf('.');
+        return dotIndex >= 0 ? originalFilename.substring(dotIndex) : "";
     }
 
     private PostDetailResponse toDetailResponse(Post post, boolean liked) {
