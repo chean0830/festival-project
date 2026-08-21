@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '../api/profileApi'
 
 export default function AttendedEventGallery({ events, expanded, onToggleExpand }) {
@@ -23,12 +24,14 @@ export default function AttendedEventGallery({ events, expanded, onToggleExpand 
           <ul className="profile-poster-grid">
             {groupedByYear.get(year).map((event) => (
               <li key={event.eventId} className="profile-poster-item">
-                {event.posterImageUrl ? (
-                  <img src={resolveImageUrl(event.posterImageUrl)} alt={event.name} />
-                ) : (
-                  <div className="profile-poster-placeholder">{event.name}</div>
-                )}
-                <span className="profile-poster-name">{event.name}</span>
+                <Link to={`/program/event/${event.eventId}`} className="profile-poster-link">
+                  {event.posterImageUrl ? (
+                    <img src={resolveImageUrl(event.posterImageUrl)} alt={event.name} />
+                  ) : (
+                    <div className="profile-poster-placeholder">{event.name}</div>
+                  )}
+                  <span className="profile-poster-name">{event.name}</span>
+                </Link>
               </li>
             ))}
           </ul>

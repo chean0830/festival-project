@@ -121,8 +121,26 @@ export function fetchAttendedEvents(memberId) {
   return getJson(`/api/members/${memberId}/events/attended`)
 }
 
+export async function addAttendedEvent(memberId, eventId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/events/attended/${eventId}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+  }).then(handleResponse)
+}
+
 export function fetchUpcomingEvents(memberId) {
   return getJson(`/api/members/${memberId}/events/upcoming`)
+}
+
+export async function addUpcomingEvent(memberId, eventId) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/events/upcoming/${eventId}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { [csrfHeaderName]: csrfToken },
+  }).then(handleResponse)
 }
 
 export function fetchMyBadges(memberId) {

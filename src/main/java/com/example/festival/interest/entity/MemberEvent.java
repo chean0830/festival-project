@@ -52,4 +52,8 @@ public class MemberEvent {
         this.event = event;
         this.status = status;
     }
+
+    public void changeStatus(String status) {
+        this.status = status;
+    }
 }

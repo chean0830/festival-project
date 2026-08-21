@@ -12,6 +12,7 @@ import com.example.festival.profile.dto.ProfileResponse;
 import com.example.festival.profile.dto.ProfileStatsResponse;
 import com.example.festival.profile.dto.UpcomingEventResponse;
 import com.example.festival.event.entity.Event;
+import com.example.festival.event.repository.EventRepository;
 import com.example.festival.visit.entity.EventVisit;
 import com.example.festival.visit.repository.EventVisitRepository;
 import com.example.festival.visit.entity.VisitedEventGenre;
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -41,21 +43,25 @@ public class ProfileService {
 
     private static final String PROFILE_IMAGE_SUBDIR = "profile";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+    private static final String EVENT_PLANNED_STATUS = "PLANNED";
 
     private final MemberRepository memberRepository;
     private final MemberEventRepository memberEventRepository;
     private final EventVisitRepository eventVisitRepository;
+    private final EventRepository eventRepository;
     private final Path uploadRoot;
 
     public ProfileService(
             MemberRepository memberRepository,
             MemberEventRepository memberEventRepository,
             EventVisitRepository eventVisitRepository,
+            EventRepository eventRepository,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.memberRepository = memberRepository;
         this.memberEventRepository = memberEventRepository;
         this.eventVisitRepository = eventVisitRepository;
+        this.eventRepository = eventRepository;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -120,33 +126,74 @@ public class ProfileService {
         Map<Long, AttendedEventResponse> byEventId = new LinkedHashMap<>();
         for (EventVisit visit : eventVisitRepository.findAllByMemberIdWithEvent(memberId)) {
             var event = visit.getEvent();
-            byEventId.putIfAbsent(event.getEventId(), new AttendedEventResponse(
-                    event.getEventId(),
-                    event.getName(),
-                    event.getPosterImage(),
-                    event.getStartDate(),
-                    event.getEndDate(),
-                    event.getStartDate().getYear()
-            ));
+            byEventId.putIfAbsent(event.getEventId(), toAttendedEventResponse(event));
         }
         return List.copyOf(byEventId.values());
     }
 
+    @Transactional
+    public AttendedEventResponse addAttendedEvent(Long memberId, Long eventId) {
+        Member member = getMemberOrThrow(memberId);
+        EventVisit existing = eventVisitRepository.findFirstByMember_IdAndEvent_EventId(memberId, eventId).orElse(null);
+        if (existing != null) {
+            return toAttendedEventResponse(existing.getEvent());
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
+
+        eventVisitRepository.save(new EventVisit(member, event, LocalDateTime.now(), false, false));
+        return toAttendedEventResponse(event);
+    }
+
     public List<UpcomingEventResponse> getUpcomingEvents(Long memberId) {
         getMemberOrThrow(memberId);
-        LocalDate today = LocalDate.now();
 
         return memberEventRepository.findUpcomingByMemberId(memberId).stream()
                 .map(MemberEvent::getEvent)
-                .map(event -> new UpcomingEventResponse(
-                        event.getEventId(),
-                        event.getName(),
-                        event.getPosterImage(),
-                        event.getStartDate(),
-                        event.getEndDate(),
-                        ChronoUnit.DAYS.between(today, event.getStartDate())
-                ))
+                .map(this::toUpcomingEventResponse)
                 .toList();
+    }
+
+    @Transactional
+    public UpcomingEventResponse addUpcomingEvent(Long memberId, Long eventId) {
+        Member member = getMemberOrThrow(memberId);
+        MemberEvent existing = memberEventRepository.findByMember_IdAndEvent_EventId(memberId, eventId).orElse(null);
+        if (existing != null) {
+            if (existing.getEvent().getEndDate().isBefore(LocalDate.now())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 끝난 공연은 예정된 공연으로 추가할 수 없습니다.");
+            }
+            existing.changeStatus(EVENT_PLANNED_STATUS);
+            return toUpcomingEventResponse(existing.getEvent());
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
+        if (event.getEndDate().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 끝난 공연은 예정된 공연으로 추가할 수 없습니다.");
+        }
+
+        memberEventRepository.save(new MemberEvent(member, event, EVENT_PLANNED_STATUS));
+        return toUpcomingEventResponse(event);
+    }
+
+    /**
+     * "예정된 공연"(PLANNED)인데 이미 끝난 공연은 "다녀온 공연"으로 자동 전환한다.
+     * PlannedEventAutoAttendScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void autoAttendEndedPlannedEvents() {
+        LocalDateTime now = LocalDateTime.now();
+        for (MemberEvent memberEvent : memberEventRepository.findAllPlannedWithEndedEvent()) {
+            Member member = memberEvent.getMember();
+            Event event = memberEvent.getEvent();
+            boolean alreadyVisited = eventVisitRepository
+                    .findFirstByMember_IdAndEvent_EventId(member.getId(), event.getEventId())
+                    .isPresent();
+            if (!alreadyVisited) {
+                eventVisitRepository.save(new EventVisit(member, event, now, false, false));
+            }
+        }
     }
 
     public ProfileStatsResponse getProfileStats(Long memberId) {
@@ -177,6 +224,29 @@ public class ProfileService {
     private Member getMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+    }
+
+    private UpcomingEventResponse toUpcomingEventResponse(Event event) {
+        long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+        return new UpcomingEventResponse(
+                event.getEventId(),
+                event.getName(),
+                event.getPosterImage(),
+                event.getStartDate(),
+                event.getEndDate(),
+                dDay
+        );
+    }
+
+    private AttendedEventResponse toAttendedEventResponse(Event event) {
+        return new AttendedEventResponse(
+                event.getEventId(),
+                event.getName(),
+                event.getPosterImage(),
+                event.getStartDate(),
+                event.getEndDate(),
+                event.getStartDate().getYear()
+        );
     }
 
     private ProfileResponse toProfileResponse(Member member) {

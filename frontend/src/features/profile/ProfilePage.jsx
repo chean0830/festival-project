@@ -14,7 +14,9 @@ import {
   removeInterestedArtist,
   removeInterestedEvent,
   fetchAttendedEvents,
+  addAttendedEvent,
   fetchUpcomingEvents,
+  addUpcomingEvent,
   fetchMyBadges,
   fetchProfileStats,
 } from './api/profileApi'
@@ -25,6 +27,7 @@ import InterestedArtistList from './components/InterestedArtistList'
 import InterestedEventList from './components/InterestedEventList'
 import AttendedEventGallery from './components/AttendedEventGallery'
 import UpcomingEventList from './components/UpcomingEventList'
+import AddEventModal from './components/AddEventModal'
 import ProfileStats from './components/ProfileStats'
 import NotificationBell from '../notification/components/NotificationBell'
 import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
@@ -51,11 +54,28 @@ export default function ProfilePage() {
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [addModalTarget, setAddModalTarget] = useState(null) // null | 'attended' | 'upcoming'
   const attendedSectionRef = useRef(null)
 
   function goToAttendedSection(expandAll) {
     if (expandAll) setAttendedExpanded(true)
     attendedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function handleAddAttendedEvent(eventId) {
+    const added = await addAttendedEvent(memberId, eventId)
+    setAttendedEvents((prev) => {
+      if (prev.some((event) => event.eventId === added.eventId)) return prev
+      return [added, ...prev]
+    })
+  }
+
+  async function handleAddUpcomingEvent(eventId) {
+    const added = await addUpcomingEvent(memberId, eventId)
+    setUpcomingEvents((prev) => {
+      const withoutDuplicate = prev.filter((event) => event.eventId !== added.eventId)
+      return [...withoutDuplicate, added].sort((a, b) => a.startDate.localeCompare(b.startDate))
+    })
   }
 
   useEffect(() => {
@@ -217,7 +237,12 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-my-events-group" ref={attendedSectionRef}>
-            <h3>다녀온 공연</h3>
+            <div className="profile-section-header">
+              <h3>다녀온 공연</h3>
+              <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('attended')}>
+                공연 추가하기
+              </button>
+            </div>
             <AttendedEventGallery
               events={attendedEvents}
               expanded={attendedExpanded}
@@ -226,7 +251,12 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-my-events-group">
-            <h3>예정된 공연</h3>
+            <div className="profile-section-header">
+              <h3>예정된 공연</h3>
+              <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('upcoming')}>
+                공연 추가하기
+              </button>
+            </div>
             <UpcomingEventList events={upcomingEvents} />
           </div>
         </section>
@@ -240,7 +270,12 @@ export default function ProfilePage() {
           </div>
 
           {festivalRecords.length === 0 ? (
-            <p className="profile-empty-text">아직 작성한 페스티벌 기록이 없어요.</p>
+            <div className="profile-empty-state">
+              <p className="profile-empty-text">아직 작성한 페스티벌 기록이 없어요.</p>
+              <button type="button" className="profile-btn-outline" onClick={() => navigate('/festival-log/new')}>
+                새로운 페스티벌 기록 작성하기
+              </button>
+            </div>
           ) : (
             <div className="record-grid">
               {festivalRecords.slice(0, 4).map((record) => (
@@ -251,6 +286,15 @@ export default function ProfilePage() {
         </section>
       </div>
       </div>
+
+      {addModalTarget && (
+        <AddEventModal
+          title={addModalTarget === 'attended' ? '다녀온 공연 추가' : '예정된 공연 추가'}
+          excludePastEvents={addModalTarget === 'upcoming'}
+          onClose={() => setAddModalTarget(null)}
+          onAdd={addModalTarget === 'attended' ? handleAddAttendedEvent : handleAddUpcomingEvent}
+        />
+      )}
     </Layout>
   )
 }

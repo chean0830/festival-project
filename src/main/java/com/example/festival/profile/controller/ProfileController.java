@@ -11,6 +11,7 @@ import com.example.festival.profile.dto.UpcomingEventResponse;
 import com.example.festival.profile.service.BadgeService;
 import com.example.festival.profile.service.ProfileService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,9 +74,21 @@ public class ProfileController {
         return profileService.getAttendedEvents(memberId);
     }
 
+    @PostMapping("/events/attended/{eventId}")
+    public ResponseEntity<AttendedEventResponse> addAttendedEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
+        AttendedEventResponse response = profileService.addAttendedEvent(memberId, eventId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping("/events/upcoming")
     public List<UpcomingEventResponse> getUpcomingEvents(@PathVariable Long memberId) {
         return profileService.getUpcomingEvents(memberId);
+    }
+
+    @PostMapping("/events/upcoming/{eventId}")
+    public ResponseEntity<UpcomingEventResponse> addUpcomingEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
+        UpcomingEventResponse response = profileService.addUpcomingEvent(memberId, eventId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/badges")
