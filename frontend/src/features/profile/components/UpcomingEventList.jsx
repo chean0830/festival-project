@@ -1,9 +1,15 @@
 import { resolveImageUrl } from '../api/profileApi'
+import { todayIso } from '../../../utils/todayIso'
 
-function formatDDay(dDay) {
-  if (dDay > 0) return `D-${dDay}`
-  if (dDay === 0) return 'D-DAY'
-  return '진행중'
+// 공연 시작일~종료일 사이(당일 포함)에만 "진행중"을 띄우고, 그 전까지는 디데이를 유지한다.
+function isInProgress(event) {
+  const today = todayIso()
+  return today >= event.startDate && today <= event.endDate
+}
+
+function formatStatus(event) {
+  if (isInProgress(event)) return '진행중'
+  return `D-${event.dDay}`
 }
 
 export default function UpcomingEventList({ events }) {
@@ -26,8 +32,8 @@ export default function UpcomingEventList({ events }) {
               {event.startDate} ~ {event.endDate}
             </span>
           </div>
-          <span className={`profile-dday-badge${event.dDay <= 0 ? ' profile-dday-live' : ''}`}>
-            {formatDDay(event.dDay)}
+          <span className={`profile-dday-badge${isInProgress(event) ? ' profile-dday-live' : ''}`}>
+            {formatStatus(event)}
           </span>
         </li>
       ))}

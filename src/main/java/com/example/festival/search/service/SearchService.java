@@ -45,7 +45,8 @@ public class SearchService {
                 "artist",
                 artist.getName(),
                 artist.getArtistType() != null ? artist.getArtistType() : "아티스트",
-                artist.getProfileImage()
+                artist.getProfileImage(),
+                null
         );
     }
 
@@ -55,7 +56,8 @@ public class SearchService {
                 type,
                 event.getName(),
                 formatDate(event),
-                event.getPosterImage()
+                event.getPosterImage(),
+                event.getEndDate()
         );
     }
 

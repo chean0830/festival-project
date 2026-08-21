@@ -8,11 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EventVisitRepository extends JpaRepository<EventVisit, Long> {
 
     @Query("SELECT ev FROM EventVisit ev JOIN FETCH ev.event e JOIN FETCH e.venue WHERE ev.member.id = :memberId ORDER BY e.startDate DESC")
     List<EventVisit> findAllByMemberIdWithEvent(@Param("memberId") Long memberId);
+
+    Optional<EventVisit> findFirstByMember_IdAndEvent_EventId(Long memberId, Long eventId);
 
     /**
      * 방문한 공연들의 장르 태그를 (event_id, genre_name) 쌍으로 반환한다.

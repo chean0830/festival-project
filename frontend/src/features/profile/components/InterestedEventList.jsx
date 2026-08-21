@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '../api/profileApi'
 
 export default function InterestedEventList({ events, onRemove }) {
@@ -9,17 +10,19 @@ export default function InterestedEventList({ events, onRemove }) {
     <ul className="profile-interest-list">
       {events.map((event) => (
         <li key={event.eventId} className="profile-interest-item">
-          {event.posterImageUrl ? (
-            <img src={resolveImageUrl(event.posterImageUrl)} alt={event.name} />
-          ) : (
-            <div className="profile-interest-thumb-placeholder" />
-          )}
-          <div>
-            <span>{event.name}</span>
-            <span className="profile-interest-date">
-              {event.startDate} ~ {event.endDate}
-            </span>
-          </div>
+          <Link to={`/program/event/${event.eventId}`} className="profile-interest-link">
+            {event.posterImageUrl ? (
+              <img src={resolveImageUrl(event.posterImageUrl)} alt={event.name} />
+            ) : (
+              <div className="profile-interest-thumb-placeholder" />
+            )}
+            <div>
+              <span>{event.name}</span>
+              <span className="profile-interest-date">
+                {event.startDate} ~ {event.endDate}
+              </span>
+            </div>
+          </Link>
           {onRemove && (
             <button
               type="button"

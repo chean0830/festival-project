@@ -3,8 +3,6 @@ package com.example.festival.profile.controller;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.BadgeResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
-import com.example.festival.profile.dto.InterestedArtistResponse;
-import com.example.festival.profile.dto.InterestedEventResponse;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
@@ -13,6 +11,7 @@ import com.example.festival.profile.dto.UpcomingEventResponse;
 import com.example.festival.profile.service.BadgeService;
 import com.example.festival.profile.service.ProfileService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,36 +69,26 @@ public class ProfileController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/interests/artists")
-    public List<InterestedArtistResponse> getInterestedArtists(@PathVariable Long memberId) {
-        return profileService.getInterestedArtists(memberId);
-    }
-
-    @GetMapping("/interests/events")
-    public List<InterestedEventResponse> getInterestedEvents(@PathVariable Long memberId) {
-        return profileService.getInterestedEvents(memberId);
-    }
-
-    @DeleteMapping("/interests/artists/{artistId}")
-    public ResponseEntity<Void> removeInterestedArtist(@PathVariable Long memberId, @PathVariable Long artistId) {
-        profileService.removeInterestedArtist(memberId, artistId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/interests/events/{eventId}")
-    public ResponseEntity<Void> removeInterestedEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
-        profileService.removeInterestedEvent(memberId, eventId);
-        return ResponseEntity.noContent().build();
-    }
-
     @GetMapping("/events/attended")
     public List<AttendedEventResponse> getAttendedEvents(@PathVariable Long memberId) {
         return profileService.getAttendedEvents(memberId);
     }
 
+    @PostMapping("/events/attended/{eventId}")
+    public ResponseEntity<AttendedEventResponse> addAttendedEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
+        AttendedEventResponse response = profileService.addAttendedEvent(memberId, eventId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @GetMapping("/events/upcoming")
     public List<UpcomingEventResponse> getUpcomingEvents(@PathVariable Long memberId) {
         return profileService.getUpcomingEvents(memberId);
+    }
+
+    @PostMapping("/events/upcoming/{eventId}")
+    public ResponseEntity<UpcomingEventResponse> addUpcomingEvent(@PathVariable Long memberId, @PathVariable Long eventId) {
+        UpcomingEventResponse response = profileService.addUpcomingEvent(memberId, eventId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/badges")

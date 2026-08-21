@@ -9,6 +9,7 @@ import {
   createFestivalRecord,
   deleteRecordImage,
   fetchFestivalRecord,
+  fetchFestivalRecords,
   reorderRecordImages,
   updateFestivalRecord,
 } from './api/festivalRecordApi'
@@ -23,6 +24,7 @@ export default function FestivalRecordFormPage() {
   const currentMember = useCurrentMember()
   const memberId = currentMember?.memberId
   const [eligibleEvents, setEligibleEvents] = useState([])
+  const [recordedEventIds, setRecordedEventIds] = useState(() => new Set())
   const [initialValues, setInitialValues] = useState(isEditMode ? null : undefined)
   const [existingImages, setExistingImages] = useState([])
   const [loadError, setLoadError] = useState(null)
@@ -35,12 +37,21 @@ export default function FestivalRecordFormPage() {
 
     async function load() {
       try {
-        const [events, record] = await Promise.all([
+        const [events, existingRecords, record] = await Promise.all([
           fetchAttendedEvents(memberId),
+          fetchFestivalRecords(memberId),
           isEditMode ? fetchFestivalRecord(memberId, recordId) : Promise.resolve(undefined),
         ])
         if (!cancelled) {
           setEligibleEvents(events)
+          // 편집 중인 기록 자신은 "이미 생성됨" 표시에서 제외한다.
+          setRecordedEventIds(
+            new Set(
+              existingRecords
+                .filter((r) => !isEditMode || r.recordId !== Number(recordId))
+                .map((r) => r.eventId),
+            ),
+          )
           setInitialValues(record)
           setExistingImages(record?.images ?? [])
         }
@@ -108,6 +119,7 @@ export default function FestivalRecordFormPage() {
           {!loadError && !isLoadingInitialValues && eligibleEvents.length > 0 && (
             <RecordForm
               eligibleEvents={eligibleEvents}
+              recordedEventIds={recordedEventIds}
               initialValues={initialValues}
               existingImages={existingImages}
               onDeleteExistingImage={isEditMode ? handleDeleteExistingImage : undefined}

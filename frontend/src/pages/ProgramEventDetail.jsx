@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
 import { getEventDetail } from "../api/eventApi";
+import useCurrentMember from "../features/profile/hooks/useCurrentMember";
+import {
+  fetchInterestedEventStatus,
+  addInterestedEvent,
+  removeInterestedEvent,
+} from "../features/profile/api/profileApi";
 import "./ProgramEventDetail.css";
 
 const EVENT_TYPE_LABEL = {
@@ -23,8 +29,14 @@ function formatDate(dateStr) {
  */
 function ProgramEventDetail() {
   const { eventId } = useParams();
+  const navigate = useNavigate();
+  const currentMember = useCurrentMember();
+  const memberId = currentMember?.memberId;
   const [event, setEvent] = useState(undefined);
   const [error, setError] = useState(null);
+  const [interested, setInterested] = useState(false);
+  const [heartBusy, setHeartBusy] = useState(false);
+  const [heartError, setHeartError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +53,51 @@ function ProgramEventDetail() {
       cancelled = true;
     };
   }, [eventId]);
+
+  useEffect(() => {
+    if (!memberId) {
+      setInterested(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    fetchInterestedEventStatus(memberId, eventId)
+      .then((data) => {
+        if (!cancelled) setInterested(Boolean(data?.interested));
+      })
+      .catch(() => {
+        if (!cancelled) setInterested(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [memberId, eventId]);
+
+  async function handleToggleInterest() {
+    if (!memberId) {
+      navigate("/login");
+      return;
+    }
+    if (heartBusy) return;
+
+    setHeartBusy(true);
+    setHeartError(null);
+    try {
+      if (interested) {
+        await removeInterestedEvent(memberId, eventId);
+        setInterested(false);
+      } else {
+        await addInterestedEvent(memberId, eventId);
+        setInterested(true);
+      }
+    } catch (err) {
+      setHeartError(err.message);
+    } finally {
+      setHeartBusy(false);
+    }
+  }
 
   if (error) {
     return (
@@ -99,16 +156,36 @@ function ProgramEventDetail() {
             <p className="event-detail__description">{event.description}</p>
           )}
 
-          <Button
-            variant="primary"
-            size="lg"
-            disabled={!event.ticketUrl}
-            onClick={() =>
-              window.open(event.ticketUrl, "_blank", "noopener,noreferrer")
-            }
-          >
-            {event.ticketUrl ? "YES24에서 예매하기 →" : "예매 링크 준비 중"}
-          </Button>
+          <div className="event-detail__actions">
+            <Button
+              variant="primary"
+              size="lg"
+              disabled={!event.ticketUrl}
+              onClick={() =>
+                window.open(event.ticketUrl, "_blank", "noopener,noreferrer")
+              }
+            >
+              {event.ticketUrl ? "YES24에서 예매하기 →" : "예매 링크 준비 중"}
+            </Button>
+
+            <button
+              type="button"
+              className={`event-detail__heart-btn${interested ? " event-detail__heart-btn--active" : ""}`}
+              aria-label={interested ? "관심 공연 해제" : "관심 공연 추가"}
+              aria-pressed={interested}
+              disabled={heartBusy}
+              onClick={handleToggleInterest}
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2">
+                <path
+                  d="M12 21s-7.5-4.8-10-9.5C0.3 8 1.7 4.5 5 3.6c2.1-0.6 4.3 0.3 5.6 2.1L12 7.5l1.4-1.8c1.3-1.8 3.5-2.7 5.6-2.1 3.3 0.9 4.7 4.4 3 7.9C19.5 16.2 12 21 12 21z"
+                  fill={interested ? "currentColor" : "none"}
+                />
+              </svg>
+            </button>
+          </div>
+
+          {heartError && <p className="event-detail__heart-error">{heartError}</p>}
         </div>
       </div>
     </Layout>

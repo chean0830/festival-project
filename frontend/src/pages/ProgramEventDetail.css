@@ -89,6 +89,50 @@
   margin-bottom: var(--spacing-md);
 }
 
-.event-detail__info .btn {
+.event-detail__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
   align-self: center;
+}
+
+.event-detail__heart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.event-detail__heart-btn:hover {
+  border-color: #e5484d;
+  color: #e5484d;
+}
+
+.event-detail__heart-btn:active {
+  transform: scale(0.92);
+}
+
+.event-detail__heart-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.event-detail__heart-btn--active {
+  border-color: #e5484d;
+  color: #e5484d;
+}
+
+.event-detail__heart-error {
+  color: #e5484d;
+  font-size: var(--font-size-xs);
+  margin: 0;
 }
