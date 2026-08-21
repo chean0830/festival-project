@@ -3,12 +3,13 @@ import {
   LiveKitRoom,
   RoomAudioRenderer,
   VideoTrack,
+  useConnectionState,
   useDataChannel,
   useLocalParticipant,
   useParticipants,
   useTracks,
 } from '@livekit/components-react'
-import { DisconnectReason, Track } from 'livekit-client'
+import { ConnectionState, DisconnectReason, Track } from 'livekit-client'
 import '@livekit/components-styles'
 import { fetchLiveKitConnection } from './api/liveApi'
 
@@ -132,6 +133,8 @@ function LiveRoomBridge({
 }) {
   const participants = useParticipants()
   const { localParticipant } = useLocalParticipant()
+  const connectionState = useConnectionState()
+  const connected = connectionState === ConnectionState.Connected
 
   const handleDataMessage = useCallback((message) => {
     try {
@@ -169,15 +172,20 @@ function LiveRoomBridge({
   }, [onViewerCountChange, participants])
 
   useEffect(() => {
-    if (!owner) return
+    if (!owner || !connected) return
     const payload = new TextEncoder().encode(JSON.stringify({
       type: 'CHAT_STATE',
       enabled: chatEnabled,
     }))
     send(payload, { reliable: true }).catch(() => {})
-  }, [chatEnabled, owner, send])
+  }, [chatEnabled, connected, owner, send])
 
   useEffect(() => {
+    if (!connected) {
+      onChatControllerChange?.(null)
+      return undefined
+    }
+
     async function sendChat(text) {
       if (!chatEnabled) throw new Error('방송자가 채팅을 중지했습니다.')
 
@@ -209,7 +217,7 @@ function LiveRoomBridge({
 
     onChatControllerChange?.({ sendChat, notifyStreamEnded, isSending })
     return () => onChatControllerChange?.(null)
-  }, [chatEnabled, isSending, localParticipant, onChatControllerChange, onChatMessage, owner, send])
+  }, [chatEnabled, connected, isSending, localParticipant, onChatControllerChange, onChatMessage, owner, send])
 
   return null
 }
