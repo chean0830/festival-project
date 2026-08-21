@@ -15,6 +15,35 @@
   color: var(--color-primary-dark);
 }
 
+.program-category-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.program-category-page__sort {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.program-category-page__sort-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.program-category-page__sort-btn:hover {
+  color: var(--color-text);
+}
+.program-category-page__sort-btn--active {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
 .program-category-page__grid {
   display: flex;
   flex-wrap: wrap;

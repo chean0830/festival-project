@@ -4,6 +4,11 @@ import Program from './pages/Program'
 import ProgramCalendar from './pages/ProgramCalendar'
 import ProgramCategory from './pages/ProgramCategory'
 import ProgramEventDetail from './pages/ProgramEventDetail'
+import NewsPage from './pages/NewsPage'
+import CommunityLayout from './components/community/CommunityLayout'
+import CommunityPage from './pages/CommunityPage'
+import CommunityPostWritePage from './pages/CommunityPostWritePage'
+import CommunityPostDetailPage from './pages/CommunityPostDetailPage'
 import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -24,7 +29,7 @@ import FestivalRecordBookPage from './features/festivalrecord/FestivalRecordBook
  * - "/login", "/signup", "/account/recovery", "/password/reset/confirm" : 인증 관련 페이지
  * - "/profile", "/profile/badges" : 내 프로필 / 나의 뱃지 (로그인한 사용자 기준, 비로그인 시 로그인 안내)
  *
- * 커뮤니티/MD구매 등 다른 메뉴들은 아직 페이지가 없어서
+ * MD구매 등 다른 메뉴들은 아직 페이지가 없어서
  * 눌러도 흰 화면(라우트 없음)이 뜰 거야. 각 기능 브랜치가 합쳐지면
  * 여기에 Route를 하나씩 추가해주면 돼.
  */
@@ -36,6 +41,13 @@ function App() {
       <Route path="/program/calendar" element={<ProgramCalendar />} />
       <Route path="/program/:category" element={<ProgramCategory />} />
       <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
+      <Route path="/news" element={<NewsPage />} />
+      <Route path="/community" element={<CommunityLayout />}>
+        <Route index element={<CommunityPage />} />
+        <Route path="new" element={<CommunityPostWritePage />} />
+        <Route path=":postId/edit" element={<CommunityPostWritePage />} />
+        <Route path=":postId" element={<CommunityPostDetailPage />} />
+      </Route>
       <Route path="/search" element={<Search />} />
 
       <Route path="/login" element={<LoginPage />} />
