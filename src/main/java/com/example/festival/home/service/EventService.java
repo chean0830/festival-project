@@ -7,6 +7,7 @@ import com.example.festival.home.dto.EventDetailDto;
 import com.example.festival.home.dto.EventSummaryDto;
 import com.example.festival.home.dto.LineupArtistDto;
 import com.example.festival.interest.repository.MemberEventRepository;
+import com.example.festival.genre.repository.GenreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventScheduleRepository eventScheduleRepository;
     private final MemberEventRepository memberEventRepository;
+    private final GenreRepository genreRepository;
 
     public EventDetailDto getEventDetail(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -42,7 +44,8 @@ public class EventService {
                 event.getTicketUrl(),
                 event.getStatus(),
                 event.getVenue() != null ? event.getVenue().getName() : null,
-                event.getVenue() != null ? event.getVenue().getAddress() : null
+                event.getVenue() != null ? event.getVenue().getAddress() : null,
+                genreRepository.findGenreNamesByEventId(eventId)
         );
     }
 
@@ -71,6 +74,11 @@ public class EventService {
                         MemberEventRepository.EventInterestCount::getEventId,
                         MemberEventRepository.EventInterestCount::getCount
                 ));
+        Map<Long, List<String>> genresByEventId = genreRepository.findAllEventGenreNames().stream()
+                .collect(Collectors.groupingBy(
+                        GenreRepository.EventGenreNameProjection::getEventId,
+                        Collectors.mapping(GenreRepository.EventGenreNameProjection::getGenreName, Collectors.toList())
+                ));
 
         return events.stream()
                 .map(event -> new EventSummaryDto(
@@ -82,7 +90,8 @@ public class EventService {
                         event.getPosterImage(),
                         toRegion(event),
                         toKind(event),
-                        popularityByEventId.getOrDefault(event.getEventId(), 0L)
+                        popularityByEventId.getOrDefault(event.getEventId(), 0L),
+                        genresByEventId.getOrDefault(event.getEventId(), List.of())
                 ))
                 .toList();
     }

@@ -16,6 +16,7 @@ export function toProgramItem(event) {
     region: event.region,
     kind: event.kind,
     popularity: event.popularity,
+    genres: event.genres ?? [],
   }
 }
 
