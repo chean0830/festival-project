@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { searchItems } from "../../../data/searchMockData";
+import { search } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
@@ -59,7 +59,32 @@ function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const searchResults = searchTerm.trim() ? searchItems(searchTerm) : [];
+  const [searchResults, setSearchResults] = useState([]);
+
+  // 입력할 때마다 바로 요청하지 않고, 타이핑이 멈추고 250ms 지나면 검색한다.
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      search(trimmed)
+        .then((data) => {
+          if (!cancelled) setSearchResults(data);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchResults([]);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
 
   function goToSearchPage(term) {
     const trimmed = term.trim();
