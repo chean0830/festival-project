@@ -9,6 +9,7 @@ import {
   getComments,
   getPost,
   likePost,
+  reportContent,
   unlikePost,
 } from "../api/communityApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
@@ -109,6 +110,22 @@ function CommunityPostDetailPage() {
     }
   }
 
+  async function handleReport(targetType, targetId) {
+    if (!currentMember?.memberId) {
+      navigate("/login");
+      return;
+    }
+    const reason = window.prompt("신고 사유를 입력해주세요 (선택 입력 가능)");
+    if (reason === null) return;
+
+    try {
+      await reportContent(currentMember.memberId, { targetType, targetId, reason });
+      window.alert("신고가 접수됐어요.");
+    } catch (err) {
+      window.alert(err.message);
+    }
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -196,7 +213,7 @@ function CommunityPostDetailPage() {
             ♥ 좋아요 {post.likeCount}
           </button>
 
-          {isOwner && (
+          {isOwner ? (
             <div className="community-detail-page__owner-actions">
               <button
                 type="button"
@@ -209,6 +226,14 @@ function CommunityPostDetailPage() {
                 삭제
               </button>
             </div>
+          ) : (
+            <button
+              type="button"
+              className="community-detail-page__report-btn"
+              onClick={() => handleReport("POST", post.id)}
+            >
+              신고
+            </button>
           )}
         </div>
 
@@ -228,9 +253,13 @@ function CommunityPostDetailPage() {
                     <button type="button" onClick={() => setReplyTarget(comment.id)}>
                       답글
                     </button>
-                    {currentMember?.memberId === comment.authorId && (
+                    {currentMember?.memberId === comment.authorId ? (
                       <button type="button" onClick={() => handleDeleteComment(comment.id)}>
                         삭제
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => handleReport("COMMENT", comment.id)}>
+                        신고
                       </button>
                     )}
                   </div>
@@ -246,13 +275,17 @@ function CommunityPostDetailPage() {
                         <span className="community-comment__author">{reply.authorNickname}</span>
                         {reply.content}
                       </p>
-                      {currentMember?.memberId === reply.authorId && (
-                        <div className="community-comment__actions">
+                      <div className="community-comment__actions">
+                        {currentMember?.memberId === reply.authorId ? (
                           <button type="button" onClick={() => handleDeleteComment(reply.id)}>
                             삭제
                           </button>
-                        </div>
-                      )}
+                        ) : (
+                          <button type="button" onClick={() => handleReport("COMMENT", reply.id)}>
+                            신고
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

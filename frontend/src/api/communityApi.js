@@ -106,3 +106,13 @@ export function deleteComment(memberId, postId, commentId) {
     '댓글을 삭제하지 못했습니다.'
   )
 }
+
+// targetType: 'POST' | 'COMMENT'
+export function reportContent(memberId, { targetType, targetId, reason }) {
+  return mutateJson(
+    `/api/members/${memberId}/reports`,
+    'POST',
+    { targetType, targetId, reason },
+    '신고 처리에 실패했습니다.'
+  )
+}

@@ -94,6 +94,18 @@
   cursor: pointer;
 }
 
+.community-detail-page__report-btn {
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.community-detail-page__report-btn:hover {
+  color: var(--color-error);
+  text-decoration: underline;
+}
+
 .community-detail-page__comments {
   margin-top: var(--spacing-lg);
 }
