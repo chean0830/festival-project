@@ -21,6 +21,7 @@ function CommunityPostWritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
@@ -61,6 +62,10 @@ function CommunityPostWritePage() {
     event.target.value = "";
     if (!file) return;
 
+    // 업로드가 끝나기 전에도 바로 내 사진이 보이도록 로컬 미리보기부터 띄운다.
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageUrl(null);
+
     setUploadingImage(true);
     setError("");
     try {
@@ -72,6 +77,19 @@ function CommunityPostWritePage() {
       setUploadingImage(false);
     }
   }
+
+  function handleRemoveImage() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setImageUrl(null);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewUrl]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -149,17 +167,30 @@ function CommunityPostWritePage() {
           </div>
 
           <div className="community-write-page__field">
-            <label htmlFor="image">사진</label>
-            {imageUrl && (
+            {(previewUrl || imageUrl) && (
               <div className="community-write-page__image-preview">
-                <img src={imageUrl} alt="첨부 이미지 미리보기" />
-                <button type="button" onClick={() => setImageUrl(null)}>
+                <img src={previewUrl || imageUrl} alt="첨부 이미지 미리보기" />
+                <button type="button" onClick={handleRemoveImage}>
                   이미지 삭제
                 </button>
               </div>
             )}
-            <input id="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImageChange} />
-            {uploadingImage && <p className="community-write-page__image-uploading">업로드 중...</p>}
+
+            <input
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleImageChange}
+              className="community-write-page__image-input"
+            />
+            <label htmlFor="image" className="community-write-page__image-btn">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                <circle cx="9" cy="10.5" r="1.6" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M4.5 17.5 9 13l3 3 4-4.5 3.5 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {uploadingImage ? "업로드 중..." : previewUrl || imageUrl ? "사진 변경" : "사진 추가"}
+            </label>
           </div>
 
           {error && <p className="community-write-page__error">{error}</p>}
