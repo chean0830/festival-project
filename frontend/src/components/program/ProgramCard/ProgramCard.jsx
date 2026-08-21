@@ -20,6 +20,15 @@ function ProgramCard({ item }) {
       </div>
       <p className="program-card__name">{item.name}</p>
       <p className="program-card__time">{item.time}</p>
+      {item.genres?.length > 0 && (
+        <div className="program-card__genres">
+          {item.genres.slice(0, 3).map((genre) => (
+            <span key={genre} className="program-card__genre-tag">
+              {genre}
+            </span>
+          ))}
+        </div>
+      )}
     </button>
   );
 }

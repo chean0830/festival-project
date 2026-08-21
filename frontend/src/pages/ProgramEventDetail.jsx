@@ -163,6 +163,18 @@ function ProgramEventDetail() {
                 </dd>
               </div>
             )}
+            {event.genres?.length > 0 && (
+              <div>
+                <dt>장르</dt>
+                <dd className="event-detail__genres">
+                  {event.genres.map((genre) => (
+                    <span key={genre} className="event-detail__genre-tag">
+                      {genre}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            )}
           </dl>
 
           {event.description && (
