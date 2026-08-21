@@ -16,10 +16,6 @@ public record LiveStreamCreateRequest(
         String description,
 
         @Size(max = 500, message = "썸네일 주소가 너무 깁니다.")
-        String thumbnailUrl,
-
-        @NotBlank(message = "YouTube 영상 주소를 입력해 주세요.")
-        @Size(max = 500, message = "YouTube 영상 주소가 너무 깁니다.")
-        String youtubeUrl
+        String thumbnailUrl
 ) {
 }

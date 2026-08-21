@@ -1,5 +1,6 @@
 package com.example.festival.live.dto;
 
+import com.example.festival.live.entity.LiveSourceType;
 import com.example.festival.live.entity.LiveStreamStatus;
 import java.time.LocalDateTime;
 
@@ -10,9 +11,7 @@ public record LiveStreamResponse(
         String title,
         String description,
         String thumbnailUrl,
-        String youtubeVideoId,
-        String youtubeWatchUrl,
-        String youtubeEmbedUrl,
+        LiveSourceType sourceType,
         LiveStreamStatus status,
         LocalDateTime startAt,
         LocalDateTime endAt,
@@ -20,6 +19,7 @@ public record LiveStreamResponse(
         String hostNickname,
         String hostProfileImage,
         boolean owner,
+        boolean chatEnabled,
         LocalDateTime createdAt
 ) {
 }

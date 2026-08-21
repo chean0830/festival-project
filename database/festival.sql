@@ -76,32 +76,6 @@ CREATE TABLE social_account (
 
 
 -- ============================================================
--- 2-1. YOUTUBE CONNECTION
--- 회원별 YouTube 채널 연결 (refresh token은 애플리케이션에서 암호화 후 저장)
--- ============================================================
-
-CREATE TABLE youtube_connection (
-    youtube_connection_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    member_id BIGINT NOT NULL UNIQUE,
-
-    channel_id VARCHAR(100) NOT NULL,
-
-    channel_title VARCHAR(200) NOT NULL,
-
-    refresh_token_encrypted VARCHAR(2000) NOT NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (member_id)
-        REFERENCES member(member_id)
-        ON DELETE CASCADE
-);
-
-
--- ============================================================
 -- 2-2. PASSWORD RESET TOKEN
 -- 비밀번호 재설정용 1회성 토큰
 -- ============================================================
@@ -1133,6 +1107,9 @@ CREATE TABLE live_stream (
     description VARCHAR(1000),
 
     thumbnail_url VARCHAR(500),
+
+    source_type VARCHAR(20) NOT NULL DEFAULT 'BROWSER'
+        COMMENT 'BROWSER',
 
     stream_url VARCHAR(500),
 

@@ -2,12 +2,17 @@ package com.example.festival.live.controller;
 
 import com.example.festival.auth.security.MemberPrincipal;
 import com.example.festival.live.dto.LiveEventOptionResponse;
+import com.example.festival.live.dto.LiveChatSettingRequest;
+import com.example.festival.live.dto.LiveKitConnectionResponse;
 import com.example.festival.live.dto.LiveStreamCreateRequest;
 import com.example.festival.live.dto.LiveStreamResponse;
 import com.example.festival.live.service.LiveStreamService;
+import com.example.festival.live.service.LiveKitTokenService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -23,9 +28,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class LiveStreamController {
 
     private final LiveStreamService liveStreamService;
+    private final LiveKitTokenService liveKitTokenService;
 
-    public LiveStreamController(LiveStreamService liveStreamService) {
+    public LiveStreamController(
+            LiveStreamService liveStreamService,
+            LiveKitTokenService liveKitTokenService
+    ) {
         this.liveStreamService = liveStreamService;
+        this.liveKitTokenService = liveKitTokenService;
     }
 
     @GetMapping
@@ -44,6 +54,17 @@ public class LiveStreamController {
             @AuthenticationPrincipal MemberPrincipal principal
     ) {
         return liveStreamService.getWatchStream(streamId, principal == null ? null : principal.getMemberId());
+    }
+
+    @GetMapping("/{streamId}/connection")
+    public ResponseEntity<LiveKitConnectionResponse> getLiveKitConnection(
+            @PathVariable Long streamId,
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        Long memberId = principal == null ? null : principal.getMemberId();
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(liveKitTokenService.createConnection(streamId, memberId));
     }
 
     @GetMapping("/mine")
@@ -74,5 +95,14 @@ public class LiveStreamController {
             @AuthenticationPrincipal MemberPrincipal principal
     ) {
         return liveStreamService.end(streamId, principal.getMemberId());
+    }
+
+    @PatchMapping("/{streamId}/chat")
+    public LiveStreamResponse changeChatEnabled(
+            @PathVariable Long streamId,
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestBody LiveChatSettingRequest request
+    ) {
+        return liveStreamService.changeChatEnabled(streamId, principal.getMemberId(), request.enabled());
     }
 }

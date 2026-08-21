@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { searchItems } from "../../../data/searchMockData";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
@@ -38,14 +38,19 @@ function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const currentMember = useCurrentMember();
   const isLoggedIn = Boolean(currentMember?.memberId);
 
   async function handleLogout() {
     await logout();
-    window.location.href = "/";
+    window.location.href = location.pathname.startsWith("/live") ? "/live" : "/";
   }
+
+  const loginHref = location.pathname.startsWith("/live")
+    ? "/login?returnTo=%2Flive"
+    : "/login";
 
   // 검색창 바깥을 클릭하면 드롭다운을 닫는다.
   useEffect(() => {
@@ -139,7 +144,7 @@ function Header() {
                 </button>
               </div>
             ) : (
-              <a href="/login" className="header__login-btn">
+              <a href={loginHref} className="header__login-btn">
                 <svg
                   viewBox="0 0 24 24"
                   width="16"
@@ -222,7 +227,7 @@ function Header() {
               ) : (
                 <>
                   <p className="header__drawer-profile-text">로그인이 필요해요</p>
-                  <a href="/login" className="header__login-btn header__login-btn--sm">
+                  <a href={loginHref} className="header__login-btn header__login-btn--sm">
                     Login
                   </a>
                 </>

@@ -48,16 +48,15 @@ export async function fetchLiveStream(streamId) {
   return parseResponse(await fetch(`/api/live-streams/watch/${streamId}`, { credentials: 'include' }))
 }
 
-export async function fetchYouTubeStatus() {
-  return parseResponse(await fetch('/api/youtube/status', { credentials: 'include' }))
+export async function fetchLiveKitConnection(streamId) {
+  return parseResponse(await fetch(`/api/live-streams/${streamId}/connection`, {
+    credentials: 'include',
+    cache: 'no-store',
+  }))
 }
 
 export function createLiveStream(data) {
   return changeLiveStream('/api/live-streams', 'POST', data)
-}
-
-export function createYouTubeBroadcast({ title, description }) {
-  return changeLiveStream('/api/youtube/broadcasts', 'POST', { title, description })
 }
 
 export function startLiveStream(streamId) {
@@ -66,4 +65,8 @@ export function startLiveStream(streamId) {
 
 export function endLiveStream(streamId) {
   return changeLiveStream(`/api/live-streams/${streamId}/end`, 'PATCH')
+}
+
+export function changeLiveChatEnabled(streamId, enabled) {
+  return changeLiveStream(`/api/live-streams/${streamId}/chat`, 'PATCH', { enabled })
 }

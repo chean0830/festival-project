@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
-import { fetchLiveStreams, fetchMyLiveStreams } from './api/liveApi'
+import { fetchLiveStreams } from './api/liveApi'
 import './live.css'
 
 const STATUS_LABEL = {
@@ -11,7 +11,7 @@ const STATUS_LABEL = {
   ENDED: '종료',
 }
 
-function LiveCard({ stream, management = false }) {
+function LiveCard({ stream }) {
   return (
     <Link to={`/live/${stream.streamId}`} className="live-card">
       <div className="live-card__visual">
@@ -23,9 +23,7 @@ function LiveCard({ stream, management = false }) {
       <div className="live-card__body">
         <strong className="live-card__title">{stream.title}</strong>
         <span className="live-card__event">{stream.eventName}</span>
-        <span className="live-card__host">
-          {management ? '내 방송 관리' : stream.hostNickname}
-        </span>
+        <span className="live-card__host">{stream.hostNickname}</span>
       </div>
     </Link>
   )
@@ -33,8 +31,8 @@ function LiveCard({ stream, management = false }) {
 
 export default function LiveListPage() {
   const currentMember = useCurrentMember()
+  const isAdmin = currentMember?.role === 'ADMIN'
   const [streams, setStreams] = useState([])
-  const [myStreams, setMyStreams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -51,15 +49,13 @@ export default function LiveListPage() {
   }, [])
 
   useEffect(() => {
-    loadLiveStreams()
+    const initialTimer = window.setTimeout(loadLiveStreams, 0)
     const timer = window.setInterval(loadLiveStreams, 5000)
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearTimeout(initialTimer)
+      window.clearInterval(timer)
+    }
   }, [loadLiveStreams])
-
-  useEffect(() => {
-    if (!currentMember?.memberId) return
-    fetchMyLiveStreams().then(setMyStreams).catch(() => setMyStreams([]))
-  }, [currentMember?.memberId])
 
   return (
     <Layout>
@@ -70,11 +66,11 @@ export default function LiveListPage() {
             <h1>페스티벌의 순간을 라이브로</h1>
             <p>페스티벌을 라이브로 송출하고 FESTLOG에서 함께 시청하세요.</p>
           </div>
-          {currentMember?.memberId ? (
+          {isAdmin ? (
             <Link to="/live/new" className="live-button live-button--primary">방송 만들기</Link>
-          ) : (
-            <Link to="/login" className="live-button live-button--primary">로그인하고 방송하기</Link>
-          )}
+          ) : !currentMember?.memberId ? (
+            <Link to="/login?returnTo=%2Flive" className="live-button live-button--primary">로그인하고 참여하기</Link>
+          ) : null}
         </section>
 
         <section className="live-section">
@@ -97,17 +93,6 @@ export default function LiveListPage() {
             </div>
           )}
         </section>
-
-        {currentMember?.memberId && myStreams.length > 0 && (
-          <section className="live-section live-section--mine">
-            <div className="live-section__heading"><h2>내 방송 관리</h2></div>
-            <div className="live-grid">
-              {myStreams.map((stream) => (
-                <LiveCard key={stream.streamId} stream={stream} management />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </Layout>
   )

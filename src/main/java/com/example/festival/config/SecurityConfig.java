@@ -39,20 +39,28 @@ public class SecurityConfig {
                                 "/api/auth/csrf",
                                 "/api/auth/signup",
                                 "/api/auth/login",
+                                "/api/auth/oauth2/start/**",
                                 "/api/auth/find-email",
                                 "/api/auth/password-reset/**",
                                 "/api/home/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
-                                "/api/youtube/oauth/callback",
                                 "/error"
                         ).permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/live-streams",
                                 "/api/live-streams/events",
-                                "/api/live-streams/watch/*"
+                                "/api/live-streams/watch/*",
+                                "/api/live-streams/*/connection"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/live-streams").hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/live-streams/*/start",
+                                "/api/live-streams/*/end",
+                                "/api/live-streams/*/chat"
+                        ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)

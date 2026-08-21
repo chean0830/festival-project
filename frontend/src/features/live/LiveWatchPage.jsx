@@ -1,20 +1,129 @@
-import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
-import { endLiveStream, fetchLiveStream, startLiveStream } from './api/liveApi'
+import {
+  changeLiveChatEnabled,
+  endLiveStream,
+  fetchLiveStream,
+  startLiveStream,
+} from './api/liveApi'
+import BrowserLivePlayer from './BrowserLivePlayer'
 import './live.css'
 
 const STATUS_LABEL = { SCHEDULED: '방송 대기', LIVE: 'LIVE', ENDED: '방송 종료' }
 
+function LiveChatPanel({
+  open,
+  enabled,
+  owner,
+  viewerCount,
+  messages,
+  controller,
+  input,
+  sending,
+  changingSetting,
+  onInputChange,
+  onSubmit,
+  onToggleOpen,
+  onToggleEnabled,
+}) {
+  return (
+    <div className={`live-chat ${open ? '' : 'live-chat--closed'}`}>
+      <div className="live-chat__header">
+        <div>
+          <h2>실시간 채팅</h2>
+          <span className="live-viewer-count" aria-label={`현재 시청자 ${viewerCount}명`}>
+            시청자 {viewerCount}명
+          </span>
+        </div>
+        <div className="live-chat__header-actions">
+          {owner && (
+            <button
+              type="button"
+              className={`live-chat__setting ${enabled ? 'is-on' : ''}`}
+              onClick={onToggleEnabled}
+              disabled={changingSetting}
+              aria-pressed={enabled}
+            >
+              채팅 {enabled ? 'ON' : 'OFF'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="live-chat__collapse"
+            onClick={onToggleOpen}
+            aria-expanded={open}
+            aria-label="채팅창 닫기"
+            title="채팅창 닫기"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <>
+          <div className="live-chat__messages" aria-live="polite">
+            {!enabled && (
+              <div className="live-chat__system">방송자가 채팅을 중지했습니다.</div>
+            )}
+            {enabled && messages.length === 0 && (
+              <div className="live-chat__empty">첫 번째 채팅을 남겨보세요.</div>
+            )}
+            {messages.map((message) => (
+              <div className={`live-chat__message ${message.mine ? 'is-mine' : ''}`} key={message.id}>
+                <div>
+                  <strong>{message.senderName}</strong>
+                  <time>{new Date(message.sentAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time>
+                </div>
+                <p>{message.text}</p>
+              </div>
+            ))}
+          </div>
+          <form className="live-chat__form" onSubmit={onSubmit}>
+            <input
+              value={input}
+              onChange={onInputChange}
+              maxLength="300"
+              placeholder={enabled ? '메시지를 입력하세요' : '현재 채팅을 사용할 수 없습니다'}
+              disabled={!enabled || !controller || sending}
+              aria-label="채팅 메시지"
+            />
+            <button
+              type="submit"
+              disabled={!enabled || !controller || sending || !input.trim()}
+            >
+              전송
+            </button>
+          </form>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function LiveWatchPage() {
   const { streamId } = useParams()
   const navigate = useNavigate()
-  const location = useLocation()
-  const youtubeSetup = location.state?.youtubeSetup
+  const fullscreenRef = useRef(null)
+  const playerRef = useRef(null)
   const [stream, setStream] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [changing, setChanging] = useState(false)
+  const [browserReady, setBrowserReady] = useState(false)
+  const [viewerCount, setViewerCount] = useState(0)
+  const [chatOpen, setChatOpen] = useState(true)
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatController, setChatController] = useState(null)
+  const [chatInput, setChatInput] = useState('')
+  const [sendingChat, setSendingChat] = useState(false)
+  const [changingChatSetting, setChangingChatSetting] = useState(false)
+  const [viewerPlaying, setViewerPlaying] = useState(true)
+  const [viewerMuted, setViewerMuted] = useState(false)
+  const [viewerVolume, setViewerVolume] = useState(1)
+  const [viewerPip, setViewerPip] = useState(false)
+  const [viewerFullscreen, setViewerFullscreen] = useState(false)
 
   useEffect(() => {
     fetchLiveStream(streamId)
@@ -23,7 +132,140 @@ export default function LiveWatchPage() {
       .finally(() => setLoading(false))
   }, [streamId])
 
+  useEffect(() => {
+    function handleFullscreenChange() {
+      const fullscreenElement = document.fullscreenElement ?? document.webkitFullscreenElement
+      setViewerFullscreen(fullscreenElement === fullscreenRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  const getViewerMedia = useCallback(() => (
+    Array.from(playerRef.current?.querySelectorAll('video, audio') ?? [])
+  ), [])
+
+  async function handleViewerPlayPause() {
+    const media = getViewerMedia()
+    if (media.length === 0) {
+      setError('재생할 방송 영상을 준비하는 중입니다.')
+      return
+    }
+
+    if (viewerPlaying) {
+      media.forEach((element) => element.pause())
+      setViewerPlaying(false)
+      return
+    }
+
+    const results = await Promise.allSettled(media.map((element) => element.play()))
+    if (results.some((result) => result.status === 'fulfilled')) {
+      setViewerPlaying(true)
+      setError('')
+    } else {
+      setError('방송 영상을 다시 재생하지 못했습니다.')
+    }
+  }
+
+  function applyViewerVolume(volume, muted) {
+    getViewerMedia().forEach((element) => {
+      element.volume = volume
+      element.muted = muted
+    })
+  }
+
+  function handleViewerMuteToggle() {
+    const nextMuted = !viewerMuted
+    setViewerMuted(nextMuted)
+    applyViewerVolume(viewerVolume, nextMuted)
+  }
+
+  function handleViewerVolumeChange(event) {
+    const nextVolume = Number(event.target.value)
+    const nextMuted = nextVolume === 0
+    setViewerVolume(nextVolume)
+    setViewerMuted(nextMuted)
+    applyViewerVolume(nextVolume, nextMuted)
+  }
+
+  async function handleViewerPip() {
+    const video = playerRef.current?.querySelector('video')
+    if (!video) {
+      setError('PIP로 재생할 방송 영상을 준비하는 중입니다.')
+      return
+    }
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture()
+        setViewerPip(false)
+      } else if (document.pictureInPictureEnabled && video.requestPictureInPicture) {
+        video.addEventListener('leavepictureinpicture', () => setViewerPip(false), { once: true })
+        await video.requestPictureInPicture()
+        setViewerPip(true)
+      } else if (video.webkitSupportsPresentationMode) {
+        const nextMode = video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture'
+        video.webkitSetPresentationMode(nextMode)
+        setViewerPip(nextMode === 'picture-in-picture')
+      } else {
+        setError('현재 브라우저에서는 PIP 기능을 지원하지 않습니다.')
+      }
+    } catch {
+      setError('PIP 화면을 시작하지 못했습니다.')
+    }
+  }
+
+  async function handleViewerFullscreen() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+        document.webkitExitFullscreen()
+      } else if (fullscreenRef.current?.requestFullscreen) {
+        await fullscreenRef.current.requestFullscreen()
+      } else if (fullscreenRef.current?.webkitRequestFullscreen) {
+        fullscreenRef.current.webkitRequestFullscreen()
+        setViewerFullscreen(true)
+      } else {
+        setError('현재 브라우저에서는 전체화면 기능을 지원하지 않습니다.')
+      }
+    } catch {
+      setError('전체화면으로 전환하지 못했습니다.')
+    }
+  }
+
+  const handleChatMessage = useCallback((message) => {
+    setChatMessages((current) => {
+      if (current.some((item) => item.id === message.id)) return current
+      return [...current, message].slice(-100)
+    })
+  }, [])
+
+  const handleRemoteChatEnabledChange = useCallback((enabled) => {
+    setStream((current) => current ? { ...current, chatEnabled: enabled } : current)
+  }, [])
+
+  const handleRemoteStreamEnded = useCallback(() => {
+    setStream((current) => current ? { ...current, status: 'ENDED' } : current)
+    setChatController(null)
+    setBrowserReady(false)
+    setError('')
+  }, [])
+
+  const handleChatControllerChange = useCallback((controller) => {
+    setChatController(controller)
+  }, [])
+
   async function handleStart() {
+    if (!browserReady) {
+      setError('먼저 카메라와 마이크를 시작해 주세요.')
+      return
+    }
     setChanging(true)
     setError('')
     try {
@@ -39,11 +281,46 @@ export default function LiveWatchPage() {
     if (!window.confirm('FESTLOG 라이브를 종료할까요? 종료 후 라이브 목록에서 사라집니다.')) return
     setChanging(true)
     try {
+      try {
+        await chatController?.notifyStreamEnded()
+      } catch {
+        // 연결이 이미 끊겼더라도 서버의 방송 종료 처리는 계속 진행합니다.
+      }
       await endLiveStream(streamId)
       navigate('/live', { replace: true })
     } catch (changeError) {
       setError(changeError.message)
       setChanging(false)
+    }
+  }
+
+  async function handleToggleChatEnabled() {
+    if (!stream.owner || changingChatSetting) return
+    setChangingChatSetting(true)
+    setError('')
+    try {
+      setStream(await changeLiveChatEnabled(streamId, !stream.chatEnabled))
+    } catch (changeError) {
+      setError(changeError.message)
+    } finally {
+      setChangingChatSetting(false)
+    }
+  }
+
+  async function handleSendChat(event) {
+    event.preventDefault()
+    const message = chatInput.trim()
+    if (!message || !chatController || !stream.chatEnabled) return
+
+    setSendingChat(true)
+    setError('')
+    try {
+      await chatController.sendChat(message)
+      setChatInput('')
+    } catch (sendError) {
+      setError(sendError.message)
+    } finally {
+      setSendingChat(false)
     }
   }
 
@@ -63,22 +340,160 @@ export default function LiveWatchPage() {
           <span className={`live-status live-status--${stream.status.toLowerCase()}`}>{STATUS_LABEL[stream.status]}</span>
         </div>
 
-        <div className="live-watch__layout">
+        <div
+          className={`live-watch__layout ${chatOpen ? '' : 'live-watch__layout--chat-hidden'}`}
+          ref={fullscreenRef}
+        >
           <section>
-            <div className="live-player">
-              {stream.status === 'LIVE' ? (
-                <iframe
-                  src={stream.youtubeEmbedUrl}
-                  title={stream.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
+            <div className="live-player" ref={playerRef}>
+              {stream.status !== 'ENDED' ? (
+                <BrowserLivePlayer
+                  streamId={stream.streamId}
+                  owner={stream.owner}
+                  status={stream.status}
+                  chatEnabled={stream.chatEnabled}
+                  onReadyChange={setBrowserReady}
+                  onError={setError}
+                  onChatEnabledChange={handleRemoteChatEnabledChange}
+                  onChatMessage={handleChatMessage}
+                  onStreamEnded={handleRemoteStreamEnded}
+                  onChatControllerChange={handleChatControllerChange}
+                  onViewerCountChange={setViewerCount}
                 />
               ) : (
                 <div className="live-player__waiting" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.7)), url(${stream.thumbnailUrl})` }}>
-                  <strong>{stream.status === 'SCHEDULED' ? '방송 시작을 기다리고 있습니다.' : '종료된 방송입니다.'}</strong>
+                  <strong>방송이 종료되었습니다.</strong>
                 </div>
               )}
+              <div className="live-player__hover-ui">
+                <div className="live-player__hover-top">
+                  <button
+                    type="button"
+                    className="live-player__chat-toggle"
+                    onClick={() => setChatOpen((current) => !current)}
+                    aria-label={chatOpen ? '채팅창 닫기' : '채팅창 열기'}
+                    title={chatOpen ? '채팅창 닫기' : '채팅창 열기'}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 5.5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-7l-4.8 3.2.8-3.2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" />
+                      <circle cx="8" cy="11" r="1" />
+                      <circle cx="12" cy="11" r="1" />
+                      <circle cx="16" cy="11" r="1" />
+                    </svg>
+                    <span>{chatOpen ? '채팅 닫기' : '채팅 열기'}</span>
+                  </button>
+                </div>
+                <div className="live-player__hover-bottom">
+                  <div className="live-player__status-group">
+                    <span className="live-player__live-label"><i /> {STATUS_LABEL[stream.status]}</span>
+                    <span className="live-player__viewer-label">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.5 3.5a3.7 3.7 0 0 1 2.5 3.5v1m-4-8a2.6 2.6 0 0 0 0-5" />
+                      </svg>
+                      {viewerCount}
+                    </span>
+                  </div>
+
+                  {!stream.owner && stream.status !== 'ENDED' && (
+                    <div className="live-player__viewer-controls">
+                      <button
+                        type="button"
+                        className="live-player__control"
+                        onClick={handleViewerPlayPause}
+                        aria-label={viewerPlaying ? '일시정지' : '재생'}
+                        title={viewerPlaying ? '일시정지' : '재생'}
+                      >
+                        {viewerPlaying ? (
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M17 5v14" /></svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z" /></svg>
+                        )}
+                      </button>
+
+                      <div className="live-player__volume-control">
+                        <button
+                          type="button"
+                          className="live-player__control"
+                          onClick={handleViewerMuteToggle}
+                          aria-label={viewerMuted ? '음소거 해제' : '음소거'}
+                          title={viewerMuted ? '음소거 해제' : '음소거'}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 9v6h4l5 4V5L9 9H5Z" />
+                            {viewerMuted ? <path d="m18 9 4 4m0-4-4 4" /> : <path d="M17 9.5a4 4 0 0 1 0 5M19.5 7a7 7 0 0 1 0 10" />}
+                          </svg>
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={viewerMuted ? 0 : viewerVolume}
+                          onChange={handleViewerVolumeChange}
+                          aria-label="볼륨 조절"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        className={`live-player__control ${viewerPip ? 'is-active' : ''}`}
+                        onClick={handleViewerPip}
+                        aria-label="PIP 화면"
+                        title="PIP 화면"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><rect x="12" y="11" width="7" height="5" rx="1" /></svg>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={`live-player__control ${viewerFullscreen ? 'is-active' : ''}`}
+                        onClick={handleViewerFullscreen}
+                        aria-label={viewerFullscreen ? '전체화면 종료' : '전체화면'}
+                        title={viewerFullscreen ? '전체화면 종료' : '전체화면'}
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {stream.owner && (
+              <div className="live-broadcast-controls live-broadcast-controls--below-player">
+                <div className="live-broadcast-controls__heading">
+                  <div>
+                    <h2>방송 관리</h2>
+                    <p>카메라와 마이크 상태를 확인한 뒤 방송을 시작하거나 종료하세요.</p>
+                  </div>
+                  <div className="live-broadcast-controls__actions">
+                    {stream.status === 'SCHEDULED' && (
+                      <button
+                        className="live-button live-button--primary"
+                        onClick={handleStart}
+                        disabled={changing || !browserReady}
+                      >
+                        방송 시작
+                      </button>
+                    )}
+                    {stream.status === 'LIVE' && (
+                      <button
+                        className="live-button live-button--danger"
+                        onClick={handleEnd}
+                        disabled={changing}
+                      >
+                        방송 종료
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <ol className="live-guide live-guide--horizontal">
+                  <li>카메라·마이크를 허용합니다.</li>
+                  <li>미리보기를 확인합니다.</li>
+                  <li>방송 시작 또는 종료 버튼을 누릅니다.</li>
+                </ol>
+              </div>
+            )}
 
             <div className="live-watch__info">
               <span>{stream.eventName}</span>
@@ -88,45 +503,25 @@ export default function LiveWatchPage() {
             </div>
           </section>
 
-          <aside className="live-side-panel">
-            {stream.owner ? (
-              <>
-                <h2>방송 관리</h2>
-                {youtubeSetup && (
-                  <div className="obs-setup-card">
-                    <strong>OBS 연결 정보</strong>
-                    <p>보안을 위해 지금 화면에서만 확인하세요. 스트림 키를 다른 사람에게 보내면 안 됩니다.</p>
-                    <label>
-                      서버
-                      <div><code>{youtubeSetup.obsServerUrl}</code><button type="button" onClick={() => navigator.clipboard.writeText(youtubeSetup.obsServerUrl)}>복사</button></div>
-                    </label>
-                    <label>
-                      스트림 키
-                      <div><code>{youtubeSetup.streamKey}</code><button type="button" onClick={() => navigator.clipboard.writeText(youtubeSetup.streamKey)}>복사</button></div>
-                    </label>
-                  </div>
-                )}
-                <ol className="live-guide">
-                  <li>OBS 설정의 방송 서비스에서 사용자 지정 또는 YouTube RTMPS를 선택합니다.</li>
-                  <li>위 서버 주소와 스트림 키를 OBS에 넣고 송출합니다.</li>
-                  <li>YouTube 미리보기를 확인한 뒤 아래 버튼을 누릅니다.</li>
-                </ol>
-                {stream.status === 'SCHEDULED' && (
-                  <button className="live-button live-button--primary live-button--wide" onClick={handleStart} disabled={changing}>방송 시작 상태로 변경</button>
-                )}
-                {stream.status === 'LIVE' && (
-                  <button className="live-button live-button--danger live-button--wide" onClick={handleEnd} disabled={changing}>방송 종료</button>
-                )}
-                <a href={stream.youtubeWatchUrl} target="_blank" rel="noreferrer" className="live-button live-button--ghost live-button--wide">YouTube에서 확인</a>
-                <p className="live-guide__note">FESTLOG의 시작·종료 버튼은 목록 공개 상태를 바꿉니다. 실제 영상 송출은 OBS와 YouTube Studio에서 관리해 주세요.</p>
-              </>
-            ) : (
-              <>
-                <h2>실시간 방송</h2>
-                <p className="live-side-panel__text">채팅 기능은 다음 개발 단계에서 이 영역에 연결할 수 있습니다.</p>
-              </>
-            )}
-          </aside>
+          {chatOpen && (
+            <aside className="live-side-panel">
+              <LiveChatPanel
+                open
+                enabled={stream.chatEnabled}
+                owner={stream.owner}
+                viewerCount={viewerCount}
+                messages={chatMessages}
+                controller={chatController}
+                input={chatInput}
+                sending={sendingChat}
+                changingSetting={changingChatSetting}
+                onInputChange={(event) => setChatInput(event.target.value)}
+                onSubmit={handleSendChat}
+                onToggleOpen={() => setChatOpen(false)}
+                onToggleEnabled={handleToggleChatEnabled}
+              />
+            </aside>
+          )}
         </div>
         {error && <p className="live-message live-message--error">{error}</p>}
       </div>

@@ -68,11 +68,11 @@ function KakaoIcon() {
   )
 }
 
-function SocialLoginButton({ provider, label, icon }) {
+function SocialLoginButton({ provider, label, icon, returnTo }) {
   return (
     <a
       className="social-login"
-      href={`/oauth2/authorization/${provider}`}
+      href={`/api/auth/oauth2/start/${provider}?returnTo=${encodeURIComponent(returnTo)}`}
       aria-label={`${label} 계정으로 로그인`}
     >
       <span className={`social-icon ${provider}-icon`}>{icon}</span>
@@ -104,6 +104,10 @@ function LoginPage() {
   const signupComplete = searchParams.get('signup') === 'success'
   const oauthSuccess = searchParams.get('oauth') === 'success'
   const oauthError = searchParams.get('oauth') === 'error'
+  const requestedReturnTo = searchParams.get('returnTo')
+  const returnTo = requestedReturnTo?.startsWith('/') && !requestedReturnTo.startsWith('//')
+    ? requestedReturnTo
+    : '/'
   const trimmedEmail = email.trim()
   const emailInvalid = trimmedEmail !== '' && !EMAIL_PATTERN.test(trimmedEmail)
   const showEmailError = emailTouched && emailInvalid
@@ -111,9 +115,9 @@ function LoginPage() {
 
   useEffect(() => {
     if (oauthSuccess) {
-      navigate('/', { replace: true })
+      navigate(returnTo, { replace: true })
     }
-  }, [navigate, oauthSuccess])
+  }, [navigate, oauthSuccess, returnTo])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -129,7 +133,7 @@ function LoginPage() {
 
     try {
       await login({ email, password })
-      navigate('/', { replace: true })
+      navigate(returnTo, { replace: true })
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -243,16 +247,19 @@ function LoginPage() {
             provider="google"
             label="google"
             icon={<GoogleIcon />}
+            returnTo={returnTo}
           />
           <SocialLoginButton
             provider="kakao"
             label="kakao"
             icon={<KakaoIcon />}
+            returnTo={returnTo}
           />
           <SocialLoginButton
             provider="naver"
             label="naver"
             icon={<span className="naver-letter">N</span>}
+            returnTo={returnTo}
           />
         </div>
       </section>

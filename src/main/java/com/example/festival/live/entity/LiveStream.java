@@ -43,7 +43,11 @@ public class LiveStream {
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
-    @Column(name = "stream_url", nullable = false, length = 500)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type", nullable = false, length = 20)
+    private LiveSourceType sourceType;
+
+    @Column(name = "stream_url", length = 500)
     private String streamUrl;
 
     @Column(name = "start_at")
@@ -78,6 +82,7 @@ public class LiveStream {
             String title,
             String description,
             String thumbnailUrl,
+            LiveSourceType sourceType,
             String streamUrl
     ) {
         this.event = event;
@@ -85,6 +90,7 @@ public class LiveStream {
         this.title = title;
         this.description = description;
         this.thumbnailUrl = thumbnailUrl;
+        this.sourceType = sourceType;
         this.streamUrl = streamUrl;
         this.entranceFee = BigDecimal.ZERO;
         this.adEnabled = false;
@@ -98,9 +104,10 @@ public class LiveStream {
             String title,
             String description,
             String thumbnailUrl,
+            LiveSourceType sourceType,
             String streamUrl
     ) {
-        return new LiveStream(event, host, title, description, thumbnailUrl, streamUrl);
+        return new LiveStream(event, host, title, description, thumbnailUrl, sourceType, streamUrl);
     }
 
     public void start(LocalDateTime now) {
@@ -112,6 +119,10 @@ public class LiveStream {
     public void end(LocalDateTime now) {
         this.status = LiveStreamStatus.ENDED;
         this.endAt = now;
+    }
+
+    public void changeChatEnabled(boolean enabled) {
+        this.chatEnabled = enabled;
     }
 
     public boolean isOwnedBy(Long memberId) {
@@ -146,6 +157,10 @@ public class LiveStream {
         return streamUrl;
     }
 
+    public LiveSourceType getSourceType() {
+        return sourceType;
+    }
+
     public LocalDateTime getStartAt() {
         return startAt;
     }
@@ -156,6 +171,10 @@ public class LiveStream {
 
     public LiveStreamStatus getStatus() {
         return status;
+    }
+
+    public boolean isChatEnabled() {
+        return chatEnabled;
     }
 
     public LocalDateTime getCreatedAt() {
