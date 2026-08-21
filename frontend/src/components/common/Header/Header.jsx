@@ -4,6 +4,7 @@ import { search } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
+import NotificationBell from "../../../features/notification/components/NotificationBell";
 import "./Header.css";
 
 /**
@@ -156,6 +157,7 @@ function Header() {
 
             {isLoggedIn ? (
               <div className="header__account">
+                <NotificationBell />
                 <a href="/profile" className="header__profile-btn">
                   내 프로필
                 </a>
