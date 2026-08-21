@@ -110,6 +110,9 @@ function Home() {
       <section className="home__section">
         <div className="home__section-header">
           <h2>뉴스</h2>
+          <a href="/news" className="home__section-more">
+            더보기 ›
+          </a>
         </div>
 
         <NewsSection items={newsItems} />

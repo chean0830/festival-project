@@ -14,6 +14,7 @@ public record EventSummaryDto(
         LocalDate endDate,
         String posterImage,
         String region,
-        String kind
+        String kind,
+        long popularity
 ) {
 }

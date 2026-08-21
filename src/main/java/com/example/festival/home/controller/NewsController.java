@@ -23,4 +23,9 @@ public class NewsController {
     public List<NewsSummaryDto> getRecentNews() {
         return newsService.getRecentNews();
     }
+
+    @GetMapping("/news/all")
+    public List<NewsSummaryDto> getAllNews() {
+        return newsService.getAllNews();
+    }
 }

@@ -12,9 +12,8 @@ export const CATEGORIES = [
 ];
 
 /**
- * sortBy: "popularity"(인기순, 내림차순) | "latest"(최신순, 날짜 빠른 순)
+ * sortBy: "popularity"(인기순, 찜 수 내림차순) | "latest"(최신순, 날짜 빠른 순)
  * 원본 배열은 건드리지 않고 정렬된 새 배열을 반환한다.
- * (DB에 인기도 데이터가 아직 없어서 popularity 정렬은 지금은 latest와 동일하게 동작함)
  */
 export function sortPrograms(items, sortBy) {
   const sorted = [...items];
