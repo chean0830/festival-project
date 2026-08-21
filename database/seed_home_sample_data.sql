@@ -5,6 +5,11 @@
 --
 -- 실행: mysql -u root -p festival < database/seed_home_sample_data.sql
 --
+-- 맨 아래 member_event(찜) 데이터는 공연일정 "인기순" 정렬이 실제로 동작하는 걸
+-- 눈으로 보여주기 위한 더미 데이터 (후지록 페스티벌을 1등으로 만들어둠).
+-- member_id 1,2,3이 이미 존재해야 들어감 (FK) — 없으면 그 블록만 본인 DB에 있는
+-- 실제 member_id로 바꿔서 넣으면 됨.
+--
 -- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
 -- Host: localhost    Database: festival
@@ -61,6 +66,16 @@ LOCK TABLES `event_news` WRITE;
 INSERT INTO `event_news` (`news_id`, `event_id`, `artist_id`, `title`, `content`, `news_type`, `image_url`, `source_url`, `created_at`, `updated_at`) VALUES (1,NULL,NULL,'넬(NELL), 새 싱글 발표 소식',NULL,'ARTIST','https://tkfile.yes24.com/upload2/perfblog/202607/20260720/20260720-59323.jpg','https://m.ddaily.co.kr/page/view/2026041009545113347','2026-08-20 20:37:33','2026-08-20 20:43:14'),(2,NULL,NULL,'NELL SEASON 2026 [Only One] 티켓 오픈 안내',NULL,'NOTICE','https://tkfile.yes24.com/upload2/perfblog/202607/20260720/20260720-59323.jpg','https://www.heraldmuse.com/article/10813302','2026-08-20 20:37:33','2026-08-20 20:43:14'),(3,NULL,NULL,'태민 월드투어 서울 공연 라인업 공개',NULL,'LINEUP','https://tkfile.yes24.com/upload2/perfblog/202608/20260807/20260807-59646_1.jpg','https://www.etoday.co.kr/news/view/2608201','2026-08-20 20:37:33','2026-08-20 20:43:14'),(4,NULL,NULL,'SPYAIR 내한공연 공식 MD 발표',NULL,'MD','https://tkfile.yes24.com/upload2/perfblog/202605/20260522/20260522-58592.jpg','https://news.nate.com/view/20260526n10774','2026-08-20 20:37:33','2026-08-20 20:43:14'),(5,NULL,NULL,'2026 THE FACT MUSIC AWARDS 부산 개최 공지',NULL,'NOTICE','https://tkfile.yes24.com/upload2/perfblog/202608/20260804/20260804-59564.jpg','https://news.tf.co.kr/read/entertain/2331510.htm','2026-08-20 20:37:33','2026-08-20 20:43:14');
 /*!40000 ALTER TABLE `event_news` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping data for table `member_event` (인기순 정렬용 더미 찜 데이터 — 후지록 페스티벌 1등)
+--
+
+LOCK TABLES `member_event` WRITE;
+INSERT INTO `member_event` (`member_id`, `event_id`, `status`, `created_at`) VALUES
+(1,9,'INTERESTED',NOW()),(2,9,'INTERESTED',NOW()),(3,9,'INTERESTED',NOW());
+UNLOCK TABLES;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
