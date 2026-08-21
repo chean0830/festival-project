@@ -1,0 +1,37 @@
+.write-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 16px;
+  padding: 6px 2px;
+  cursor: pointer;
+  position: relative;
+}
+.write-btn svg:first-child {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.write-btn__underline {
+  position: absolute;
+  left: 0;
+  bottom: 1px;
+  width: 100%;
+  height: 6px;
+}
+.write-btn__underline path {
+  stroke: var(--color-primary);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 0.3s ease;
+}
+.write-btn:hover .write-btn__underline path {
+  stroke-dashoffset: 0;
+}
