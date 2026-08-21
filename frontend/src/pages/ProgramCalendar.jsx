@@ -46,16 +46,6 @@ function ProgramCalendar() {
         <div className="program-calendar-page__lower">
           <div className="program-calendar-page__calendar">
             <EventCalendar />
-            <div className="program-calendar-page__legend">
-              <span className="program-calendar-page__legend-item">
-                <span className="program-calendar-page__legend-dot program-calendar-page__legend-dot--today" />
-                오늘
-              </span>
-              <span className="program-calendar-page__legend-item">
-                <span className="program-calendar-page__legend-dot program-calendar-page__legend-dot--event" />
-                공연 있음
-              </span>
-            </div>
           </div>
 
           <div className="program-calendar-page__side">

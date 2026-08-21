@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { getUpcomingEvents } from "../../../api/eventApi";
+import { useNavigate } from "react-router-dom";
+import { getUpcomingEvents, formatEventDate } from "../../../api/eventApi";
 import "./EventCalendar.css";
 
 /**
  * 공연 캘린더 (월 단위)
  * - 이전/다음 달 이동
- * - 공연 있는 날짜에 점(dot) 표시
- * - 그 날짜에 마우스를 올리면(hover) 그 날 공연 목록이 툴팁으로 뜸
+ * - 공연 있는 날짜에 점(dot) 표시, 마우스 올리면 간단 미리보기
+ * - 공연이 여러 개인 날짜를 클릭하면 그 날의 전체 공연 목록을 모달로 보여줌
  * - GET /api/home/events로 받아온 실제 DB 데이터를 날짜별로 묶어서 씀
  */
+
+const DOT_PALETTE = ["#c98fd1", "#ff6f91", "#5ac8fa", "#4be3ab", "#ffb347", "#7c83fd"];
 
 // events를 날짜(dateKey)별로 묶는다. start~end 사이 모든 날짜에 표시한다.
 function buildEventsByDate(events) {
@@ -20,7 +23,12 @@ function buildEventsByDate(events) {
 
     while (cursor <= end) {
       const key = toDateKey(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
-      (map[key] ??= []).push({ id: event.id, name: event.name });
+      (map[key] ??= []).push({
+        id: event.id,
+        name: event.name,
+        venueName: event.venueName,
+        startDate: event.startDate,
+      });
       cursor.setDate(cursor.getDate() + 1);
     }
   });
@@ -60,11 +68,13 @@ function buildCalendarCells(year, month) {
 }
 
 function EventCalendar() {
+  const navigate = useNavigate();
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [hoveredDateKey, setHoveredDateKey] = useState(null);
   const [eventsByDate, setEventsByDate] = useState({});
+  const [modalDateKey, setModalDateKey] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,7 +115,18 @@ function EventCalendar() {
     }
   }
 
+  function handleCellClick(cell, events) {
+    if (!events.length) return;
+    if (events.length === 1) {
+      navigate(`/program/event/${events[0].id}`);
+      return;
+    }
+    setModalDateKey(cell.dateKey);
+  }
+
   const hoveredEvents = hoveredDateKey ? eventsByDate[hoveredDateKey] ?? [] : [];
+  const modalEvents = modalDateKey ? eventsByDate[modalDateKey] ?? [] : [];
+  const modalDay = modalDateKey ? Number(modalDateKey.split("-")[2]) : null;
 
   return (
     <div className="event-calendar">
@@ -132,8 +153,13 @@ function EventCalendar() {
       </div>
 
       <div className="event-calendar__weekdays">
-        {WEEKDAY_LABELS.map((label) => (
-          <span key={label}>{label}</span>
+        {WEEKDAY_LABELS.map((label, index) => (
+          <span
+            key={label}
+            className={index === 0 ? "event-calendar__weekday--sun" : index === 6 ? "event-calendar__weekday--sat" : undefined}
+          >
+            {label}
+          </span>
         ))}
       </div>
 
@@ -141,38 +167,116 @@ function EventCalendar() {
         {cells.map((cell, index) => {
           const events = cell.dateKey ? eventsByDate[cell.dateKey] ?? [] : [];
           const hasEvents = events.length > 0;
+          const isToday = cell.dateKey === todayKey;
+
+          if (!cell.inCurrentMonth) {
+            return <div key={index} className="event-calendar__cell event-calendar__cell--empty" />;
+          }
 
           return (
             <div
               key={index}
               className={[
                 "event-calendar__cell",
-                !cell.inCurrentMonth && "event-calendar__cell--muted",
-                cell.dateKey === todayKey && "event-calendar__cell--today",
+                isToday && "event-calendar__cell--today",
                 hasEvents && "event-calendar__cell--has-events",
               ]
                 .filter(Boolean)
                 .join(" ")}
               onMouseEnter={() => hasEvents && setHoveredDateKey(cell.dateKey)}
               onMouseLeave={() => setHoveredDateKey(null)}
+              onClick={() => handleCellClick(cell, events)}
             >
-              {cell.inCurrentMonth && (
-                <span className="event-calendar__day">{cell.day}</span>
-              )}
-              {hasEvents && <span className="event-calendar__dot" />}
-
-              {hoveredDateKey === cell.dateKey && (
-                <div className="event-calendar__tooltip">
-                  {hoveredEvents.map((event) => (
-                    <p key={event.id} className="event-calendar__tooltip-item">
-                      {event.name}
-                    </p>
+              <span className="event-calendar__day">{cell.day}</span>
+              {hasEvents && (
+                <span className="event-calendar__dotrow">
+                  {events.slice(0, 3).map((event, i) => (
+                    <span
+                      key={event.id}
+                      className="event-calendar__dot"
+                      style={{ background: DOT_PALETTE[i % DOT_PALETTE.length] }}
+                    />
                   ))}
+                  {events.length > 3 && (
+                    <span className="event-calendar__dot-more">+{events.length - 3}</span>
+                  )}
+                </span>
+              )}
+              {isToday && !hasEvents && <span className="event-calendar__dotrow"><span className="event-calendar__dot event-calendar__dot--today" /></span>}
+
+              {hoveredDateKey === cell.dateKey && hasEvents && (
+                <div className="event-calendar__tooltip">
+                  {events.length > 1
+                    ? `${events.length}개 일정 · 클릭해서 전체보기`
+                    : `${events[0].name} · 클릭해서 보기`}
                 </div>
               )}
             </div>
           );
         })}
+      </div>
+
+      <div className="event-calendar__legend">
+        <span className="event-calendar__legend-item">
+          <span className="event-calendar__legend-swatch event-calendar__legend-swatch--today" />
+          오늘
+        </span>
+        <span className="event-calendar__legend-item">
+          <span className="event-calendar__legend-swatch event-calendar__legend-swatch--event" />
+          공연 있음
+        </span>
+      </div>
+
+      <div
+        className={`event-calendar__overlay${modalDateKey ? " event-calendar__overlay--show" : ""}`}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setModalDateKey(null);
+        }}
+      >
+        <div className="event-calendar__modal">
+          <div className="event-calendar__modal-head">
+            <div>
+              <p className="event-calendar__modal-title">
+                {viewMonth + 1}월 {modalDay}일
+              </p>
+              <p className="event-calendar__modal-sub">{modalEvents.length}개의 공연 일정</p>
+            </div>
+            <button
+              type="button"
+              className="event-calendar__modal-close"
+              aria-label="닫기"
+              onClick={() => setModalDateKey(null)}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="event-calendar__event-list">
+            {modalEvents.map((event, idx) => (
+              <button
+                type="button"
+                key={event.id}
+                className="event-calendar__event-item"
+                onClick={() => {
+                  setModalDateKey(null);
+                  navigate(`/program/event/${event.id}`);
+                }}
+              >
+                <span
+                  className="event-calendar__event-bar"
+                  style={{ background: DOT_PALETTE[idx % DOT_PALETTE.length] }}
+                />
+                <span className="event-calendar__event-info">
+                  <span className="event-calendar__event-name">{event.name}</span>
+                  <span className="event-calendar__event-meta">
+                    {formatEventDate(event.startDate)}
+                    {event.venueName ? ` · ${event.venueName}` : ""}
+                  </span>
+                </span>
+                <span className="event-calendar__event-chev">›</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
