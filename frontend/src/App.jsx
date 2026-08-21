@@ -10,6 +10,10 @@ import MdOrderShippingPage from './pages/MdOrderShippingPage'
 import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
 import MdOrderCompletePage from './pages/MdOrderCompletePage'
 import MdOrderPayPage from './pages/MdOrderPayPage'
+import CommunityLayout from './components/community/CommunityLayout'
+import CommunityPage from './pages/CommunityPage'
+import CommunityPostWritePage from './pages/CommunityPostWritePage'
+import CommunityPostDetailPage from './pages/CommunityPostDetailPage'
 import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -49,6 +53,12 @@ function App() {
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
         <Route path="/shop/preorder/:productId/complete" element={<MdOrderCompletePage />} />
         <Route path="/shop/preorder/order/:orderId/pay" element={<MdOrderPayPage />} />
+        <Route path="/community" element={<CommunityLayout />}>
+          <Route index element={<CommunityPage />} />
+          <Route path="new" element={<CommunityPostWritePage />} />
+          <Route path=":postId/edit" element={<CommunityPostWritePage />} />
+          <Route path=":postId" element={<CommunityPostDetailPage />} />
+        </Route>
         <Route path="/search" element={<Search />} />
 
         <Route path="/login" element={<LoginPage />} />
