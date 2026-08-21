@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
-import { getEventDetail } from "../api/eventApi";
+import { getEventDetail, getEventLineup } from "../api/eventApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import {
   fetchInterestedEventStatus,
@@ -37,6 +37,9 @@ function ProgramEventDetail() {
   const [interested, setInterested] = useState(false);
   const [heartBusy, setHeartBusy] = useState(false);
   const [heartError, setHeartError] = useState(null);
+  const [lineup, setLineup] = useState(undefined);
+  const [showLineup, setShowLineup] = useState(false);
+  const [lineupError, setLineupError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +77,16 @@ function ProgramEventDetail() {
       cancelled = true;
     };
   }, [memberId, eventId]);
+
+  function handleToggleLineup() {
+    setShowLineup((prev) => !prev);
+
+    if (lineup === undefined) {
+      getEventLineup(eventId)
+        .then((data) => setLineup(data))
+        .catch((err) => setLineupError(err.message));
+    }
+  }
 
   async function handleToggleInterest() {
     if (!memberId) {
@@ -186,6 +199,40 @@ function ProgramEventDetail() {
           </div>
 
           {heartError && <p className="event-detail__heart-error">{heartError}</p>}
+
+          <button type="button" className="event-detail__lineup-toggle" onClick={handleToggleLineup}>
+            라인업 확인하기 {showLineup ? "▲" : "▼"}
+          </button>
+
+          {showLineup && (
+            <div className="event-detail__lineup">
+              {lineupError && <p className="event-detail__heart-error">{lineupError}</p>}
+              {lineup === undefined && !lineupError && <p>라인업을 불러오는 중...</p>}
+              {lineup && lineup.length === 0 && <p>등록된 라인업이 없어요.</p>}
+              {lineup && lineup.length > 0 && (
+                <ul className="event-detail__lineup-grid">
+                  {lineup.map((artist) => (
+                    <li key={artist.artistId}>
+                      <button
+                        type="button"
+                        className="event-detail__lineup-artist"
+                        onClick={() => navigate(`/artists/${artist.artistId}`)}
+                      >
+                        <span className="event-detail__lineup-artist-thumb">
+                          {artist.profileImage ? (
+                            <img src={artist.profileImage} alt={artist.name} />
+                          ) : (
+                            "예시 이미지"
+                          )}
+                        </span>
+                        <span className="event-detail__lineup-artist-name">{artist.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

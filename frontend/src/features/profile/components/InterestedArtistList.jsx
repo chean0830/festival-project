@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { resolveImageUrl } from '../api/profileApi'
 
 export default function InterestedArtistList({ artists, onRemove }) {
@@ -9,12 +10,14 @@ export default function InterestedArtistList({ artists, onRemove }) {
     <ul className="profile-interest-list">
       {artists.map((artist) => (
         <li key={artist.artistId} className="profile-interest-item">
-          {artist.profileImageUrl ? (
-            <img src={resolveImageUrl(artist.profileImageUrl)} alt={artist.name} />
-          ) : (
-            <div className="profile-interest-thumb-placeholder" />
-          )}
-          <span>{artist.name}</span>
+          <Link to={`/artists/${artist.artistId}`} className="profile-interest-link">
+            {artist.profileImageUrl ? (
+              <img src={resolveImageUrl(artist.profileImageUrl)} alt={artist.name} />
+            ) : (
+              <div className="profile-interest-thumb-placeholder" />
+            )}
+            <span>{artist.name}</span>
+          </Link>
           {onRemove && (
             <button
               type="button"

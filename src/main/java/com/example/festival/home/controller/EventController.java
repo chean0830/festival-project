@@ -2,6 +2,7 @@ package com.example.festival.home.controller;
 
 import com.example.festival.home.dto.EventDetailDto;
 import com.example.festival.home.dto.EventSummaryDto;
+import com.example.festival.home.dto.LineupArtistDto;
 import com.example.festival.home.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,5 +31,10 @@ public class EventController {
     @GetMapping("/events/{eventId}")
     public EventDetailDto getEventDetail(@PathVariable Long eventId) {
         return eventService.getEventDetail(eventId);
+    }
+
+    @GetMapping("/events/{eventId}/lineup")
+    public List<LineupArtistDto> getEventLineup(@PathVariable Long eventId) {
+        return eventService.getEventLineup(eventId);
     }
 }

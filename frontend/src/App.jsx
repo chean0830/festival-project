@@ -5,6 +5,7 @@ import Program from './pages/Program'
 import ProgramCalendar from './pages/ProgramCalendar'
 import ProgramCategory from './pages/ProgramCategory'
 import ProgramEventDetail from './pages/ProgramEventDetail'
+import ArtistDetailPage from './pages/ArtistDetailPage'
 import MdPreorderPage from './pages/MdPreorderPage'
 import MdOrderShippingPage from './pages/MdOrderShippingPage'
 import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
@@ -44,6 +45,7 @@ function App() {
         <Route path="/program/calendar" element={<ProgramCalendar />} />
         <Route path="/program/:category" element={<ProgramCategory />} />
         <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
+        <Route path="/artists/:artistId" element={<ArtistDetailPage />} />
         <Route path="/shop/preorder" element={<MdPreorderPage />} />
         <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
