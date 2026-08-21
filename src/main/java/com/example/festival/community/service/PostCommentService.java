@@ -1,5 +1,6 @@
 package com.example.festival.community.service;
 
+import com.example.festival.community.dto.MyCommentResponse;
 import com.example.festival.community.dto.PostCommentRequest;
 import com.example.festival.community.dto.PostCommentResponse;
 import com.example.festival.community.entity.Post;
@@ -28,6 +29,19 @@ public class PostCommentService {
     public List<PostCommentResponse> getComments(Long postId) {
         return postCommentRepository.findByPost_PostIdOrderByCreatedAtAsc(postId).stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    // 프로필 - 내가 쓴 댓글
+    public List<MyCommentResponse> getMyComments(Long memberId) {
+        return postCommentRepository.findByMember_IdOrderByCreatedAtDesc(memberId).stream()
+                .map(comment -> new MyCommentResponse(
+                        comment.getCommentId(),
+                        comment.getPost().getPostId(),
+                        comment.getPost().getTitle(),
+                        comment.getContent(),
+                        comment.getCreatedAt()
+                ))
                 .toList();
     }
 

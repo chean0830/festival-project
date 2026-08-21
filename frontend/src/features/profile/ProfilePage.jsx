@@ -35,6 +35,9 @@ import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
 import RecordCard from '../festivalrecord/components/RecordCard'
 import { cancelMdOrder, fetchMyMdOrders } from '../../api/mdShopApi'
 import MdOrderHistoryList from './components/MdOrderHistoryList'
+import { getMyPosts, getLikedPosts, getMyComments } from '../../api/communityApi'
+import ProfilePostList from './components/ProfilePostList'
+import ProfileCommentList from './components/ProfileCommentList'
 import '../festivalrecord/festivalrecord.css'
 import './profile.css'
 
@@ -56,6 +59,9 @@ export default function ProfilePage() {
   const [stats, setStats] = useState(null)
   const [festivalRecords, setFestivalRecords] = useState([])
   const [mdOrders, setMdOrders] = useState([])
+  const [myPosts, setMyPosts] = useState([])
+  const [likedPosts, setLikedPosts] = useState([])
+  const [myComments, setMyComments] = useState([])
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -108,8 +114,20 @@ export default function ProfilePage() {
       setLoading(true)
       setLoadError(null)
       try {
-        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData, recordData, mdOrderData] =
-          await Promise.all([
+        const [
+          profileData,
+          artistData,
+          eventData,
+          attendedData,
+          upcomingData,
+          badgeData,
+          statsData,
+          recordData,
+          mdOrderData,
+          myPostData,
+          likedPostData,
+          myCommentData,
+        ] = await Promise.all([
             fetchProfile(memberId),
             fetchInterestedArtists(memberId),
             fetchInterestedEvents(memberId),
@@ -119,6 +137,9 @@ export default function ProfilePage() {
             fetchProfileStats(memberId),
             fetchFestivalRecords(memberId),
             fetchMyMdOrders(memberId),
+            getMyPosts(memberId),
+            getLikedPosts(memberId),
+            getMyComments(memberId),
           ])
         if (!cancelled) {
           setProfile(profileData)
@@ -130,6 +151,9 @@ export default function ProfilePage() {
           setStats(statsData)
           setFestivalRecords(recordData)
           setMdOrders(mdOrderData)
+          setMyPosts(myPostData)
+          setLikedPosts(likedPostData)
+          setMyComments(myCommentData)
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
@@ -325,6 +349,25 @@ export default function ProfilePage() {
             </a>
           </div>
           <MdOrderHistoryList orders={mdOrders} onCancel={handleCancelMdOrder} />
+        </section>
+
+        <section>
+          <h2>커뮤니티 활동</h2>
+
+          <div className="profile-my-events-group">
+            <h3>내가 쓴 글</h3>
+            <ProfilePostList posts={myPosts} emptyText="아직 작성한 글이 없어요." />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>좋아요 누른 글</h3>
+            <ProfilePostList posts={likedPosts} emptyText="아직 좋아요 누른 글이 없어요." />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 쓴 댓글</h3>
+            <ProfileCommentList comments={myComments} />
+          </div>
         </section>
       </div>
       </div>

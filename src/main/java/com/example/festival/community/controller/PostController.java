@@ -49,6 +49,16 @@ public class PostController {
         return postService.getPost(postId, memberId);
     }
 
+    @GetMapping("/api/members/{memberId}/posts")
+    public List<PostSummaryResponse> getMyPosts(@PathVariable Long memberId) {
+        return postService.getMyPosts(memberId);
+    }
+
+    @GetMapping("/api/members/{memberId}/posts/liked")
+    public List<PostSummaryResponse> getLikedPosts(@PathVariable Long memberId) {
+        return postService.getLikedPosts(memberId);
+    }
+
     @PostMapping("/api/members/{memberId}/posts")
     public PostDetailResponse createPost(@PathVariable Long memberId, @Valid @RequestBody PostRequest request) {
         return postService.createPost(memberId, request);

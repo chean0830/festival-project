@@ -1,6 +1,9 @@
 package com.example.festival.mdshop.service;
 
 import com.example.festival.event.entity.Event;
+import com.example.festival.event.repository.EventScheduleRepository;
+import com.example.festival.interest.entity.MemberArtist;
+import com.example.festival.interest.repository.MemberArtistRepository;
 import com.example.festival.mdshop.dto.MdOrderRequest;
 import com.example.festival.mdshop.dto.MdOrderResponse;
 import com.example.festival.mdshop.dto.MdProductResponse;
@@ -21,7 +24,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * MD 사전예약 상품 조회 + 주문(예약) 생성.
@@ -42,22 +47,31 @@ public class MdShopService {
     private static final String NOTIFICATION_TYPE_ORDER = "MD_ORDER";
     private static final String NOTIFICATION_TYPE_PAID = "MD_PAID";
     private static final String NOTIFICATION_TYPE_CANCELED = "MD_CANCELED";
+    private static final String NOTIFICATION_TYPE_NEW_PRODUCT = "MD_NEW_PRODUCT";
+    private static final String NOTIFICATION_TYPE_PAYMENT_REMINDER = "MD_PAYMENT_REMINDER";
+    private static final int PAYMENT_REMINDER_AFTER_HOURS = 24;
 
     private final MdProductRepository mdProductRepository;
     private final MdOrderRepository mdOrderRepository;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
+    private final EventScheduleRepository eventScheduleRepository;
+    private final MemberArtistRepository memberArtistRepository;
 
     public MdShopService(
             MdProductRepository mdProductRepository,
             MdOrderRepository mdOrderRepository,
             MemberRepository memberRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            EventScheduleRepository eventScheduleRepository,
+            MemberArtistRepository memberArtistRepository
     ) {
         this.mdProductRepository = mdProductRepository;
         this.mdOrderRepository = mdOrderRepository;
         this.memberRepository = memberRepository;
         this.notificationService = notificationService;
+        this.eventScheduleRepository = eventScheduleRepository;
+        this.memberArtistRepository = memberArtistRepository;
     }
 
     public List<MdProductResponse> getPreorderProducts() {
@@ -68,6 +82,67 @@ public class MdShopService {
 
     public MdProductResponse getProduct(Long productId) {
         return toProductResponse(getProductOrThrow(productId));
+    }
+
+    /**
+     * 사전예약 중인 상품의 공연에 출연하는 아티스트를 관심 등록한 회원들에게 "신상 MD" 알림을 보낸다.
+     * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
+     * NewMdProductNotifyScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void notifyInterestedArtistFans() {
+        for (MdProduct product : mdProductRepository.findAllByStatusInWithEvent(List.of(PREORDER_STATUS))) {
+            Long eventId = product.getEvent().getEventId();
+
+            Set<Long> artistIds = eventScheduleRepository.findByEvent_EventIdOrderByLineupOrderAsc(eventId).stream()
+                    .map(schedule -> schedule.getArtist().getArtistId())
+                    .collect(Collectors.toSet());
+
+            for (Long artistId : artistIds) {
+                for (MemberArtist memberArtist : memberArtistRepository.findAllByArtist_ArtistId(artistId)) {
+                    Long memberId = memberArtist.getMember().getId();
+                    if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_NEW_PRODUCT)) {
+                        continue;
+                    }
+                    notificationService.notifyMember(
+                            memberId,
+                            eventId,
+                            NOTIFICATION_TYPE_NEW_PRODUCT,
+                            "관심 아티스트의 새 MD가 떴어요!",
+                            product.getName() + " 사전예약이 시작됐어요. (" + product.getEvent().getName() + ")"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * 결제 대기(PAYMENT_WAIT) 상태로 일정 시간 이상 방치된 예약에 결제 리마인더를 보낸다.
+     * MdPaymentReminderScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void notifyPendingPayments() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(PAYMENT_REMINDER_AFTER_HOURS);
+
+        for (MdOrder order : mdOrderRepository.findAllByStatusWithMemberAndProduct(ORDER_INITIAL_STATUS)) {
+            if (order.getCreatedAt() == null || order.getCreatedAt().isAfter(cutoff)) {
+                continue;
+            }
+
+            Long memberId = order.getMember().getId();
+            Long eventId = order.getProduct().getEvent().getEventId();
+            if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_PAYMENT_REMINDER)) {
+                continue;
+            }
+
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    NOTIFICATION_TYPE_PAYMENT_REMINDER,
+                    "MD 사전예약 결제가 아직이에요",
+                    order.getProduct().getName() + " (예약번호 " + order.getOrderNumber() + ") 결제를 아직 완료하지 않으셨어요."
+            );
+        }
     }
 
     @Transactional

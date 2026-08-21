@@ -16,4 +16,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             + "(:keyword IS NULL OR p.title LIKE %:keyword% OR p.content LIKE %:keyword%) "
             + "ORDER BY p.createdAt DESC")
     List<Post> search(@Param("category") String category, @Param("keyword") String keyword);
+
+    // 프로필 - 내가 쓴 글
+    List<Post> findByMember_IdOrderByCreatedAtDesc(Long memberId);
 }

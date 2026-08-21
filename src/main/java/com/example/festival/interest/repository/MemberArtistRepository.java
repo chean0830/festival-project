@@ -16,5 +16,8 @@ public interface MemberArtistRepository extends JpaRepository<MemberArtist, Long
 
     Optional<MemberArtist> findByMember_IdAndArtist_ArtistId(Long memberId, Long artistId);
 
+    // 이 아티스트를 관심 등록한 회원들 (신상 MD 알림 발송용)
+    List<MemberArtist> findAllByArtist_ArtistId(Long artistId);
+
     long deleteByMember_IdAndArtist_ArtistId(Long memberId, Long artistId);
 }

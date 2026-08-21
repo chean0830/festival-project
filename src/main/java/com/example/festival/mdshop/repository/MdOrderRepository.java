@@ -21,4 +21,8 @@ public interface MdOrderRepository extends JpaRepository<MdOrder, Long> {
     @Query("SELECT COALESCE(SUM(o.quantity), 0) FROM MdOrder o "
             + "WHERE o.member.id = :memberId AND o.product.productId = :productId AND o.status <> 'CANCELED'")
     int sumQuantityByMemberAndProductExcludingCanceled(@Param("memberId") Long memberId, @Param("productId") Long productId);
+
+    // 결제 대기 리마인더 발송용
+    @Query("SELECT o FROM MdOrder o JOIN FETCH o.member JOIN FETCH o.product p JOIN FETCH p.event WHERE o.status = :status")
+    List<MdOrder> findAllByStatusWithMemberAndProduct(@Param("status") String status);
 }

@@ -1,5 +1,6 @@
 package com.example.festival.community.controller;
 
+import com.example.festival.community.dto.MyCommentResponse;
 import com.example.festival.community.dto.PostCommentRequest;
 import com.example.festival.community.dto.PostCommentResponse;
 import com.example.festival.community.service.PostCommentService;
@@ -28,6 +29,11 @@ public class PostCommentController {
     @GetMapping("/api/posts/{postId}/comments")
     public List<PostCommentResponse> getComments(@PathVariable Long postId) {
         return postCommentService.getComments(postId);
+    }
+
+    @GetMapping("/api/members/{memberId}/comments")
+    public List<MyCommentResponse> getMyComments(@PathVariable Long memberId) {
+        return postCommentService.getMyComments(memberId);
     }
 
     @PostMapping("/api/members/{memberId}/posts/{postId}/comments")

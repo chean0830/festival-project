@@ -53,6 +53,18 @@ export async function uploadPostImage(memberId, file) {
   }).then((response) => handleResponse(response, '이미지 업로드에 실패했습니다.'))
 }
 
+export function getMyPosts(memberId) {
+  return getJson(`/api/members/${memberId}/posts`, '내가 쓴 글을 불러오지 못했습니다.')
+}
+
+export function getLikedPosts(memberId) {
+  return getJson(`/api/members/${memberId}/posts/liked`, '좋아요 누른 글을 불러오지 못했습니다.')
+}
+
+export function getMyComments(memberId) {
+  return getJson(`/api/members/${memberId}/comments`, '내가 쓴 댓글을 불러오지 못했습니다.')
+}
+
 export function getPosts({ category, keyword } = {}) {
   const params = new URLSearchParams()
   if (category) params.set('category', category)
