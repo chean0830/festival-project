@@ -39,3 +39,14 @@ export async function getEventDetail(eventId) {
 
   return response.json()
 }
+
+export async function getEventLineup(eventId) {
+  const response = await fetch(`/api/home/events/${eventId}/lineup`)
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new Error(data?.message ?? '라인업 정보를 불러오지 못했습니다.')
+  }
+
+  return response.json()
+}

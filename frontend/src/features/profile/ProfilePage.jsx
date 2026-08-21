@@ -10,6 +10,7 @@ import {
   uploadProfileImage,
   deleteProfileImage,
   fetchInterestedArtists,
+  addInterestedArtist,
   fetchInterestedEvents,
   removeInterestedArtist,
   removeInterestedEvent,
@@ -58,13 +59,21 @@ export default function ProfilePage() {
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
-  const [addModalTarget, setAddModalTarget] = useState(null) // null | 'attended' | 'upcoming'
+  const [addModalTarget, setAddModalTarget] = useState(null) // null | 'artist' | 'attended' | 'upcoming'
   const attendedSectionRef = useRef(null)
   const mdOrdersSectionRef = useRef(null)
 
   function goToAttendedSection(expandAll) {
     if (expandAll) setAttendedExpanded(true)
     attendedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function handleAddArtist(artistId) {
+    const added = await addInterestedArtist(memberId, artistId)
+    setArtists((prev) => {
+      if (prev.some((artist) => artist.artistId === added.artistId)) return prev
+      return [added, ...prev]
+    })
   }
 
   async function handleAddAttendedEvent(eventId) {
@@ -224,7 +233,12 @@ export default function ProfilePage() {
         </div>
 
         <section>
-          <h2>관심 가수</h2>
+          <div className="profile-section-header">
+            <h2>관심 가수</h2>
+            <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('artist')}>
+              가수 추가하기
+            </button>
+          </div>
           <InterestedArtistList
             artists={artists}
             onRemove={async (artistId) => {
@@ -315,7 +329,17 @@ export default function ProfilePage() {
       </div>
       </div>
 
-      {addModalTarget && (
+      {addModalTarget === 'artist' && (
+        <AddEventModal
+          title="관심 가수 추가"
+          searchPlaceholder="아티스트 이름으로 검색"
+          allowedTypes={['artist']}
+          onClose={() => setAddModalTarget(null)}
+          onAdd={handleAddArtist}
+        />
+      )}
+
+      {(addModalTarget === 'attended' || addModalTarget === 'upcoming') && (
         <AddEventModal
           title={addModalTarget === 'attended' ? '다녀온 공연 추가' : '예정된 공연 추가'}
           excludePastEvents={addModalTarget === 'upcoming'}

@@ -2,8 +2,10 @@ package com.example.festival.home.service;
 
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
+import com.example.festival.event.repository.EventScheduleRepository;
 import com.example.festival.home.dto.EventDetailDto;
 import com.example.festival.home.dto.EventSummaryDto;
+import com.example.festival.home.dto.LineupArtistDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.List;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final EventScheduleRepository eventScheduleRepository;
 
     public EventDetailDto getEventDetail(Long eventId) {
         Event event = eventRepository.findById(eventId)
@@ -37,6 +40,24 @@ public class EventService {
                 event.getVenue() != null ? event.getVenue().getName() : null,
                 event.getVenue() != null ? event.getVenue().getAddress() : null
         );
+    }
+
+    public List<LineupArtistDto> getEventLineup(Long eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다.");
+        }
+
+        return eventScheduleRepository.findByEvent_EventIdOrderByLineupOrderAsc(eventId).stream()
+                .map(schedule -> new LineupArtistDto(
+                        schedule.getArtist().getArtistId(),
+                        schedule.getArtist().getName(),
+                        schedule.getArtist().getArtistType(),
+                        schedule.getArtist().getProfileImage(),
+                        schedule.getStageName(),
+                        schedule.getPerformanceStart(),
+                        schedule.getLineupOrder()
+                ))
+                .toList();
     }
 
     public List<EventSummaryDto> getUpcomingEvents() {

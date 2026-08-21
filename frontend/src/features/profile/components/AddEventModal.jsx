@@ -2,14 +2,21 @@ import { useEffect, useRef, useState } from 'react'
 import { search, SEARCH_TYPE_LABEL } from '../../../api/searchApi'
 import { todayIso } from '../../../utils/todayIso'
 
-const ADDABLE_TYPES = new Set(['festival', 'event'])
-
 /**
- * 검색해서 공연을 골라 추가하는 모달. '다녀온 공연' / '예정된 공연'이 같은 로직(검색 + 추가)을 공유한다.
- * DB에 있는 공연/페스티벌을 검색해서 선택하면 부모(onAdd)가 실제 등록 API를 호출한다.
+ * 검색해서 항목(공연/아티스트)을 골라 추가하는 공용 모달.
+ * '다녀온 공연' / '예정된 공연' / '관심 가수'가 같은 로직(검색 + 추가)을 공유한다.
+ * DB에 있는 항목을 검색해서 선택하면 부모(onAdd)가 실제 등록 API를 호출한다.
  * excludePastEvents가 true면(예정된 공연) 이미 끝난 공연은 검색 결과에서 아예 제외한다.
  */
-export default function AddEventModal({ title = '공연 추가', excludePastEvents = false, onClose, onAdd }) {
+export default function AddEventModal({
+  title = '공연 추가',
+  searchPlaceholder = '공연/페스티벌 이름으로 검색',
+  allowedTypes = ['festival', 'event'],
+  excludePastEvents = false,
+  onClose,
+  onAdd,
+}) {
+  const addableTypes = new Set(allowedTypes)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [pendingId, setPendingId] = useState(null)
@@ -35,7 +42,7 @@ export default function AddEventModal({ title = '공연 추가', excludePastEven
           if (cancelled) return
           const today = todayIso()
           const filtered = data.filter((item) => {
-            if (!ADDABLE_TYPES.has(item.type)) return false
+            if (!addableTypes.has(item.type)) return false
             if (excludePastEvents && item.endDate && item.endDate < today) return false
             return true
           })
@@ -50,16 +57,17 @@ export default function AddEventModal({ title = '공연 추가', excludePastEven
       cancelled = true
       clearTimeout(timer)
     }
-  }, [query, excludePastEvents])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, excludePastEvents, allowedTypes.join(',')])
 
   async function handleAdd(item) {
-    const eventId = Number(item.id.split('-')[1])
-    if (!eventId || pendingId) return
+    const targetId = Number(item.id.split('-')[1])
+    if (!targetId || pendingId) return
 
     setPendingId(item.id)
     setError(null)
     try {
-      await onAdd(eventId)
+      await onAdd(targetId)
       setFlashId(item.id)
       setTimeout(() => {
         setFlashId((current) => (current === item.id ? null : current))
@@ -85,7 +93,7 @@ export default function AddEventModal({ title = '공연 추가', excludePastEven
           ref={inputRef}
           type="text"
           className="profile-modal-search-input"
-          placeholder="공연/페스티벌 이름으로 검색"
+          placeholder={searchPlaceholder}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
