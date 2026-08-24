@@ -1,0 +1,282 @@
+.nearby-food-page {
+  --np-ink: #12291b;
+  --np-ink-soft: #5a7166;
+  --np-line: #e9f0e7;
+  --np-font-mono: "IBM Plex Mono", monospace;
+
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.nearby-food-page__back {
+  display: inline-block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+.nearby-food-page__back:hover {
+  color: var(--color-primary-dark);
+}
+
+.nearby-food-page__title {
+  margin: 0 0 8px;
+}
+
+.nearby-food-page__desc {
+  margin: 0 0 30px;
+  font-size: var(--font-size-md);
+  color: var(--np-ink-soft);
+  line-height: 1.6;
+}
+
+.nearby-food-page__message {
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-lg);
+}
+
+.nearby-food-page .nearby-map {
+  margin: var(--spacing-xl) 0 calc(var(--spacing-xl) * 1.5);
+}
+
+/* ── 카테고리 섹션 ── */
+.nearby-food-page .section {
+  margin-bottom: 36px;
+}
+
+.nearby-food-page .section__head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.nearby-food-page .section__tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(155deg, var(--color-cafe-light), var(--color-cafe-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(111, 74, 44, 0.3);
+}
+.nearby-food-page .section--restaurant .section__tile {
+  background: linear-gradient(155deg, var(--color-food-light), var(--color-food-dark));
+  box-shadow: 0 3px 8px rgba(168, 56, 36, 0.3);
+}
+.nearby-food-page .section__tile svg {
+  width: 16px;
+  height: 16px;
+}
+
+.nearby-food-page .section__head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--np-ink);
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+.nearby-food-page .section__count {
+  font-family: var(--np-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #9aa79f;
+  flex-shrink: 0;
+}
+
+.nearby-food-page .section__sort {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--np-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--np-ink);
+  background: #fff;
+  border: 1px solid var(--np-line);
+  padding: 5px 11px;
+  border-radius: 999px;
+}
+.nearby-food-page .section__sort svg {
+  width: 11px;
+  height: 11px;
+}
+
+.nearby-food-page .panel {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(18, 41, 27, 0.04), 0 10px 24px rgba(18, 41, 27, 0.07);
+  overflow: hidden;
+}
+
+/* ── 장소 행 ── */
+.nearby-food-page .place-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 18px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.nearby-food-page .place-row + .place-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: var(--np-line);
+}
+.nearby-food-page .place-row:hover {
+  background: var(--color-cafe-surface);
+}
+.nearby-food-page .place-row--restaurant:hover {
+  background: var(--color-food-surface);
+}
+
+.nearby-food-page .place-row__icon {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--color-cafe-light), var(--color-cafe-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(111, 74, 44, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.15s ease;
+}
+.nearby-food-page .place-row:hover .place-row__icon {
+  transform: scale(1.06) rotate(-4deg);
+}
+.nearby-food-page .place-row__icon svg {
+  width: 20px;
+  height: 20px;
+}
+.nearby-food-page .place-row--restaurant .place-row__icon {
+  background: linear-gradient(155deg, var(--color-food-light), var(--color-food-dark));
+  box-shadow: 0 4px 10px rgba(168, 56, 36, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.nearby-food-page .rank-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffd23f;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nearby-food-page .rank-badge svg {
+  width: 8px;
+  height: 8px;
+}
+
+.nearby-food-page .place-row__info {
+  flex: 1;
+  min-width: 0;
+}
+.nearby-food-page .place-row__name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.nearby-food-page .place-row__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--np-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nearby-food-page .nearest-tag {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-cafe-dark);
+  background: var(--color-cafe-surface);
+  padding: 2px 6px;
+  border-radius: 5px;
+  letter-spacing: 0.01em;
+}
+.nearby-food-page .section--restaurant .nearest-tag {
+  color: var(--color-food-dark);
+  background: var(--color-food-surface);
+}
+
+.nearby-food-page .place-row__addr {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--np-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+.nearby-food-page .place-row__addr svg {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  color: #c1cbc4;
+}
+
+.nearby-food-page .place-row__right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.nearby-food-page .place-row__dist {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--np-font-mono);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--color-cafe-dark);
+}
+.nearby-food-page .place-row--restaurant .place-row__dist {
+  color: var(--color-food-dark);
+}
+.nearby-food-page .place-row__dist span {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--np-ink-soft);
+}
+
+.nearby-food-page .proximity {
+  display: flex;
+  gap: 2.5px;
+}
+.nearby-food-page .proximity i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--np-line);
+}
+.nearby-food-page .proximity i.on {
+  background: var(--color-cafe);
+}
+.nearby-food-page .place-row--restaurant .proximity i.on {
+  background: var(--color-food);
+}

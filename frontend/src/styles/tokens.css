@@ -15,6 +15,17 @@
   --color-primary-light: #b8e6c6;  /* 옅은 연두 (배경, hover 배경 등) */
   --color-secondary: #ff8a3d;      /* 포인트 컬러 */
 
+  /* ---- Color: Category (내 주변 쉼표) ---- */
+  --color-cafe: #a9744a;
+  --color-cafe-light: #c99968;
+  --color-cafe-dark: #6f4a2c;
+  --color-cafe-surface: #f7f0e6;
+
+  --color-food: #e6543f;
+  --color-food-light: #ff8a6b;
+  --color-food-dark: #a83824;
+  --color-food-surface: #fdeeea;
+
   /* ---- Color: Neutral ---- */
   --color-background: #ffffff;
   --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
