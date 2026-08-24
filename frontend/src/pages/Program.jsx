@@ -54,6 +54,9 @@ function Program() {
       <section className="program-page">
         <div className="program-page__header">
           <h1>공연일정</h1>
+          <p className="program-page__desc">
+            캘린더로 공연 일정을, 날씨까지 함께 미리 확인하세요.
+          </p>
         </div>
 
         <nav className="program-page__tabs">
