@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
-import { getEventDetail, getEventLineup } from "../api/eventApi";
+import { getEventDetail, getEventLineup, getEventWeather, getEventNews } from "../api/eventApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import {
   fetchInterestedEventStatus,
@@ -15,6 +15,25 @@ const EVENT_TYPE_LABEL = {
   FESTIVAL: "페스티벌",
   CONCERT: "콘서트",
 };
+
+const NEWS_TYPE_LABEL = {
+  LINEUP: "라인업",
+  SCHEDULE: "일정변경",
+  NOTICE: "공지",
+  PERFORMANCE: "공연",
+  MD: "MD",
+  ARTIST: "아티스트",
+};
+
+function NoticeInline({ tag, text }) {
+  return (
+    <div className="notice-inline">
+      <span className="notice-inline__dot" />
+      <span className="notice-inline__tag">{tag}</span>
+      <span className="notice-inline__text">{text}</span>
+    </div>
+  );
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -40,6 +59,8 @@ function ProgramEventDetail() {
   const [lineup, setLineup] = useState(undefined);
   const [showLineup, setShowLineup] = useState(false);
   const [lineupError, setLineupError] = useState(null);
+  const [weather, setWeather] = useState(undefined);
+  const [news, setNews] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +71,40 @@ function ProgramEventDetail() {
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWeather(undefined);
+
+    getEventWeather(eventId)
+      .then((data) => {
+        if (!cancelled) setWeather(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setWeather({ available: false, message: err.message });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setNews([]);
+
+    getEventNews(eventId)
+      .then((data) => {
+        if (!cancelled) setNews(data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setNews([]);
       });
 
     return () => {
@@ -131,6 +186,18 @@ function ProgramEventDetail() {
   return (
     <Layout>
       <div className="event-detail">
+        {news.length > 0 && (
+          <div className="event-detail__news">
+            {news.map((item) => (
+              <NoticeInline
+                key={item.id}
+                tag={NEWS_TYPE_LABEL[item.newsType] || "소식"}
+                text={item.title}
+              />
+            ))}
+          </div>
+        )}
+
         <div className="event-detail__poster">
           {event.posterImage ? (
             <img src={event.posterImage} alt={event.name} />
@@ -161,6 +228,31 @@ function ProgramEventDetail() {
                   {event.venueName}
                   {event.venueAddress ? ` (${event.venueAddress})` : ""}
                 </dd>
+              </div>
+            )}
+            {weather?.available && (
+              <div>
+                <dt>날씨</dt>
+                <dd className="event-detail__weather">
+                  {weather.icon && (
+                    <img
+                      className="event-detail__weather-icon"
+                      src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
+                      alt={weather.description ?? ""}
+                    />
+                  )}
+                  <span>
+                    {Math.round(weather.minTemp)}° - {Math.round(weather.maxTemp)}°
+                    {weather.description ? ` · ${weather.description}` : ""}
+                    {weather.rainChancePercent != null ? ` · 강수확률 ${weather.rainChancePercent}%` : ""}
+                  </span>
+                </dd>
+              </div>
+            )}
+            {weather && !weather.available && weather.message && (
+              <div>
+                <dt>날씨</dt>
+                <dd className="event-detail__weather event-detail__weather--unavailable">{weather.message}</dd>
               </div>
             )}
             {event.genres?.length > 0 && (

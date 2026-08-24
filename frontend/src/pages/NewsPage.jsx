@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import { getAllNews } from "../api/newsApi";
+import { NEWS_TYPE_ICON, NEWS_TYPE_IMAGE } from "../data/newsTypes";
 import "../components/home/NewsSection/NewsSection.css";
 import "./NewsPage.css";
 
@@ -11,6 +12,7 @@ import "./NewsPage.css";
  * 목록은 GET /api/home/news/all로 받아온 실제 DB 데이터를 씀 (공지 포함 전체).
  */
 function NewsPage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -46,14 +48,24 @@ function NewsPage() {
                 key={item.id}
                 type="button"
                 className="news-card"
-                onClick={() =>
-                  item.sourceUrl &&
-                  window.open(item.sourceUrl, "_blank", "noopener,noreferrer")
-                }
+                onClick={() => {
+                  if (item.sourceUrl) {
+                    window.open(item.sourceUrl, "_blank", "noopener,noreferrer");
+                  } else if (item.eventId) {
+                    navigate(`/program/event/${item.eventId}`);
+                  }
+                }}
               >
                 <div className="news-card__thumb">
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.title} />}
+                  {item.imageUrl || NEWS_TYPE_IMAGE[item.newsType] ? (
+                    <img src={item.imageUrl || NEWS_TYPE_IMAGE[item.newsType]} alt={item.title} />
+                  ) : (
+                    <span className="news-card__thumb-fallback">
+                      {NEWS_TYPE_ICON[item.newsType] || "📰"}
+                    </span>
+                  )}
                 </div>
+                {item.eventName && <p className="news-card__event">{item.eventName}</p>}
                 <p className="news-card__title">{item.title}</p>
               </button>
             ))}

@@ -21,15 +21,22 @@ export default function NotificationBell() {
       return
     }
     let cancelled = false
-    fetchUnreadCount(memberId)
-      .then((data) => {
-        if (!cancelled) setUnreadCount(data.unreadCount)
-      })
-      .catch(() => {
-        if (!cancelled) setUnreadCount(0)
-      })
+
+    function refresh() {
+      fetchUnreadCount(memberId)
+        .then((data) => {
+          if (!cancelled) setUnreadCount(data.unreadCount)
+        })
+        .catch(() => {
+          if (!cancelled) setUnreadCount(0)
+        })
+    }
+
+    refresh()
+    window.addEventListener('notifications:read', refresh)
     return () => {
       cancelled = true
+      window.removeEventListener('notifications:read', refresh)
     }
   }, [currentMember])
 

@@ -3,8 +3,11 @@ package com.example.festival.community.service;
 import com.example.festival.community.dto.MyCommentResponse;
 import com.example.festival.community.dto.PostCommentRequest;
 import com.example.festival.community.dto.PostCommentResponse;
+import com.example.festival.community.dto.PostLikeResponse;
 import com.example.festival.community.entity.Post;
 import com.example.festival.community.entity.PostComment;
+import com.example.festival.community.entity.PostCommentLike;
+import com.example.festival.community.repository.PostCommentLikeRepository;
 import com.example.festival.community.repository.PostCommentRepository;
 import com.example.festival.community.repository.PostRepository;
 import com.example.festival.member.entity.Member;
@@ -23,12 +26,13 @@ import java.util.List;
 public class PostCommentService {
 
     private final PostCommentRepository postCommentRepository;
+    private final PostCommentLikeRepository postCommentLikeRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
-    public List<PostCommentResponse> getComments(Long postId) {
+    public List<PostCommentResponse> getComments(Long postId, Long viewerMemberId) {
         return postCommentRepository.findByPost_PostIdOrderByCreatedAtAsc(postId).stream()
-                .map(this::toResponse)
+                .map(comment -> toResponse(comment, viewerMemberId))
                 .toList();
     }
 
@@ -63,17 +67,13 @@ public class PostCommentService {
 
         PostComment comment = new PostComment(post, member, parent, request.content());
         postCommentRepository.save(comment);
-        return toResponse(comment);
+        return toResponse(comment, memberId);
     }
 
     @Transactional
     public void deleteComment(Long memberId, Long postId, Long commentId) {
-        PostComment comment = postCommentRepository.findById(commentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."));
+        PostComment comment = findCommentInPost(postId, commentId);
 
-        if (!comment.getPost().getPostId().equals(postId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 게시글의 댓글이 아닙니다.");
-        }
         if (!comment.getMember().getId().equals(memberId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인 댓글만 삭제할 수 있습니다.");
         }
@@ -81,10 +81,47 @@ public class PostCommentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "답글이 달린 댓글은 삭제할 수 없습니다.");
         }
 
+        postCommentLikeRepository.deleteByPostComment_CommentId(commentId);
         postCommentRepository.delete(comment);
     }
 
-    private PostCommentResponse toResponse(PostComment comment) {
+    @Transactional
+    public PostLikeResponse likeComment(Long memberId, Long postId, Long commentId) {
+        PostComment comment = findCommentInPost(postId, commentId);
+        Member member = findMember(memberId);
+
+        if (!postCommentLikeRepository.existsByPostComment_CommentIdAndMember_Id(commentId, memberId)) {
+            postCommentLikeRepository.save(new PostCommentLike(comment, member));
+        }
+
+        return new PostLikeResponse(postCommentLikeRepository.countByPostComment_CommentId(commentId), true);
+    }
+
+    @Transactional
+    public PostLikeResponse unlikeComment(Long memberId, Long postId, Long commentId) {
+        findCommentInPost(postId, commentId);
+        postCommentLikeRepository.deleteByPostComment_CommentIdAndMember_Id(commentId, memberId);
+        return new PostLikeResponse(postCommentLikeRepository.countByPostComment_CommentId(commentId), false);
+    }
+
+    private PostComment findCommentInPost(Long postId, Long commentId) {
+        PostComment comment = postCommentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."));
+        if (!comment.getPost().getPostId().equals(postId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 게시글의 댓글이 아닙니다.");
+        }
+        return comment;
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+    }
+
+    private PostCommentResponse toResponse(PostComment comment, Long viewerMemberId) {
+        boolean liked = viewerMemberId != null
+                && postCommentLikeRepository.existsByPostComment_CommentIdAndMember_Id(comment.getCommentId(), viewerMemberId);
+
         return new PostCommentResponse(
                 comment.getCommentId(),
                 comment.getParent() != null ? comment.getParent().getCommentId() : null,
@@ -92,7 +129,9 @@ public class PostCommentService {
                 comment.getMember().getNickname(),
                 comment.getMember().getProfileImage(),
                 comment.getContent(),
-                comment.getCreatedAt()
+                comment.getCreatedAt(),
+                postCommentLikeRepository.countByPostComment_CommentId(comment.getCommentId()),
+                liked
         );
     }
 }

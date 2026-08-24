@@ -11,6 +11,8 @@ public record NewsSummaryDto(
         String imageUrl,
         String sourceUrl,
         String newsType,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Long eventId,
+        String eventName
 ) {
 }

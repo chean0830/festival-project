@@ -49,6 +49,8 @@ export function fetchUnreadCount(memberId) {
   return getJson(`/api/members/${memberId}/notifications/unread-count`)
 }
 
-export function markNotificationAsRead(memberId, notificationId) {
-  return patchJson(`/api/members/${memberId}/notifications/${notificationId}/read`)
+export async function markNotificationAsRead(memberId, notificationId) {
+  const result = await patchJson(`/api/members/${memberId}/notifications/${notificationId}/read`)
+  window.dispatchEvent(new Event('notifications:read'))
+  return result
 }

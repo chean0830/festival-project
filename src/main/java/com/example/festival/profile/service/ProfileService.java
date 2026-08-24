@@ -1,6 +1,7 @@
 package com.example.festival.profile.service;
 
 import com.example.festival.interest.entity.MemberEvent;
+import com.example.festival.interest.repository.MemberArtistRepository;
 import com.example.festival.interest.repository.MemberEventRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
@@ -47,9 +48,11 @@ public class ProfileService {
     private static final String EVENT_PLANNED_STATUS = "PLANNED";
     private static final String NOTIFICATION_TYPE_UPCOMING_EVENT = "UPCOMING_EVENT_REMINDER";
     private static final int UPCOMING_EVENT_REMINDER_DAYS_BEFORE = 3;
+    private static final String NOTIFICATION_TYPE_ARTIST_EVENT = "ARTIST_EVENT";
 
     private final MemberRepository memberRepository;
     private final MemberEventRepository memberEventRepository;
+    private final MemberArtistRepository memberArtistRepository;
     private final EventVisitRepository eventVisitRepository;
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
@@ -58,6 +61,7 @@ public class ProfileService {
     public ProfileService(
             MemberRepository memberRepository,
             MemberEventRepository memberEventRepository,
+            MemberArtistRepository memberArtistRepository,
             EventVisitRepository eventVisitRepository,
             EventRepository eventRepository,
             NotificationService notificationService,
@@ -65,6 +69,7 @@ public class ProfileService {
     ) {
         this.memberRepository = memberRepository;
         this.memberEventRepository = memberEventRepository;
+        this.memberArtistRepository = memberArtistRepository;
         this.eventVisitRepository = eventVisitRepository;
         this.eventRepository = eventRepository;
         this.notificationService = notificationService;
@@ -228,6 +233,41 @@ public class ProfileService {
                     NOTIFICATION_TYPE_UPCOMING_EVENT,
                     "예정된 공연이 곧 시작해요",
                     event.getName() + " 공연이 " + dDayText + " 시작해요."
+            );
+        }
+    }
+
+    /**
+     * 관심 등록한 아티스트가 출연하는 공연의 시작일이 임박(D-3 이내)한 회원들에게 알림을 보낸다.
+     * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
+     * UpcomingArtistEventReminderScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void notifyUpcomingArtistEventReminders() {
+        LocalDate deadline = LocalDate.now().plusDays(UPCOMING_EVENT_REMINDER_DAYS_BEFORE);
+
+        for (MemberArtistRepository.ArtistUpcomingEventRow row
+                : memberArtistRepository.findUpcomingEventsForInterestedArtists(deadline)) {
+            Long memberId = row.getMemberId();
+            Long eventId = row.getEventId();
+
+            if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_ARTIST_EVENT)) {
+                continue;
+            }
+
+            Event event = eventRepository.findById(eventId).orElse(null);
+            if (event == null) {
+                continue;
+            }
+
+            long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+            String dDayText = dDay <= 0 ? "오늘" : dDay + "일 후";
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    NOTIFICATION_TYPE_ARTIST_EVENT,
+                    "관심 아티스트 공연이 곧 시작해요",
+                    row.getArtistName() + " 출연 - " + event.getName() + " 공연이 " + dDayText + " 시작해요."
             );
         }
     }

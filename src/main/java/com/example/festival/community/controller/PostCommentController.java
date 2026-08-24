@@ -3,6 +3,7 @@ package com.example.festival.community.controller;
 import com.example.festival.community.dto.MyCommentResponse;
 import com.example.festival.community.dto.PostCommentRequest;
 import com.example.festival.community.dto.PostCommentResponse;
+import com.example.festival.community.dto.PostLikeResponse;
 import com.example.festival.community.service.PostCommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,8 +29,11 @@ public class PostCommentController {
     private final PostCommentService postCommentService;
 
     @GetMapping("/api/posts/{postId}/comments")
-    public List<PostCommentResponse> getComments(@PathVariable Long postId) {
-        return postCommentService.getComments(postId);
+    public List<PostCommentResponse> getComments(
+            @PathVariable Long postId,
+            @RequestParam(required = false) Long memberId
+    ) {
+        return postCommentService.getComments(postId, memberId);
     }
 
     @GetMapping("/api/members/{memberId}/comments")
@@ -53,5 +58,23 @@ public class PostCommentController {
     ) {
         postCommentService.deleteComment(memberId, postId, commentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/members/{memberId}/posts/{postId}/comments/{commentId}/like")
+    public PostLikeResponse likeComment(
+            @PathVariable Long memberId,
+            @PathVariable Long postId,
+            @PathVariable Long commentId
+    ) {
+        return postCommentService.likeComment(memberId, postId, commentId);
+    }
+
+    @DeleteMapping("/api/members/{memberId}/posts/{postId}/comments/{commentId}/like")
+    public PostLikeResponse unlikeComment(
+            @PathVariable Long memberId,
+            @PathVariable Long postId,
+            @PathVariable Long commentId
+    ) {
+        return postCommentService.unlikeComment(memberId, postId, commentId);
     }
 }
