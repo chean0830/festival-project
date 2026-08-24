@@ -19,6 +19,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     long deleteByPost_PostIdAndMember_Id(Long postId, Long memberId);
 
+    void deleteByPost_PostId(Long postId);
+
     // 프로필 - 좋아요 누른 글
     @Query("SELECT pl FROM PostLike pl JOIN FETCH pl.post p WHERE pl.member.id = :memberId ORDER BY pl.createdAt DESC")
     List<PostLike> findByMember_IdWithPostOrderByCreatedAtDesc(@Param("memberId") Long memberId);
