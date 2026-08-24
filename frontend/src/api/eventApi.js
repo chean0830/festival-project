@@ -63,3 +63,14 @@ export async function getEventWeather(eventId) {
 
   return response.json()
 }
+
+export async function getEventNews(eventId) {
+  const response = await fetch(`/api/home/events/${eventId}/news`)
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new Error(data?.message ?? '공연 소식을 불러오지 못했습니다.')
+  }
+
+  return response.json()
+}

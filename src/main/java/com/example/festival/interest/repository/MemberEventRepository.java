@@ -32,6 +32,10 @@ public interface MemberEventRepository extends JpaRepository<MemberEvent, Long> 
 
     long deleteByMember_IdAndEvent_EventId(Long memberId, Long eventId);
 
+    // 공연 소식 알림 발송용: 이 공연을 관심 등록한 회원 전체
+    @Query("SELECT me FROM MemberEvent me JOIN FETCH me.member WHERE me.event.eventId = :eventId")
+    List<MemberEvent> findAllByEventIdWithMember(@Param("eventId") Long eventId);
+
     /**
      * "예정된 공연"으로 등록해뒀고, 시작일이 deadline(오늘 포함) 이내로 임박한 공연들 (전 회원 기준).
      * UpcomingEventReminderScheduler가 마감 임박 알림을 보낼 때 사용한다.
