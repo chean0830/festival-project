@@ -64,7 +64,7 @@ export default function LiveListPage() {
           <div>
             <span className="live-eyebrow">FESTLOG LIVE</span>
             <h1>페스티벌의 순간을 라이브로</h1>
-            <p>페스티벌을 라이브로 송출하고 FESTLOG에서 함께 시청하세요.</p>
+            <p>페스티벌을 라이브로 FESTLOG에서 함께 시청하세요.</p>
           </div>
           {isAdmin ? (
             <Link to="/live/new" className="live-button live-button--primary">방송 만들기</Link>

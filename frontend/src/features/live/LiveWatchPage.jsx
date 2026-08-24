@@ -11,6 +11,12 @@ import BrowserLivePlayer from './BrowserLivePlayer'
 import './live.css'
 
 const STATUS_LABEL = { SCHEDULED: '방송 대기', LIVE: 'LIVE', ENDED: '방송 종료' }
+const MD_PREORDER_URL = ''
+const TEMP_AD = {
+  eyebrow: 'FESTLOG 광고',
+  title: '광고 내용 준비 중입니다',
+  url: '',
+}
 
 function LiveChatPanel({
   open,
@@ -124,10 +130,14 @@ export default function LiveWatchPage() {
   const [viewerVolume, setViewerVolume] = useState(1)
   const [viewerPip, setViewerPip] = useState(false)
   const [viewerFullscreen, setViewerFullscreen] = useState(false)
+  const [adVisible, setAdVisible] = useState(true)
 
   useEffect(() => {
     fetchLiveStream(streamId)
-      .then(setStream)
+      .then((result) => {
+        setStream(result)
+        setAdVisible(true)
+      })
       .catch((loadError) => setError(loadError.message))
       .finally(() => setLoading(false))
   }, [streamId])
@@ -237,6 +247,26 @@ export default function LiveWatchPage() {
     } catch {
       setError('전체화면으로 전환하지 못했습니다.')
     }
+  }
+
+  function openPreparedLink(url, pendingMessage) {
+    if (!url) {
+      window.alert(pendingMessage)
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  function handleMdPreorder() {
+    openPreparedLink(MD_PREORDER_URL, 'MD 사전예약 링크를 준비 중입니다.')
+  }
+
+  function handleDonation() {
+    window.alert('후원 기능을 준비 중입니다.')
+  }
+
+  function handleTemporaryAd() {
+    openPreparedLink(TEMP_AD.url, '광고 상세 내용을 준비 중입니다.')
   }
 
   const handleChatMessage = useCallback((message) => {
@@ -365,11 +395,47 @@ export default function LiveWatchPage() {
                   <strong>방송이 종료되었습니다.</strong>
                 </div>
               )}
+              {!stream.owner && stream.status === 'LIVE' && adVisible && (
+                <div className="live-player__ad" role="complementary" aria-label="광고">
+                  <button
+                    type="button"
+                    className="live-player__ad-content"
+                    onClick={handleTemporaryAd}
+                  >
+                    <span className="live-player__ad-thumbnail" aria-hidden="true">AD</span>
+                    <span>
+                      <small>{TEMP_AD.eyebrow}</small>
+                      <strong>{TEMP_AD.title}</strong>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="live-player__ad-close"
+                    onClick={() => setAdVisible(false)}
+                    aria-label="광고 닫기"
+                    title="광고 닫기"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
               <div className="live-player__hover-ui">
                 <div className="live-player__hover-top">
                   <button
                     type="button"
-                    className="live-player__chat-toggle"
+                    className="live-player__quick-action"
+                    onClick={handleMdPreorder}
+                    aria-label="MD 사전예약"
+                    title="MD 사전예약"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6.5 8.5h11l1 11h-13l1-11Z" />
+                      <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="live-player__quick-action live-player__chat-toggle"
                     onClick={() => setChatOpen((current) => !current)}
                     aria-label={chatOpen ? '채팅창 닫기' : '채팅창 열기'}
                     title={chatOpen ? '채팅창 닫기' : '채팅창 열기'}
@@ -380,7 +446,6 @@ export default function LiveWatchPage() {
                       <circle cx="12" cy="11" r="1" />
                       <circle cx="16" cy="11" r="1" />
                     </svg>
-                    <span>{chatOpen ? '채팅 닫기' : '채팅 열기'}</span>
                   </button>
                 </div>
                 <div className="live-player__hover-bottom">
@@ -394,8 +459,24 @@ export default function LiveWatchPage() {
                     </span>
                   </div>
 
-                  {!stream.owner && stream.status !== 'ENDED' && (
-                    <div className="live-player__viewer-controls">
+                  <div className="live-player__action-group">
+                    {!stream.owner && stream.status === 'LIVE' && (
+                      <button
+                        type="button"
+                        className="live-player__donation"
+                        onClick={handleDonation}
+                        aria-label="후원"
+                        title="후원"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
+                        </svg>
+                        <span>후원</span>
+                      </button>
+                    )}
+
+                    {!stream.owner && stream.status !== 'ENDED' && (
+                      <div className="live-player__viewer-controls">
                       <button
                         type="button"
                         className="live-player__control"
@@ -453,8 +534,9 @@ export default function LiveWatchPage() {
                       >
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5" /></svg>
                       </button>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
