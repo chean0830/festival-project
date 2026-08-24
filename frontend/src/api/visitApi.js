@@ -1,3 +1,5 @@
+import { notifyVisitsUpdated } from "../utils/visitsChannel";
+
 let csrfToken;
 let csrfHeaderName = "X-XSRF-TOKEN";
 
@@ -27,6 +29,9 @@ export async function checkInEvent(memberId, { eventId, latitude, longitude }) {
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(data?.message ?? "체크인에 실패했습니다.");
+  }
+  if (data?.success) {
+    notifyVisitsUpdated();
   }
   return data;
 }
