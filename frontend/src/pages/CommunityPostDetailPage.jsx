@@ -55,6 +55,7 @@ function CommunityPostDetailPage() {
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [replyTarget, setReplyTarget] = useState(null);
+  const [replyTargetNickname, setReplyTargetNickname] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visibleCommentCount, setVisibleCommentCount] = useState(COMMENTS_PAGE_SIZE);
   const [expandedReplies, setExpandedReplies] = useState({});
@@ -98,6 +99,16 @@ function CommunityPostDetailPage() {
     setPost((prev) => ({ ...prev, liked: result.liked, likeCount: result.likeCount }));
   }
 
+  function handleReplyToReply(topLevelCommentId, replyAuthorNickname) {
+    if (!currentMember?.memberId) {
+      navigate("/login");
+      return;
+    }
+    setReplyTarget(topLevelCommentId);
+    setReplyTargetNickname(replyAuthorNickname);
+    setCommentInput(`@${replyAuthorNickname} `);
+  }
+
   async function handleDeletePost() {
     if (!window.confirm("게시글을 삭제할까요?")) return;
     await deletePost(currentMember.memberId, postId);
@@ -118,6 +129,7 @@ function CommunityPostDetailPage() {
     });
     setCommentInput("");
     setReplyTarget(null);
+    setReplyTargetNickname(null);
     await loadComments();
   }
 
@@ -205,7 +217,11 @@ function CommunityPostDetailPage() {
         <button
           type="button"
           className="community-comment-form__cancel"
-          onClick={() => setReplyTarget(null)}
+          onClick={() => {
+            setReplyTarget(null);
+            setReplyTargetNickname(null);
+            setCommentInput("");
+          }}
         >
           취소
         </button>
@@ -297,7 +313,13 @@ function CommunityPostDetailPage() {
                     {comment.content}
                   </p>
                   <div className="community-comment__actions">
-                    <button type="button" onClick={() => setReplyTarget(comment.id)}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReplyTarget(comment.id);
+                        setReplyTargetNickname(comment.authorNickname);
+                      }}
+                    >
                       답글
                     </button>
                     {currentMember?.memberId === comment.authorId ? (
@@ -324,6 +346,12 @@ function CommunityPostDetailPage() {
                         {reply.content}
                       </p>
                       <div className="community-comment__actions">
+                        <button
+                          type="button"
+                          onClick={() => handleReplyToReply(comment.id, reply.authorNickname)}
+                        >
+                          답글
+                        </button>
                         {currentMember?.memberId === reply.authorId ? (
                           <button type="button" onClick={() => handleDeleteComment(reply.id)}>
                             삭제
@@ -355,7 +383,7 @@ function CommunityPostDetailPage() {
               {replyTarget === comment.id && (
                 <div className="community-comment__reply-form">
                   <span className="community-comment__reply-target">
-                    @{comment.authorNickname}님에게 답글
+                    @{replyTargetNickname}님에게 답글
                   </span>
                   {commentForm}
                 </div>
