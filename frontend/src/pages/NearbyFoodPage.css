@@ -20,8 +20,36 @@
   color: var(--color-primary-dark);
 }
 
+.nearby-food-page__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--np-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  border: 1px solid var(--np-line);
+  padding: 4px 11px;
+  border-radius: 999px;
+  margin: 0 0 12px;
+}
+.nearby-food-page__eyebrow svg {
+  width: 11px;
+  height: 11px;
+}
+
 .nearby-food-page__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0 0 8px;
+}
+.nearby-food-page__title svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .nearby-food-page__desc {
@@ -30,14 +58,149 @@
   color: var(--np-ink-soft);
   line-height: 1.6;
 }
+.nearby-food-page__hl {
+  position: relative;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+.nearby-food-page__hl::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -1px;
+  height: 6px;
+  background: var(--color-surface);
+  z-index: -1;
+  border-radius: 2px;
+}
 
 .nearby-food-page__message {
   color: var(--color-text-muted);
   margin-top: var(--spacing-lg);
 }
 
-.nearby-food-page .nearby-map {
+/* ── 지도 카드 ── */
+.nearby-food-page .map-card {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(18, 41, 27, 0.05), 0 16px 34px rgba(18, 41, 27, 0.1);
   margin: var(--spacing-xl) 0 calc(var(--spacing-xl) * 1.5);
+}
+.nearby-food-page .map-card__frame {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.nearby-food-page .map-card__frame .nearby-map {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.nearby-food-page .map-card__radius {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--np-font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--np-line);
+}
+.nearby-food-page .map-card__radius svg {
+  width: 11px;
+  height: 11px;
+}
+
+.nearby-food-page .map-card__legend {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(18, 41, 27, 0.12);
+}
+.nearby-food-page .map-card__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--np-ink-soft);
+}
+.nearby-food-page .map-card__legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.nearby-food-page .map-card__legend-dot.cafe {
+  background: var(--color-cafe);
+}
+.nearby-food-page .map-card__legend-dot.food {
+  background: var(--color-food);
+}
+.nearby-food-page .map-card__legend-sep {
+  width: 1px;
+  height: 12px;
+  background: var(--np-line);
+}
+
+.nearby-food-page .map-card__me {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(18, 41, 27, 0.88);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  padding: 9px 16px 9px 12px;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+.nearby-food-page .map-card__me-icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.nearby-food-page .map-card__me-icon::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-primary);
+  opacity: 0.5;
+}
+.nearby-food-page .map-card__me-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.nearby-food-page .map-card__me-text {
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* ── 카테고리 섹션 ── */

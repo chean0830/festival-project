@@ -63,6 +63,8 @@ function NearbyMap({ center, places }) {
               </div>`
             );
             infoWindow.open(map, marker);
+            map.setLevel(1);
+            map.panTo(marker.getPosition());
           });
         });
       })

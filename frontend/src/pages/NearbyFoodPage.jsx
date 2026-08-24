@@ -60,6 +60,38 @@ function SortIcon() {
   );
 }
 
+function CompassIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function RestSpotIcon({ color = "currentColor" }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M4 21c1-3 3-4 8-4s7 1 8 4" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 14a4 4 0 100-8 4 4 0 000 8z" stroke={color} strokeWidth="1.8" />
+      <path d="M8 4c-1 1-1 2-.3 3M16 4c1 1 1 2 .3 3" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RadiusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function PlaceRow({ place, isNearest, isRestaurant, Icon }) {
   const filled = proximityFilledCount(place.distanceMeters);
 
@@ -142,9 +174,16 @@ function NearbyFoodPage() {
         <Link to="/" className="nearby-food-page__back">
           ‹ 홈
         </Link>
-        <h1 className="nearby-food-page__title">내 주변 쉼표</h1>
+        <span className="nearby-food-page__eyebrow">
+          <CompassIcon />
+          FESTLOG · NEARBY
+        </span>
+        <h1 className="nearby-food-page__title">
+          <RestSpotIcon color="var(--color-secondary)" />
+          내 주변 쉼표
+        </h1>
         <p className="nearby-food-page__desc">
-          페스티벌 다녀오느라 지친 발걸음, 근처 카페와 밥집에서 잠깐 쉬어가세요.
+          페스티벌 다녀오느라 지친 발걸음, <span className="nearby-food-page__hl">근처 카페와 밥집에서 잠깐 쉬어가세요.</span>
         </p>
 
         {status === "loading" && <p className="nearby-food-page__message">현재 위치를 확인하는 중...</p>}
@@ -161,7 +200,39 @@ function NearbyFoodPage() {
           <p className="nearby-food-page__message">주변에 등록된 곳이 없어요.</p>
         )}
 
-        {status === "ready" && center && <NearbyMap center={center} places={places} />}
+        {status === "ready" && center && (
+          <div className="map-card">
+            <div className="map-card__frame">
+              <NearbyMap center={center} places={places} />
+
+              <div className="map-card__radius">
+                <RadiusIcon />
+                반경 1km
+              </div>
+
+              <div className="map-card__legend">
+                <span className="map-card__legend-item">
+                  <span className="map-card__legend-dot cafe" />
+                  카페
+                </span>
+                <span className="map-card__legend-sep" />
+                <span className="map-card__legend-item">
+                  <span className="map-card__legend-dot food" />
+                  음식점
+                </span>
+              </div>
+
+              <div className="map-card__me">
+                <span className="map-card__me-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="3" fill="#fff" />
+                  </svg>
+                </span>
+                <span className="map-card__me-text">현재 내 위치</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {status === "ready" &&
           CATEGORY_GROUPS.map(({ category, label, Icon }) => (
