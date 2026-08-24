@@ -165,9 +165,9 @@
 
 .community-comment__body {
   margin: 0;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--color-text);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .community-comment__author {
   font-weight: 600;
@@ -190,6 +190,56 @@
 .community-comment__actions button:hover {
   color: var(--color-text);
   text-decoration: underline;
+}
+
+.community-comment__replies-toggle {
+  margin: var(--spacing-sm) 0 0 var(--spacing-lg);
+  border: none;
+  background: none;
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.community-comment__replies-toggle:hover {
+  text-decoration: underline;
+}
+
+.community-comments__load-more {
+  display: block;
+  width: 100%;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.community-comments__load-more:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.community-comment__like-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+.community-comment__like-btn--active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.community-comment__like-btn:hover {
+  color: var(--color-primary-dark);
 }
 
 .community-comment__reply-form {

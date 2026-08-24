@@ -8,12 +8,29 @@ import {
   deletePost,
   getComments,
   getPost,
+  likeComment,
   likePost,
   reportContent,
+  unlikeComment,
   unlikePost,
 } from "../api/communityApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import "./CommunityPostDetailPage.css";
+
+const COMMENTS_PAGE_SIZE = 10;
+const REPLIES_PREVIEW_SIZE = 2;
+
+function CommentLikeButton({ comment, onToggle }) {
+  return (
+    <button
+      type="button"
+      className={`community-comment__like-btn${comment.liked ? " community-comment__like-btn--active" : ""}`}
+      onClick={() => onToggle(comment)}
+    >
+      ♥ {comment.likeCount}
+    </button>
+  );
+}
 
 function CommentAvatar({ nickname, imageUrl }) {
   if (imageUrl) {
@@ -38,19 +55,24 @@ function CommunityPostDetailPage() {
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
   const [replyTarget, setReplyTarget] = useState(null);
+  const [replyTargetNickname, setReplyTargetNickname] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [visibleCommentCount, setVisibleCommentCount] = useState(COMMENTS_PAGE_SIZE);
+  const [expandedReplies, setExpandedReplies] = useState({});
 
   function loadPost() {
     return getPost(postId, currentMember?.memberId).then(setPost);
   }
 
   function loadComments() {
-    return getComments(postId).then(setComments);
+    return getComments(postId, currentMember?.memberId).then(setComments);
   }
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setVisibleCommentCount(COMMENTS_PAGE_SIZE);
+    setExpandedReplies({});
 
     Promise.all([loadPost(), loadComments()])
       .catch(() => {
@@ -77,6 +99,16 @@ function CommunityPostDetailPage() {
     setPost((prev) => ({ ...prev, liked: result.liked, likeCount: result.likeCount }));
   }
 
+  function handleReplyToReply(topLevelCommentId, replyAuthorNickname) {
+    if (!currentMember?.memberId) {
+      navigate("/login");
+      return;
+    }
+    setReplyTarget(topLevelCommentId);
+    setReplyTargetNickname(replyAuthorNickname);
+    setCommentInput(`@${replyAuthorNickname} `);
+  }
+
   async function handleDeletePost() {
     if (!window.confirm("게시글을 삭제할까요?")) return;
     await deletePost(currentMember.memberId, postId);
@@ -97,7 +129,23 @@ function CommunityPostDetailPage() {
     });
     setCommentInput("");
     setReplyTarget(null);
+    setReplyTargetNickname(null);
     await loadComments();
+  }
+
+  async function handleToggleCommentLike(comment) {
+    if (!currentMember?.memberId) {
+      navigate("/login");
+      return;
+    }
+    const result = comment.liked
+      ? await unlikeComment(currentMember.memberId, postId, comment.id)
+      : await likeComment(currentMember.memberId, postId, comment.id);
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === comment.id ? { ...c, liked: result.liked, likeCount: result.likeCount } : c
+      )
+    );
   }
 
   async function handleDeleteComment(commentId) {
@@ -169,7 +217,11 @@ function CommunityPostDetailPage() {
         <button
           type="button"
           className="community-comment-form__cancel"
-          onClick={() => setReplyTarget(null)}
+          onClick={() => {
+            setReplyTarget(null);
+            setReplyTargetNickname(null);
+            setCommentInput("");
+          }}
         >
           취소
         </button>
@@ -185,6 +237,8 @@ function CommunityPostDetailPage() {
     return map;
   }, {});
   const isOwner = currentMember?.memberId === post.authorId;
+  const visibleTopLevelComments = topLevelComments.slice(0, visibleCommentCount);
+  const hasMoreComments = visibleCommentCount < topLevelComments.length;
 
   return (
     <Layout>
@@ -243,7 +297,13 @@ function CommunityPostDetailPage() {
         <div className="community-detail-page__comments">
           <h2>댓글 {comments.length}</h2>
 
-          {topLevelComments.map((comment) => (
+          {visibleTopLevelComments.map((comment) => {
+            const replies = repliesByParent[comment.id] ?? [];
+            const repliesExpanded = expandedReplies[comment.id] ?? false;
+            const visibleReplies = repliesExpanded ? replies : replies.slice(0, REPLIES_PREVIEW_SIZE);
+            const hiddenReplyCount = replies.length - visibleReplies.length;
+
+            return (
             <div key={comment.id} className="community-comment">
               <div className="community-comment__row">
                 <CommentAvatar nickname={comment.authorNickname} imageUrl={comment.authorProfileImage} />
@@ -253,7 +313,13 @@ function CommunityPostDetailPage() {
                     {comment.content}
                   </p>
                   <div className="community-comment__actions">
-                    <button type="button" onClick={() => setReplyTarget(comment.id)}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReplyTarget(comment.id);
+                        setReplyTargetNickname(comment.authorNickname);
+                      }}
+                    >
                       답글
                     </button>
                     {currentMember?.memberId === comment.authorId ? (
@@ -267,9 +333,10 @@ function CommunityPostDetailPage() {
                     )}
                   </div>
                 </div>
+                <CommentLikeButton comment={comment} onToggle={handleToggleCommentLike} />
               </div>
 
-              {(repliesByParent[comment.id] ?? []).map((reply) => (
+              {visibleReplies.map((reply) => (
                 <div key={reply.id} className="community-comment community-comment--reply">
                   <div className="community-comment__row">
                     <CommentAvatar nickname={reply.authorNickname} imageUrl={reply.authorProfileImage} />
@@ -279,6 +346,12 @@ function CommunityPostDetailPage() {
                         {reply.content}
                       </p>
                       <div className="community-comment__actions">
+                        <button
+                          type="button"
+                          onClick={() => handleReplyToReply(comment.id, reply.authorNickname)}
+                        >
+                          답글
+                        </button>
                         {currentMember?.memberId === reply.authorId ? (
                           <button type="button" onClick={() => handleDeleteComment(reply.id)}>
                             삭제
@@ -290,20 +363,44 @@ function CommunityPostDetailPage() {
                         )}
                       </div>
                     </div>
+                    <CommentLikeButton comment={reply} onToggle={handleToggleCommentLike} />
                   </div>
                 </div>
               ))}
 
+              {replies.length > REPLIES_PREVIEW_SIZE && (
+                <button
+                  type="button"
+                  className="community-comment__replies-toggle"
+                  onClick={() =>
+                    setExpandedReplies((prev) => ({ ...prev, [comment.id]: !repliesExpanded }))
+                  }
+                >
+                  {repliesExpanded ? "답글 접기" : `답글 ${hiddenReplyCount}개 더보기`}
+                </button>
+              )}
+
               {replyTarget === comment.id && (
                 <div className="community-comment__reply-form">
                   <span className="community-comment__reply-target">
-                    @{comment.authorNickname}님에게 답글
+                    @{replyTargetNickname}님에게 답글
                   </span>
                   {commentForm}
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
+
+          {hasMoreComments && (
+            <button
+              type="button"
+              className="community-comments__load-more"
+              onClick={() => setVisibleCommentCount((prev) => prev + COMMENTS_PAGE_SIZE)}
+            >
+              댓글 {topLevelComments.length - visibleCommentCount}개 더보기
+            </button>
+          )}
 
           {replyTarget === null && commentForm}
         </div>

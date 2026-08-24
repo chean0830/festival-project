@@ -6,6 +6,7 @@ import com.example.festival.community.dto.PostRequest;
 import com.example.festival.community.dto.PostSummaryResponse;
 import com.example.festival.community.entity.Post;
 import com.example.festival.community.entity.PostLike;
+import com.example.festival.community.repository.PostCommentLikeRepository;
 import com.example.festival.community.repository.PostCommentRepository;
 import com.example.festival.community.repository.PostLikeRepository;
 import com.example.festival.community.repository.PostRepository;
@@ -37,6 +38,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostCommentRepository postCommentRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostCommentLikeRepository postCommentLikeRepository;
     private final MemberRepository memberRepository;
 
     @Value("${file.upload-dir:uploads}")
@@ -100,6 +102,10 @@ public class PostService {
     public void deletePost(Long memberId, Long postId) {
         Post post = findPost(postId);
         requireOwner(post, memberId);
+
+        postLikeRepository.deleteByPost_PostId(postId);
+        postCommentLikeRepository.deleteByPostComment_Post_PostId(postId);
+        postCommentRepository.deleteAll(postCommentRepository.findByPost_PostIdOrderByCommentIdDesc(postId));
         postRepository.delete(post);
     }
 

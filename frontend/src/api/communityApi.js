@@ -109,8 +109,9 @@ export function unlikePost(memberId, postId) {
   return mutateJson(`/api/members/${memberId}/posts/${postId}/like`, 'DELETE', undefined, '좋아요 취소에 실패했습니다.')
 }
 
-export function getComments(postId) {
-  return getJson(`/api/posts/${postId}/comments`, '댓글을 불러오지 못했습니다.')
+export function getComments(postId, memberId) {
+  const query = memberId ? `?memberId=${memberId}` : ''
+  return getJson(`/api/posts/${postId}/comments${query}`, '댓글을 불러오지 못했습니다.')
 }
 
 export function createComment(memberId, postId, { content, parentId }) {
@@ -128,6 +129,24 @@ export function deleteComment(memberId, postId, commentId) {
     'DELETE',
     undefined,
     '댓글을 삭제하지 못했습니다.'
+  )
+}
+
+export function likeComment(memberId, postId, commentId) {
+  return mutateJson(
+    `/api/members/${memberId}/posts/${postId}/comments/${commentId}/like`,
+    'POST',
+    undefined,
+    '댓글 좋아요 처리에 실패했습니다.'
+  )
+}
+
+export function unlikeComment(memberId, postId, commentId) {
+  return mutateJson(
+    `/api/members/${memberId}/posts/${postId}/comments/${commentId}/like`,
+    'DELETE',
+    undefined,
+    '댓글 좋아요 취소에 실패했습니다.'
   )
 }
 

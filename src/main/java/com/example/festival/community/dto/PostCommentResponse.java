@@ -9,6 +9,8 @@ public record PostCommentResponse(
         String authorNickname,
         String authorProfileImage,
         String content,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        long likeCount,
+        boolean liked
 ) {
 }
