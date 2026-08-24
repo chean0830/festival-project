@@ -81,6 +81,20 @@
   color: var(--color-text);
 }
 
+.event-detail__weather {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.event-detail__weather-icon {
+  width: 28px;
+  height: 28px;
+  margin: -4px 0;
+}
+.event-detail__weather--unavailable {
+  color: var(--color-text-muted);
+}
+
 .event-detail__genres {
   display: flex;
   flex-wrap: wrap;

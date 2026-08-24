@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
-import { getEventDetail, getEventLineup } from "../api/eventApi";
+import { getEventDetail, getEventLineup, getEventWeather } from "../api/eventApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import {
   fetchInterestedEventStatus,
@@ -40,6 +40,7 @@ function ProgramEventDetail() {
   const [lineup, setLineup] = useState(undefined);
   const [showLineup, setShowLineup] = useState(false);
   const [lineupError, setLineupError] = useState(null);
+  const [weather, setWeather] = useState(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +51,23 @@ function ProgramEventDetail() {
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWeather(undefined);
+
+    getEventWeather(eventId)
+      .then((data) => {
+        if (!cancelled) setWeather(data);
+      })
+      .catch((err) => {
+        if (!cancelled) setWeather({ available: false, message: err.message });
       });
 
     return () => {
@@ -154,6 +172,31 @@ function ProgramEventDetail() {
                 {formatDate(event.startDate)} - {formatDate(event.endDate)}
               </dd>
             </div>
+            {weather?.available && (
+              <div>
+                <dt>날씨</dt>
+                <dd className="event-detail__weather">
+                  {weather.icon && (
+                    <img
+                      className="event-detail__weather-icon"
+                      src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
+                      alt={weather.description ?? ""}
+                    />
+                  )}
+                  <span>
+                    {Math.round(weather.minTemp)}° - {Math.round(weather.maxTemp)}°
+                    {weather.description ? ` · ${weather.description}` : ""}
+                    {weather.rainChancePercent != null ? ` · 강수확률 ${weather.rainChancePercent}%` : ""}
+                  </span>
+                </dd>
+              </div>
+            )}
+            {weather && !weather.available && weather.message && (
+              <div>
+                <dt>날씨</dt>
+                <dd className="event-detail__weather event-detail__weather--unavailable">{weather.message}</dd>
+              </div>
+            )}
             {event.venueName && (
               <div>
                 <dt>장소</dt>

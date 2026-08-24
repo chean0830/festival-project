@@ -4,6 +4,8 @@ import com.example.festival.home.dto.EventDetailDto;
 import com.example.festival.home.dto.EventSummaryDto;
 import com.example.festival.home.dto.LineupArtistDto;
 import com.example.festival.home.service.EventService;
+import com.example.festival.weather.dto.WeatherForecastResponse;
+import com.example.festival.weather.service.WeatherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +24,7 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final WeatherService weatherService;
 
     @GetMapping("/events")
     public List<EventSummaryDto> getUpcomingEvents() {
@@ -36,5 +39,10 @@ public class EventController {
     @GetMapping("/events/{eventId}/lineup")
     public List<LineupArtistDto> getEventLineup(@PathVariable Long eventId) {
         return eventService.getEventLineup(eventId);
+    }
+
+    @GetMapping("/events/{eventId}/weather")
+    public WeatherForecastResponse getEventWeather(@PathVariable Long eventId) {
+        return weatherService.getForecast(eventId);
     }
 }

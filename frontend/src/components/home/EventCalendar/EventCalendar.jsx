@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUpcomingEvents, formatEventDate } from "../../../api/eventApi";
+import { getUpcomingEvents, getEventWeather, formatEventDate } from "../../../api/eventApi";
 import "./EventCalendar.css";
 
 /**
@@ -34,6 +34,38 @@ function buildEventsByDate(events) {
   });
 
   return map;
+}
+
+function EventWeatherBadge({ eventId }) {
+  const [weather, setWeather] = useState(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getEventWeather(eventId)
+      .then((data) => {
+        if (!cancelled) setWeather(data);
+      })
+      .catch(() => {
+        if (!cancelled) setWeather({ available: false });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
+  if (!weather?.available) return null;
+
+  return (
+    <span className="event-calendar__event-weather">
+      <img
+        src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
+        alt={weather.description ?? ""}
+      />
+      {Math.round(weather.minTemp)}°-{Math.round(weather.maxTemp)}°
+    </span>
+  );
 }
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -272,6 +304,7 @@ function EventCalendar() {
                     {event.venueName ? ` · ${event.venueName}` : ""}
                   </span>
                 </span>
+                <EventWeatherBadge eventId={event.id} />
                 <span className="event-calendar__event-chev">›</span>
               </button>
             ))}
