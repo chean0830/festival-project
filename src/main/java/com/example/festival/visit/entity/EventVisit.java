@@ -58,4 +58,12 @@ public class EventVisit {
         this.verified = verified;
         this.stampAcquired = stampAcquired;
     }
+
+    /**
+     * 자기신고(수동 추가)로 남아있던 방문 기록을 GPS 체크인으로 인증 완료 처리한다.
+     */
+    public void verify() {
+        this.verified = true;
+        this.stampAcquired = true;
+    }
 }

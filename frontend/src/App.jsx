@@ -16,6 +16,7 @@ import CommunityPage from './pages/CommunityPage'
 import CommunityPostWritePage from './pages/CommunityPostWritePage'
 import CommunityPostDetailPage from './pages/CommunityPostDetailPage'
 import NewsPage from './pages/NewsPage'
+import VisitMapPage from './pages/VisitMapPage'
 import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -63,6 +64,7 @@ function App() {
           <Route path=":postId" element={<CommunityPostDetailPage />} />
         </Route>
         <Route path="/news" element={<NewsPage />} />
+        <Route path="/visits/map" element={<VisitMapPage />} />
         <Route path="/search" element={<Search />} />
 
         <Route path="/login" element={<LoginPage />} />

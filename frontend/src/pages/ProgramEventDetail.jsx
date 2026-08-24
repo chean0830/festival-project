@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
 import { getEventDetail, getEventLineup, getEventWeather, getEventNews } from "../api/eventApi";
+import { checkInEvent } from "../api/visitApi";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import {
   fetchInterestedEventStatus,
@@ -61,6 +62,8 @@ function ProgramEventDetail() {
   const [lineupError, setLineupError] = useState(null);
   const [weather, setWeather] = useState(undefined);
   const [news, setNews] = useState([]);
+  const [checkInStatus, setCheckInStatus] = useState("idle"); // idle | checking | success | error
+  const [checkInMessage, setCheckInMessage] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +144,44 @@ function ProgramEventDetail() {
         .then((data) => setLineup(data))
         .catch((err) => setLineupError(err.message));
     }
+  }
+
+  function handleCheckIn() {
+    if (!memberId) {
+      navigate("/login");
+      return;
+    }
+    if (!navigator.geolocation) {
+      setCheckInStatus("error");
+      setCheckInMessage("이 브라우저는 위치 정보를 지원하지 않아요.");
+      return;
+    }
+
+    setCheckInStatus("checking");
+    setCheckInMessage(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        checkInEvent(memberId, {
+          eventId,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+          .then((result) => {
+            setCheckInStatus(result.success ? "success" : "error");
+            setCheckInMessage(result.message);
+          })
+          .catch((err) => {
+            setCheckInStatus("error");
+            setCheckInMessage(err.message);
+          });
+      },
+      () => {
+        setCheckInStatus("error");
+        setCheckInMessage("위치 권한을 허용해야 체크인할 수 있어요.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
   }
 
   async function handleToggleInterest() {
@@ -303,6 +344,24 @@ function ProgramEventDetail() {
           </div>
 
           {heartError && <p className="event-detail__heart-error">{heartError}</p>}
+
+          <button
+            type="button"
+            className="event-detail__checkin-btn"
+            onClick={handleCheckIn}
+            disabled={checkInStatus === "checking" || checkInStatus === "success"}
+          >
+            {checkInStatus === "success" ? "체크인 완료 ✓" : checkInStatus === "checking" ? "위치 확인 중..." : "📍 방문 체크인"}
+          </button>
+          {checkInMessage && (
+            <p
+              className={`event-detail__checkin-message${
+                checkInStatus === "error" ? " event-detail__checkin-message--error" : ""
+              }`}
+            >
+              {checkInMessage}
+            </p>
+          )}
 
           <button type="button" className="event-detail__lineup-toggle" onClick={handleToggleLineup}>
             라인업 확인하기 {showLineup ? "▲" : "▼"}
