@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+
 const TYPE_LABEL = {
   TICKET_OPEN: '티켓 오픈',
   ARTIST_EVENT: '관심 아티스트',
@@ -12,8 +14,19 @@ const TYPE_LABEL = {
 }
 
 export default function NotificationList({ notifications, onRead }) {
+  const navigate = useNavigate()
+
   if (!notifications || notifications.length === 0) {
     return <p className="notification-empty-text">받은 알림이 없습니다.</p>
+  }
+
+  function handleClick(notification) {
+    if (!notification.read) {
+      onRead(notification.notificationId)
+    }
+    if (notification.eventId) {
+      navigate(`/program/event/${notification.eventId}`)
+    }
   }
 
   return (
@@ -23,7 +36,7 @@ export default function NotificationList({ notifications, onRead }) {
           key={notification.notificationId}
           className={`notification-item${notification.read ? '' : ' notification-item--unread'}`}
         >
-          <div className="notification-item-body" onClick={() => !notification.read && onRead(notification.notificationId)}>
+          <div className="notification-item-body" onClick={() => handleClick(notification)}>
             <span className="notification-item-type">{TYPE_LABEL[notification.type] || notification.type}</span>
             <span className="notification-item-title">{notification.title}</span>
             {notification.content && <p className="notification-item-content">{notification.content}</p>}
