@@ -37,6 +37,22 @@
   object-fit: cover;
 }
 
+.news-card__thumb-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.news-card__event {
+  margin: 0 0 2px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
 .news-card__title {
   margin: 0;
   font-size: var(--font-size-sm);

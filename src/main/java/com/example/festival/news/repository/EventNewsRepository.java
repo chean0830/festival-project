@@ -13,4 +13,7 @@ public interface EventNewsRepository extends JpaRepository<EventNews, Long> {
 
     // 뉴스 목록 페이지용: 전체 최신순
     List<EventNews> findAllByOrderByCreatedAtDesc();
+
+    // 공연 상세페이지 소식 배너용: 해당 공연에 대한 소식만 최신순
+    List<EventNews> findByEvent_EventIdOrderByCreatedAtDesc(Long eventId);
 }
