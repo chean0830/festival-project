@@ -136,6 +136,17 @@ public class Member {
         this.password = encodedPassword;
     }
 
+    public void changeContact(String phoneNumber, String postalCode, String roadAddress, String detailAddress) {
+        this.phoneNumber = phoneNumber;
+        this.postalCode = postalCode;
+        this.roadAddress = roadAddress;
+        this.detailAddress = detailAddress;
+    }
+
+    public void withdraw() {
+        this.status = MemberStatus.WITHDRAWN;
+    }
+
     public void updateSocialProfile(String nickname, String profileImage) {
         if (nickname != null && !nickname.isBlank()) {
             this.nickname = nickname;
@@ -175,6 +186,18 @@ public class Member {
 
     public String getPhoneNumber() {
         return phoneNumber;
+    }
+
+    public String getPostalCode() {
+        return postalCode;
+    }
+
+    public String getRoadAddress() {
+        return roadAddress;
+    }
+
+    public String getDetailAddress() {
+        return detailAddress;
     }
 
     public String getNickname() {
