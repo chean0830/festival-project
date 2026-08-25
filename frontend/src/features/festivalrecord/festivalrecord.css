@@ -843,6 +843,82 @@
   margin-top: 8px;
 }
 
+.fr-ai-usage-count {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.fr-version-gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 4px 0;
+}
+
+.fr-version-thumb {
+  flex: none;
+  width: 56px;
+  height: 74px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.fr-version-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fr-version-thumb:disabled {
+  cursor: not-allowed;
+}
+
+.fr-version-thumb--active {
+  opacity: 1;
+  border-color: var(--color-primary);
+}
+
+.fr-diary-version-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.fr-diary-version-item {
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fr-diary-version-item:disabled {
+  cursor: not-allowed;
+}
+
+.fr-diary-version-item--active {
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
 /* ---- 곡 자동완성 행 ---- */
 
 .record-form-song-row {

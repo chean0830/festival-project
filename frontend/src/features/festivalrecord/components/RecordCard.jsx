@@ -13,7 +13,11 @@ export default function RecordCard({ record }) {
         <span className="record-card-event">{record.eventName}</span>
         <span className="record-card-title">{record.title || '제목 없는 기록'}</span>
         {record.rating != null && <StarRating value={record.rating} readOnly />}
-        {record.oneLineReview && <p className="record-card-review">{record.oneLineReview}</p>}
+        {record.aiSummary ? (
+          <p className="record-card-review record-card-ai-summary">📝 {record.aiSummary}</p>
+        ) : (
+          record.oneLineReview && <p className="record-card-review">{record.oneLineReview}</p>
+        )}
       </div>
     </Link>
   )

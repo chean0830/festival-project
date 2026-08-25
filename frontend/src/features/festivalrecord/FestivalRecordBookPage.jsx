@@ -4,7 +4,14 @@ import HTMLFlipBook from 'react-pageflip'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import RequireLogin from '../profile/components/RequireLogin'
-import { fetchFestivalRecord, generateAiDiary, generatePoster, shareFestivalRecord } from './api/festivalRecordApi'
+import {
+  fetchFestivalRecord,
+  generateAiDiary,
+  generatePoster,
+  selectDiaryVersion,
+  selectPosterVersion,
+  shareFestivalRecord,
+} from './api/festivalRecordApi'
 import BookCoverPage from './components/BookCoverPage'
 import PosterView from './components/PosterView'
 import StarRating from './components/StarRating'
@@ -98,10 +105,19 @@ function FoodMemoContent({ record }) {
   )
 }
 
-const FREE_DIARY_REGEN_LIMIT = 3
+function ReviewContent({
+  record,
+  onGenerateDiary,
+  isGeneratingDiary,
+  diaryError,
+  onSelectDiaryVersion,
+  isSwitchingDiaryVersion,
+}) {
+  const diaryUsedCount = record.aiDiaryUsedCount ?? 0
+  const diaryFreeLimit = record.aiDiaryFreeLimit ?? 3
+  const diaryLimitReached = diaryUsedCount >= diaryFreeLimit
+  const diaryVersions = record.diaryVersions ?? []
 
-function ReviewContent({ record, onGenerateDiary, isGeneratingDiary, diaryError }) {
-  const diaryLimitReached = (record.aiDiaryUsedCount ?? 0) >= FREE_DIARY_REGEN_LIMIT
   return (
     <>
       <h3>한줄평</h3>
@@ -114,6 +130,27 @@ function ReviewContent({ record, onGenerateDiary, isGeneratingDiary, diaryError 
       ) : (
         <p className="fr-page-empty">아직 만들어진 AI 일기가 없어요.</p>
       )}
+
+      {diaryVersions.length > 1 && (
+        <div className="fr-diary-version-gallery">
+          {diaryVersions.map((version) => (
+            <button
+              key={version.versionId}
+              type="button"
+              className={`fr-diary-version-item${version.content === record.aiDiary ? ' fr-diary-version-item--active' : ''}`}
+              onClick={() => onSelectDiaryVersion(version.versionId)}
+              disabled={isSwitchingDiaryVersion}
+            >
+              {version.summary || version.content.slice(0, 20) + '...'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p className="fr-ai-usage-count">
+        무료 생성 {diaryUsedCount}/{diaryFreeLimit}회 사용
+      </p>
+
       {diaryError && <p className="record-error-text">{diaryError}</p>}
       <button
         type="button"
@@ -129,7 +166,7 @@ function ReviewContent({ record, onGenerateDiary, isGeneratingDiary, diaryError 
               ? '🔄 AI 일기 다시 쓰기'
               : '📝 AI 일기 쓰기'}
       </button>
-      {diaryLimitReached && <p className="fr-poster-regen-limit">무료 생성 {FREE_DIARY_REGEN_LIMIT}회를 모두 사용했어요.</p>}
+      {diaryLimitReached && <p className="fr-poster-regen-limit">무료 생성 {diaryFreeLimit}회를 모두 사용했어요.</p>}
     </>
   )
 }
@@ -166,6 +203,7 @@ export default function FestivalRecordBookPage() {
   const [posterStyleRequest, setPosterStyleRequest] = useState('')
   const [isGeneratingDiary, setIsGeneratingDiary] = useState(false)
   const [diaryError, setDiaryError] = useState(null)
+  const [isSwitchingDiaryVersion, setIsSwitchingDiaryVersion] = useState(false)
 
   useEffect(() => {
     if (!memberId) {
@@ -230,6 +268,12 @@ export default function FestivalRecordBookPage() {
     return updated
   }
 
+  async function handleSelectPosterVersion(versionId) {
+    const updated = await selectPosterVersion(memberId, recordId, versionId)
+    setRecord(updated)
+    return updated
+  }
+
   async function handleGenerateAiDiary() {
     setIsGeneratingDiary(true)
     setDiaryError(null)
@@ -240,6 +284,22 @@ export default function FestivalRecordBookPage() {
       setDiaryError(err.message)
     } finally {
       setIsGeneratingDiary(false)
+    }
+  }
+
+  async function handleSelectDiaryVersion(versionId) {
+    if (isSwitchingDiaryVersion) {
+      return
+    }
+    setIsSwitchingDiaryVersion(true)
+    setDiaryError(null)
+    try {
+      const updated = await selectDiaryVersion(memberId, recordId, versionId)
+      setRecord(updated)
+    } catch (err) {
+      setDiaryError(err.message)
+    } finally {
+      setIsSwitchingDiaryVersion(false)
     }
   }
 
@@ -305,6 +365,8 @@ export default function FestivalRecordBookPage() {
                   onGenerateDiary={handleGenerateAiDiary}
                   isGeneratingDiary={isGeneratingDiary}
                   diaryError={diaryError}
+                  onSelectDiaryVersion={handleSelectDiaryVersion}
+                  isSwitchingDiaryVersion={isSwitchingDiaryVersion}
                 />
               </Page>
               <Page number="6">
@@ -366,6 +428,7 @@ export default function FestivalRecordBookPage() {
                 record={record}
                 onShare={handleShare}
                 onRegenerate={handleRegeneratePoster}
+                onSelectVersion={handleSelectPosterVersion}
                 styleRequest={posterStyleRequest}
                 onStyleRequestChange={setPosterStyleRequest}
               />

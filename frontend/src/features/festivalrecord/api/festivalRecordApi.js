@@ -105,3 +105,11 @@ export function generatePoster(memberId, recordId, styleRequest) {
 export function generateAiDiary(memberId, recordId) {
   return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/generate`, 'POST')
 }
+
+export function selectPosterVersion(memberId, recordId, versionId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/versions/${versionId}/select`, 'POST')
+}
+
+export function selectDiaryVersion(memberId, recordId, versionId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/versions/${versionId}/select`, 'POST')
+}
