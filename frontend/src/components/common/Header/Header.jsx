@@ -22,6 +22,7 @@ const subNavItems = [
   { label: "커뮤니티", href: "/community" },
   { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
+  { label: "라이브", href: "/live" },
 ];
 
 // 햄버거 눌렀을 때 열리는 전체 메뉴 목록
@@ -30,10 +31,10 @@ const drawerMenuItems = [
   { label: "커뮤니티", href: "/community" },
   { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
+  { label: "라이브", href: "/live" },
   { label: "페스티벌 기록", href: "/festival-log" },
   { label: "내 주변 쉼표", href: "/nearby-food" },
   { label: "내 방문 지도", href: "/visits/map" },
-  { label: "라이브", href: "/live" },
 ];
 
 function Header() {
