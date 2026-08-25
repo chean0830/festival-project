@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
+import { fetchPreorderProducts } from '../../api/mdShopApi'
+import { formatPrice } from '../../utils/formatPrice'
+import { todayIso } from '../../utils/todayIso'
 import {
   changeLiveChatEnabled,
   endLiveStream,
@@ -11,18 +14,91 @@ import BrowserLivePlayer from './BrowserLivePlayer'
 import './live.css'
 
 const STATUS_LABEL = { SCHEDULED: '방송 대기', LIVE: 'LIVE', ENDED: '방송 종료' }
-const MD_PREORDER_URL = ''
 const TEMP_AD = {
   eyebrow: 'FESTLOG 광고',
   title: '광고 내용 준비 중입니다',
   url: '',
 }
 
+function formatMdDeadline(preorderDeadline) {
+  if (!preorderDeadline) return ''
+  const deadlineDate = preorderDeadline.slice(0, 10)
+  const today = todayIso()
+  if (deadlineDate < today) return '예약 마감'
+
+  const diffMs = new Date(`${deadlineDate}T00:00:00`) - new Date(`${today}T00:00:00`)
+  const dDay = Math.round(diffMs / (1000 * 60 * 60 * 24))
+  return dDay === 0 ? '오늘 마감' : `D-${dDay}`
+}
+
+function isMdProductClosed(product) {
+  return product.status === 'SOLD_OUT'
+    || product.stock <= 0
+    || formatMdDeadline(product.preorderDeadline) === '예약 마감'
+}
+
+function LiveMdPreorderPanel({ open, eventName, products, loading, error, onClose, onSelect }) {
+  if (!open) return null
+
+  return (
+    <aside className="live-md-panel" aria-label={`${eventName} MD 사전예약 목록`}>
+      <div className="live-md-panel__header">
+        <div>
+          <small>{eventName}</small>
+          <h2>MD 사전예약</h2>
+        </div>
+        <button type="button" onClick={onClose} aria-label="MD 사전예약 목록 닫기">×</button>
+      </div>
+
+      <div className="live-md-panel__body">
+        {loading && <p className="live-md-panel__state">상품을 불러오는 중입니다...</p>}
+        {!loading && error && <p className="live-md-panel__state live-md-panel__state--error">{error}</p>}
+        {!loading && !error && products?.length === 0 && (
+          <p className="live-md-panel__state">이 공연에 등록된 사전예약 상품이 없습니다.</p>
+        )}
+
+        {!loading && !error && products?.map((product) => {
+          const closed = isMdProductClosed(product)
+          const deadline = product.status === 'SOLD_OUT' || product.stock <= 0
+            ? '품절'
+            : formatMdDeadline(product.preorderDeadline)
+
+          return (
+            <button
+              type="button"
+              className="live-md-product"
+              key={product.productId}
+              onClick={() => onSelect(product)}
+              disabled={closed}
+            >
+              <span className="live-md-product__image">
+                {product.imageUrl ? <img src={product.imageUrl} alt="" /> : <span>MD</span>}
+              </span>
+              <span className="live-md-product__content">
+                <strong>{product.name}</strong>
+                <span className="live-md-product__price">{formatPrice(product.price)}</span>
+                <span className="live-md-product__meta">
+                  <span>남은 재고 {product.stock}개</span>
+                  {deadline && <em className={closed ? 'is-closed' : ''}>{deadline}</em>}
+                </span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="live-md-panel__footer">상품을 선택하면 사전예약 주문서로 이동합니다.</div>
+    </aside>
+  )
+}
+
 function LiveChatPanel({
   open,
   enabled,
   owner,
+  hostName,
   viewerCount,
+  viewerParticipants,
   messages,
   controller,
   input,
@@ -33,6 +109,8 @@ function LiveChatPanel({
   onToggleOpen,
   onToggleEnabled,
 }) {
+  const [participantsOpen, setParticipantsOpen] = useState(false)
+
   return (
     <div className={`live-chat ${open ? '' : 'live-chat--closed'}`}>
       <div className="live-chat__header">
@@ -43,6 +121,18 @@ function LiveChatPanel({
           </span>
         </div>
         <div className="live-chat__header-actions">
+          <button
+            type="button"
+            className={`live-chat__participants-button ${participantsOpen ? 'is-active' : ''}`}
+            onClick={() => setParticipantsOpen((current) => !current)}
+            aria-label="채팅 참여 인원"
+            aria-expanded={participantsOpen}
+            title="채팅 참여 인원"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 3 18.5V20M9 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8-3h4m-4 4h4m-4 4h4" />
+            </svg>
+          </button>
           {owner && (
             <button
               type="button"
@@ -69,39 +159,94 @@ function LiveChatPanel({
 
       {open && (
         <>
-          <div className="live-chat__messages" aria-live="polite">
-            {!enabled && (
-              <div className="live-chat__system">방송자가 채팅을 중지했습니다.</div>
-            )}
-            {enabled && messages.length === 0 && (
-              <div className="live-chat__empty">첫 번째 채팅을 남겨보세요.</div>
-            )}
-            {messages.map((message) => (
-              <div className={`live-chat__message ${message.mine ? 'is-mine' : ''}`} key={message.id}>
+          {participantsOpen ? (
+            <div className="live-chat-participants">
+              <div className="live-chat-participants__title">
                 <div>
-                  <strong>{message.senderName}</strong>
-                  <time>{new Date(message.sentAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time>
+                  <strong>채팅 참여 인원</strong>
+                  <span>현재 {viewerCount + 1}명 참여 중</span>
                 </div>
-                <p>{message.text}</p>
+                <button type="button" onClick={() => setParticipantsOpen(false)} aria-label="참여 인원 목록 닫기">×</button>
               </div>
-            ))}
-          </div>
-          <form className="live-chat__form" onSubmit={onSubmit}>
-            <input
-              value={input}
-              onChange={onInputChange}
-              maxLength="300"
-              placeholder={enabled ? '메시지를 입력하세요' : '현재 채팅을 사용할 수 없습니다'}
-              disabled={!enabled || !controller || sending}
-              aria-label="채팅 메시지"
-            />
-            <button
-              type="submit"
-              disabled={!enabled || !controller || sending || !input.trim()}
-            >
-              전송
-            </button>
-          </form>
+
+              <section className="live-chat-participants__section">
+                <h3>방송자</h3>
+                <div className="live-chat-participant is-host">
+                  <span className="live-chat-participant__avatar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="8" y="3" width="8" height="12" rx="4" />
+                      <path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8" />
+                    </svg>
+                  </span>
+                  <strong>{hostName || '방송자'}</strong>
+                  <span className="live-chat-participant__role">방송자</span>
+                </div>
+              </section>
+
+              <section className="live-chat-participants__section">
+                <h3>시청자 <span>{viewerCount}</span></h3>
+                {viewerParticipants.length === 0 ? (
+                  <p className="live-chat-participants__empty">현재 참여 중인 시청자가 없습니다.</p>
+                ) : viewerParticipants.map((participant) => (
+                  <div className="live-chat-participant" key={participant.identity}>
+                    <span className="live-chat-participant__avatar">
+                      {(participant.name || '시').slice(0, 1)}
+                    </span>
+                    <strong>{participant.name}</strong>
+                    {participant.mine && <span className="live-chat-participant__mine">나</span>}
+                  </div>
+                ))}
+              </section>
+            </div>
+          ) : (
+            <>
+              <div className="live-chat__messages" aria-live="polite">
+                {!enabled && (
+                  <div className="live-chat__system">방송자가 채팅을 중지했습니다.</div>
+                )}
+                {enabled && messages.length === 0 && (
+                  <div className="live-chat__empty">첫 번째 채팅을 남겨보세요.</div>
+                )}
+                {messages.map((message) => (
+                  <div
+                    className={`live-chat__message ${message.mine ? 'is-mine' : ''} ${message.host ? 'is-host' : ''}`}
+                    key={message.id}
+                  >
+                    <div>
+                      <strong>{message.senderName}</strong>
+                      {message.host && (
+                        <span className="live-chat__host-badge">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="8" y="3" width="8" height="12" rx="4" />
+                            <path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8" />
+                          </svg>
+                          방송자
+                        </span>
+                      )}
+                      <time>{new Date(message.sentAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</time>
+                    </div>
+                    <p>{message.text}</p>
+                  </div>
+                ))}
+              </div>
+              <form className="live-chat__form" onSubmit={onSubmit}>
+                <input
+                  value={input}
+                  onChange={onInputChange}
+                  maxLength="300"
+                  placeholder={enabled ? '메시지를 입력하세요' : '현재 채팅을 사용할 수 없습니다'}
+                  disabled={!enabled || !controller || sending}
+                  aria-label="채팅 메시지"
+                />
+                <button
+                  type="submit"
+                  disabled={!enabled || !controller || sending || !input.trim()}
+                >
+                  전송
+                </button>
+              </form>
+            </>
+          )}
         </>
       )}
     </div>
@@ -119,6 +264,7 @@ export default function LiveWatchPage() {
   const [changing, setChanging] = useState(false)
   const [browserReady, setBrowserReady] = useState(false)
   const [viewerCount, setViewerCount] = useState(0)
+  const [viewerParticipants, setViewerParticipants] = useState([])
   const [chatOpen, setChatOpen] = useState(true)
   const [chatMessages, setChatMessages] = useState([])
   const [chatController, setChatController] = useState(null)
@@ -131,12 +277,19 @@ export default function LiveWatchPage() {
   const [viewerPip, setViewerPip] = useState(false)
   const [viewerFullscreen, setViewerFullscreen] = useState(false)
   const [adVisible, setAdVisible] = useState(true)
+  const [mdPanelOpen, setMdPanelOpen] = useState(false)
+  const [mdProducts, setMdProducts] = useState(null)
+  const [mdLoading, setMdLoading] = useState(false)
+  const [mdError, setMdError] = useState('')
 
   useEffect(() => {
     fetchLiveStream(streamId)
       .then((result) => {
         setStream(result)
         setAdVisible(true)
+        setMdPanelOpen(false)
+        setMdProducts(null)
+        setMdError('')
       })
       .catch((loadError) => setError(loadError.message))
       .finally(() => setLoading(false))
@@ -257,8 +410,29 @@ export default function LiveWatchPage() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  function handleMdPreorder() {
-    openPreparedLink(MD_PREORDER_URL, 'MD 사전예약 링크를 준비 중입니다.')
+  async function handleMdPreorder() {
+    const nextOpen = !mdPanelOpen
+    setMdPanelOpen(nextOpen)
+    if (!nextOpen || mdProducts !== null || mdLoading || !stream?.eventId) return
+
+    setMdLoading(true)
+    setMdError('')
+    try {
+      setMdProducts(await fetchPreorderProducts(stream.eventId))
+    } catch (loadError) {
+      setMdError(loadError.message)
+    } finally {
+      setMdLoading(false)
+    }
+  }
+
+  function handleMdProductSelect(product) {
+    if (isMdProductClosed(product)) return
+    window.open(
+      `/shop/preorder/${product.productId}/order`,
+      '_blank',
+      'noopener,noreferrer'
+    )
   }
 
   function handleDonation() {
@@ -389,6 +563,7 @@ export default function LiveWatchPage() {
                   onStreamEnded={handleRemoteStreamEnded}
                   onChatControllerChange={handleChatControllerChange}
                   onViewerCountChange={setViewerCount}
+                  onViewerParticipantsChange={setViewerParticipants}
                 />
               ) : (
                 <div className="live-player__waiting" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.7)), url(${stream.thumbnailUrl})` }}>
@@ -419,20 +594,34 @@ export default function LiveWatchPage() {
                   </button>
                 </div>
               )}
+              {!stream.owner && (
+                <LiveMdPreorderPanel
+                  open={mdPanelOpen}
+                  eventName={stream.eventName}
+                  products={mdProducts}
+                  loading={mdLoading}
+                  error={mdError}
+                  onClose={() => setMdPanelOpen(false)}
+                  onSelect={handleMdProductSelect}
+                />
+              )}
               <div className="live-player__hover-ui">
                 <div className="live-player__hover-top">
-                  <button
-                    type="button"
-                    className="live-player__quick-action"
-                    onClick={handleMdPreorder}
-                    aria-label="MD 사전예약"
-                    title="MD 사전예약"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M6.5 8.5h11l1 11h-13l1-11Z" />
-                      <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
-                    </svg>
-                  </button>
+                  {!stream.owner && (
+                    <button
+                      type="button"
+                      className={`live-player__quick-action ${mdPanelOpen ? 'is-active' : ''}`}
+                      onClick={handleMdPreorder}
+                      aria-label="MD 사전예약"
+                      aria-expanded={mdPanelOpen}
+                      title="MD 사전예약"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6.5 8.5h11l1 11h-13l1-11Z" />
+                        <path d="M9 9V6.5a3 3 0 0 1 6 0V9" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="live-player__quick-action live-player__chat-toggle"
@@ -591,7 +780,9 @@ export default function LiveWatchPage() {
                 open
                 enabled={stream.chatEnabled}
                 owner={stream.owner}
+                hostName={stream.hostNickname}
                 viewerCount={viewerCount}
+                viewerParticipants={viewerParticipants}
                 messages={chatMessages}
                 controller={chatController}
                 input={chatInput}

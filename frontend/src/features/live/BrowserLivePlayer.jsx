@@ -130,11 +130,13 @@ function LiveRoomBridge({
   onStreamEnded,
   onChatControllerChange,
   onViewerCountChange,
+  onViewerParticipantsChange,
 }) {
   const participants = useParticipants()
   const { localParticipant } = useLocalParticipant()
   const connectionState = useConnectionState()
   const connected = connectionState === ConnectionState.Connected
+  const lastViewerSignatureRef = useRef('')
 
   const handleDataMessage = useCallback((message) => {
     try {
@@ -155,6 +157,7 @@ function LiveRoomBridge({
         sentAt: data.sentAt,
         senderIdentity: message.from?.identity ?? 'unknown',
         senderName: message.from?.name ?? '시청자',
+        host: data.senderRole === 'HOST' || Boolean(message.from?.identity?.startsWith('host-')),
         mine: false,
       })
     } catch {
@@ -165,11 +168,22 @@ function LiveRoomBridge({
   const { send, isSending } = useDataChannel('festlog.chat', handleDataMessage)
 
   useEffect(() => {
-    const viewerCount = participants.filter(
+    const viewers = participants.filter(
       (participant) => !participant.identity.startsWith('host-')
-    ).length
-    onViewerCountChange?.(viewerCount)
-  }, [onViewerCountChange, participants])
+    )
+    const viewerList = viewers.map((participant) => ({
+      identity: participant.identity,
+      name: participant.name ?? '시청자',
+      mine: participant.isLocal,
+    })).sort((left, right) => left.name.localeCompare(right.name, 'ko-KR'))
+    const viewerSignature = JSON.stringify(viewerList)
+
+    onViewerCountChange?.(viewers.length)
+    if (lastViewerSignatureRef.current !== viewerSignature) {
+      lastViewerSignatureRef.current = viewerSignature
+      onViewerParticipantsChange?.(viewerList)
+    }
+  }, [onViewerCountChange, onViewerParticipantsChange, participants])
 
   useEffect(() => {
     if (!owner || !connected) return
@@ -194,6 +208,7 @@ function LiveRoomBridge({
         id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
         text,
         sentAt: new Date().toISOString(),
+        senderRole: owner ? 'HOST' : 'VIEWER',
       }
       await send(
         new TextEncoder().encode(JSON.stringify(chatMessage)),
@@ -203,6 +218,7 @@ function LiveRoomBridge({
         ...chatMessage,
         senderIdentity: localParticipant.identity,
         senderName: localParticipant.name ?? (owner ? '방송자' : '시청자'),
+        host: owner,
         mine: true,
       })
     }
@@ -234,6 +250,7 @@ export default function BrowserLivePlayer({
   onStreamEnded,
   onChatControllerChange,
   onViewerCountChange,
+  onViewerParticipantsChange,
 }) {
   const [connection, setConnection] = useState(null)
   const [connecting, setConnecting] = useState(!owner && status === 'LIVE')
@@ -286,6 +303,7 @@ export default function BrowserLivePlayer({
     onReadyChange?.(false)
     onChatControllerChange?.(null)
     onViewerCountChange?.(0)
+    onViewerParticipantsChange?.([])
     setConnection(null)
     setConnectRequested(false)
 
@@ -297,7 +315,7 @@ export default function BrowserLivePlayer({
     }
 
     setNotice(owner ? '방송 연결이 종료되었습니다. 다시 연결해 주세요.' : '방송 연결이 종료되었습니다.')
-  }, [onChatControllerChange, onError, onReadyChange, onViewerCountChange, owner])
+  }, [onChatControllerChange, onError, onReadyChange, onViewerCountChange, onViewerParticipantsChange, owner])
 
   const handleRoomError = useCallback((liveKitError) => {
     setNotice(liveKitError.message)
@@ -361,6 +379,7 @@ export default function BrowserLivePlayer({
         onStreamEnded={onStreamEnded}
         onChatControllerChange={onChatControllerChange}
         onViewerCountChange={onViewerCountChange}
+        onViewerParticipantsChange={onViewerParticipantsChange}
       />
     </LiveKitRoom>
   )

@@ -74,8 +74,13 @@ public class MdShopService {
         this.memberArtistRepository = memberArtistRepository;
     }
 
-    public List<MdProductResponse> getPreorderProducts() {
-        return mdProductRepository.findAllByStatusInWithEvent(List.of(PREORDER_STATUS, SOLD_OUT_STATUS)).stream()
+    public List<MdProductResponse> getPreorderProducts(Long eventId) {
+        List<String> visibleStatuses = List.of(PREORDER_STATUS, SOLD_OUT_STATUS);
+        List<MdProduct> products = eventId == null
+                ? mdProductRepository.findAllByStatusInWithEvent(visibleStatuses)
+                : mdProductRepository.findAllByEventIdAndStatusInWithEvent(eventId, visibleStatuses);
+
+        return products.stream()
                 .map(this::toProductResponse)
                 .toList();
     }
