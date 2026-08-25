@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 
 /**
  * md_order 매핑 (MD 사전예약/주문).
- * 실제 결제(PG) 연동 전이라, 생성 시 status는 항상 PAYMENT_WAIT으로 시작한다.
+ * 생성 시 status는 항상 PAYMENT_WAIT으로 시작하고, Toss Payments 결제 승인 후 PAID로 전환된다.
  */
 @Entity
 @Table(name = "md_order")

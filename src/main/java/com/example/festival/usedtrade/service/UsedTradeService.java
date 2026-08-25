@@ -13,9 +13,13 @@ import com.example.festival.usedtrade.dto.UsedTransactionResponse;
 import com.example.festival.usedtrade.entity.UsedListing;
 import com.example.festival.usedtrade.entity.UsedLike;
 import com.example.festival.usedtrade.entity.UsedTransaction;
+import com.example.festival.usedtrade.entity.UsedTransactionPayment;
 import com.example.festival.usedtrade.repository.UsedLikeRepository;
 import com.example.festival.usedtrade.repository.UsedListingRepository;
+import com.example.festival.usedtrade.repository.UsedTransactionPaymentRepository;
 import com.example.festival.usedtrade.repository.UsedTransactionRepository;
+import com.example.festival.payment.TossPaymentClient;
+import com.example.festival.payment.dto.TossConfirmResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,7 +40,9 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * MD 중고거래 매물 조회/등록, 찜, 구매 요청/승인/완료/취소.
+ * MD 중고거래 매물 조회/등록, 찜, 구매 요청/승인/결제/완료/취소.
+ * 구매 요청은 REQUEST -> APPROVED -> PAID -> COMPLETED 순으로 진행되며,
+ * 판매자가 승인(APPROVED)한 뒤 구매자가 Toss Payments로 결제해야(PAID) 거래완료 처리할 수 있다.
  * 아티스트/공연 테이블과는 정식으로 연결하지 않고, tags(해시태그)로 검색만 지원한다.
  * 실시간 채팅(trade_chat)은 별도 작업으로, 이 서비스 범위에 포함하지 않는다.
  */
@@ -65,11 +71,13 @@ public class UsedTradeService {
 
     private static final String TX_REQUEST = "REQUEST";
     private static final String TX_APPROVED = "APPROVED";
+    private static final String TX_PAID = "PAID";
     private static final String TX_COMPLETED = "COMPLETED";
     private static final String TX_CANCELED = "CANCELED";
 
     private static final String NOTIFICATION_TYPE_TX_REQUEST = "USED_TX_REQUEST";
     private static final String NOTIFICATION_TYPE_TX_APPROVED = "USED_TX_APPROVED";
+    private static final String NOTIFICATION_TYPE_TX_PAID = "USED_TX_PAID";
     private static final String NOTIFICATION_TYPE_TX_COMPLETED = "USED_TX_COMPLETED";
     private static final String NOTIFICATION_TYPE_TX_CANCELED = "USED_TX_CANCELED";
 
@@ -80,23 +88,29 @@ public class UsedTradeService {
     private final UsedListingRepository usedListingRepository;
     private final UsedLikeRepository usedLikeRepository;
     private final UsedTransactionRepository usedTransactionRepository;
+    private final UsedTransactionPaymentRepository usedTransactionPaymentRepository;
     private final MemberRepository memberRepository;
     private final NotificationService notificationService;
+    private final TossPaymentClient tossPaymentClient;
     private final Path uploadRoot;
 
     public UsedTradeService(
             UsedListingRepository usedListingRepository,
             UsedLikeRepository usedLikeRepository,
             UsedTransactionRepository usedTransactionRepository,
+            UsedTransactionPaymentRepository usedTransactionPaymentRepository,
             MemberRepository memberRepository,
             NotificationService notificationService,
+            TossPaymentClient tossPaymentClient,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.usedListingRepository = usedListingRepository;
         this.usedLikeRepository = usedLikeRepository;
         this.usedTransactionRepository = usedTransactionRepository;
+        this.usedTransactionPaymentRepository = usedTransactionPaymentRepository;
         this.memberRepository = memberRepository;
         this.notificationService = notificationService;
+        this.tossPaymentClient = tossPaymentClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -393,13 +407,45 @@ public class UsedTradeService {
     }
 
     @Transactional
+    public UsedTransactionResponse confirmPayment(Long memberId, Long transactionId, String paymentKey, String tossOrderId, BigDecimal amount) {
+        UsedTransaction transaction = getTransactionOrThrow(transactionId);
+        if (!transaction.getBuyer().getId().equals(memberId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인의 구매 요청만 결제할 수 있습니다.");
+        }
+        if (!TX_APPROVED.equals(transaction.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "승인된 구매 요청만 결제할 수 있습니다.");
+        }
+        if (transaction.getPrice().compareTo(amount) != 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 금액이 거래 금액과 일치하지 않습니다.");
+        }
+
+        TossConfirmResponse confirmed = tossPaymentClient.confirm(paymentKey, tossOrderId, amount);
+        usedTransactionPaymentRepository.save(
+                new UsedTransactionPayment(transaction, tossOrderId, paymentKey, confirmed.method(), amount, "SUCCESS", LocalDateTime.now())
+        );
+
+        transaction.changeStatus(TX_PAID);
+
+        UsedListing listing = transaction.getListing();
+        notificationService.notifyMember(
+                listing.getSeller().getId(),
+                null,
+                NOTIFICATION_TYPE_TX_PAID,
+                "구매자가 결제를 완료했어요",
+                listing.getTitle() + " 매물 결제가 완료됐어요. 거래를 진행해주세요."
+        );
+
+        return toTransactionResponse(transaction);
+    }
+
+    @Transactional
     public UsedTransactionResponse completeTransaction(Long memberId, Long transactionId) {
         UsedTransaction transaction = getTransactionOrThrow(transactionId);
         UsedListing listing = transaction.getListing();
         requireSeller(memberId, listing);
 
-        if (!TX_APPROVED.equals(transaction.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "승인된 구매 요청만 거래완료 처리할 수 있습니다.");
+        if (!TX_PAID.equals(transaction.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제가 완료된 구매 요청만 거래완료 처리할 수 있습니다.");
         }
 
         transaction.changeStatus(TX_COMPLETED);
@@ -430,7 +476,17 @@ public class UsedTradeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 완료되었거나 취소된 거래입니다.");
         }
 
-        boolean wasReserving = TX_APPROVED.equals(transaction.getStatus());
+        boolean wasPaid = TX_PAID.equals(transaction.getStatus());
+        boolean wasReserving = TX_APPROVED.equals(transaction.getStatus()) || wasPaid;
+
+        if (wasPaid) {
+            UsedTransactionPayment payment = usedTransactionPaymentRepository
+                    .findByTransaction_TransactionIdAndStatus(transactionId, "SUCCESS")
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 내역을 찾을 수 없습니다."));
+            tossPaymentClient.cancel(payment.getPaymentKey(), "중고거래 취소");
+            payment.markCanceled();
+        }
+
         transaction.changeStatus(TX_CANCELED);
 
         if (wasReserving && LISTING_RESERVED.equals(listing.getStatus())) {

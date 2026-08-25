@@ -4,6 +4,7 @@ import com.example.festival.mdshop.dto.MdOrderRequest;
 import com.example.festival.mdshop.dto.MdOrderResponse;
 import com.example.festival.mdshop.dto.MdProductResponse;
 import com.example.festival.mdshop.service.MdShopService;
+import com.example.festival.payment.dto.PaymentConfirmRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,9 +60,13 @@ public class MdShopController {
         return mdShopService.getOrder(memberId, orderId);
     }
 
-    @PostMapping("/api/members/{memberId}/md/orders/{orderId}/pay")
-    public MdOrderResponse payOrder(@PathVariable Long memberId, @PathVariable Long orderId) {
-        return mdShopService.payOrder(memberId, orderId);
+    @PostMapping("/api/members/{memberId}/md/orders/{orderId}/payments/confirm")
+    public MdOrderResponse confirmPayment(
+            @PathVariable Long memberId,
+            @PathVariable Long orderId,
+            @Valid @RequestBody PaymentConfirmRequest request
+    ) {
+        return mdShopService.confirmPayment(memberId, orderId, request.paymentKey(), request.orderId(), request.amount());
     }
 
     @PostMapping("/api/members/{memberId}/md/orders/{orderId}/cancel")

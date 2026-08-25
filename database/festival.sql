@@ -877,6 +877,9 @@ CREATE TABLE payment (
 
     order_id BIGINT NOT NULL,
 
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호 (order_id와 별개)',
+
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
     payment_method VARCHAR(30) NOT NULL,
@@ -976,7 +979,7 @@ CREATE TABLE used_transaction (
     price DECIMAL(10,0) NOT NULL,
 
     status VARCHAR(20) NOT NULL
-        COMMENT 'REQUEST, APPROVED, COMPLETED, CANCELED',
+        COMMENT 'REQUEST, APPROVED, PAID, COMPLETED, CANCELED',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -987,6 +990,37 @@ CREATE TABLE used_transaction (
 
     FOREIGN KEY (buyer_id)
         REFERENCES member(member_id)
+);
+
+
+-- ============================================================
+-- 36-1. USED TRANSACTION PAYMENT
+-- 중고거래 결제 (Toss Payments)
+-- ============================================================
+
+CREATE TABLE used_transaction_payment (
+    payment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    transaction_id BIGINT NOT NULL,
+
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호',
+
+    payment_key VARCHAR(100) NOT NULL UNIQUE,
+
+    payment_method VARCHAR(30) NOT NULL,
+
+    amount DECIMAL(10,0) NOT NULL,
+
+    status VARCHAR(20) NOT NULL
+        COMMENT 'SUCCESS, FAIL, CANCELED',
+
+    paid_at DATETIME,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (transaction_id)
+        REFERENCES used_transaction(transaction_id)
 );
 
 
