@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/common/Layout/Layout";
+import RequireLogin from "../features/profile/components/RequireLogin";
+import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import MdProductCard from "../components/mdshop/MdProductCard/MdProductCard";
 import { fetchPreorderProducts } from "../api/mdShopApi";
 import "./MdPreorderPage.css";
@@ -8,15 +10,20 @@ const ALL_CATEGORY = "전체";
 
 /**
  * MD 사전예약 페이지.
+ * 회원만 이용할 수 있고, 비회원은 로그인 안내로 보낸다.
  * GET /api/md/products (status=PREORDER인 상품만 내려옴)로 실제 DB 데이터를 받아온다.
  */
 function MdPreorderPage() {
+  const currentMember = useCurrentMember();
+  const memberId = currentMember?.memberId;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY);
 
   useEffect(() => {
+    if (!memberId) return undefined;
+
     let cancelled = false;
 
     fetchPreorderProducts()
@@ -33,7 +40,7 @@ function MdPreorderPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [memberId]);
 
   const categories = useMemo(
     () => [ALL_CATEGORY, ...new Set(products.map((product) => product.category).filter(Boolean))],
@@ -44,6 +51,18 @@ function MdPreorderPage() {
     activeCategory === ALL_CATEGORY
       ? products
       : products.filter((product) => product.category === activeCategory);
+
+  if (currentMember === undefined) {
+    return (
+      <Layout>
+        <div className="md-preorder-page">확인 중입니다...</div>
+      </Layout>
+    );
+  }
+
+  if (currentMember === null) {
+    return <RequireLogin />;
+  }
 
   return (
     <Layout>
