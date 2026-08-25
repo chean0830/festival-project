@@ -905,6 +905,12 @@ CREATE TABLE used_listing (
 
     seller_id BIGINT NOT NULL,
 
+    category VARCHAR(20) NOT NULL
+        COMMENT 'CLOTHING, ALBUM, FASHION_GOODS, POSTER_PRINT, CHARACTER_GOODS, LIVING_GOODS, ACCESSORY, SLOGAN_TOWEL',
+
+    tags VARCHAR(300)
+        COMMENT '해시태그 검색용 (예: #넬 #페스티벌후드티), 아티스트/공연 테이블과 정식 연결은 하지 않는다',
+
     title VARCHAR(200) NOT NULL,
 
     description TEXT,
@@ -917,10 +923,11 @@ CREATE TABLE used_listing (
 
     region VARCHAR(100),
 
-    image_url VARCHAR(500),
+    image_url VARCHAR(2000)
+        COMMENT '업로드된 이미지 URL을 ","로 이어붙여 저장 (최소 2장)',
 
     status VARCHAR(20) NOT NULL DEFAULT 'ON_SALE'
-        COMMENT 'ON_SALE, RESERVED, SOLD',
+        COMMENT 'ON_SALE, RESERVED, SOLD, CANCELED',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
