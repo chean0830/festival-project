@@ -132,9 +132,9 @@ export default function RecordForm({
         <select id="record-event" value={eventId} onChange={(e) => setEventId(e.target.value)}>
           <option value="">공연을 선택해주세요</option>
           {eligibleEvents.map((event) => (
-            <option key={event.eventId} value={event.eventId}>
+            <option key={event.eventId} value={event.eventId} disabled={recordedEventIds.has(event.eventId)}>
               {event.name}
-              {recordedEventIds.has(event.eventId) ? ' (생성 완료)' : ''}
+              {recordedEventIds.has(event.eventId) ? ' (이미 기록 있음 - 수정만 가능)' : ''}
             </option>
           ))}
         </select>

@@ -591,11 +591,37 @@ CREATE TABLE festival_record (
 
     is_shared BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ai_regenerated_count INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id),
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+);
+
+
+-- ============================================================
+-- 22-1. FESTIVAL RECORD AI QUOTA
+-- AI 포스터 무료 생성 횟수를 (회원, 공연) 단위로 관리 - 기록을 지우고
+-- 같은 공연으로 새 기록을 만들어도 무료 횟수가 초기화되지 않게 하기 위함
+-- ============================================================
+
+CREATE TABLE festival_record_ai_quota (
+    quota_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    member_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+
+    used_count INT NOT NULL DEFAULT 0,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE (member_id, event_id),
 
     FOREIGN KEY (member_id)
         REFERENCES member(member_id),

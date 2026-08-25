@@ -11,10 +11,12 @@ import com.example.festival.festivalrecord.dto.RecordSongResponse;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.dto.SongInput;
 import com.example.festival.festivalrecord.entity.FestivalRecord;
+import com.example.festival.festivalrecord.entity.FestivalRecordAiQuota;
 import com.example.festival.festivalrecord.entity.RecordFood;
 import com.example.festival.festivalrecord.entity.RecordImage;
 import com.example.festival.festivalrecord.entity.RecordShare;
 import com.example.festival.festivalrecord.entity.RecordSong;
+import com.example.festival.festivalrecord.repository.FestivalRecordAiQuotaRepository;
 import com.example.festival.festivalrecord.repository.FestivalRecordRepository;
 import com.example.festival.festivalrecord.repository.RecordFoodRepository;
 import com.example.festival.festivalrecord.repository.RecordImageRepository;
@@ -26,6 +28,7 @@ import com.example.festival.notification.service.NotificationService;
 import com.example.festival.visit.entity.EventVisit;
 import com.example.festival.visit.repository.EventVisitRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +36,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,8 +57,14 @@ public class FestivalRecordService {
     private static final int FREE_POSTER_REGEN_LIMIT = 3;
     private static final int MAX_POSTER_REFERENCE_IMAGES = 6;
     private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
+    private static final List<String> POSTER_STYLE_REFERENCE_PATHS = List.of(
+            "ai/poster-style/example-1.jpg",
+            "ai/poster-style/example-2.jpg",
+            "ai/poster-style/example-3.jpg"
+    );
 
     private final FestivalRecordRepository festivalRecordRepository;
+    private final FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository;
     private final RecordImageRepository recordImageRepository;
     private final RecordSongRepository recordSongRepository;
     private final RecordFoodRepository recordFoodRepository;
@@ -64,9 +75,12 @@ public class FestivalRecordService {
     private final NotificationService notificationService;
     private final GeminiPosterClient geminiPosterClient;
     private final Path uploadRoot;
+    private final List<byte[]> posterStyleReferenceImages;
+    private final List<String> posterStyleReferenceMimeTypes;
 
     public FestivalRecordService(
             FestivalRecordRepository festivalRecordRepository,
+            FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository,
             RecordImageRepository recordImageRepository,
             RecordSongRepository recordSongRepository,
             RecordFoodRepository recordFoodRepository,
@@ -79,6 +93,7 @@ public class FestivalRecordService {
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
+        this.festivalRecordAiQuotaRepository = festivalRecordAiQuotaRepository;
         this.recordImageRepository = recordImageRepository;
         this.recordSongRepository = recordSongRepository;
         this.recordFoodRepository = recordFoodRepository;
@@ -89,6 +104,16 @@ public class FestivalRecordService {
         this.notificationService = notificationService;
         this.geminiPosterClient = geminiPosterClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
+        this.posterStyleReferenceImages = new ArrayList<>();
+        this.posterStyleReferenceMimeTypes = new ArrayList<>();
+        for (String resourcePath : POSTER_STYLE_REFERENCE_PATHS) {
+            try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
+                posterStyleReferenceImages.add(in.readAllBytes());
+                posterStyleReferenceMimeTypes.add("image/jpeg");
+            } catch (IOException e) {
+                throw new UncheckedIOException("포스터 스타일 참고 이미지를 불러오지 못했습니다: " + resourcePath, e);
+            }
+        }
     }
 
     public List<FestivalRecordSummaryResponse> getRecords(Long memberId) {
@@ -107,6 +132,10 @@ public class FestivalRecordService {
     public FestivalRecordResponse createRecord(Long memberId, FestivalRecordRequest request) {
         Member member = getMemberOrThrow(memberId);
         Event event = getEventOrThrow(request.eventId());
+
+        if (festivalRecordRepository.existsByMember_IdAndEvent_EventId(memberId, event.getEventId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 기록을 작성한 공연이에요. 기존 기록을 수정해주세요.");
+        }
 
         FestivalRecord record = FestivalRecord.create(member, event);
         record.updateContent(request.title(), request.content(), request.rating(),
@@ -132,6 +161,9 @@ public class FestivalRecordService {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
 
         if (!request.eventId().equals(record.getEvent().getEventId())) {
+            if (festivalRecordRepository.existsByMember_IdAndEvent_EventId(memberId, request.eventId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 기록을 작성한 공연이에요. 기존 기록을 수정해주세요.");
+            }
             record.changeEvent(getEventOrThrow(request.eventId()));
         }
         record.updateContent(request.title(), request.content(), request.rating(),
@@ -207,12 +239,14 @@ public class FestivalRecordService {
 
     /**
      * 업로드된 사진 + 공연명/무드/한줄평/해시태그를 Gemini에 보내 포스터 이미지 한 장을 합성한다.
-     * 무료 생성 횟수(3회) 안에서만 호출할 수 있다 — 이 API는 호출마다 실제 과금이 발생한다.
+     * 무료 생성 횟수(3회)는 기록이 아니라 (회원, 공연) 단위로 세므로, 기록을 지우고 같은 공연으로
+     * 새 기록을 만들어도 초기화되지 않는다. 이 API는 호출마다 실제 과금이 발생한다.
      */
     @Transactional
     public FestivalRecordResponse generatePoster(Long memberId, Long recordId) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
-        if (record.getAiRegeneratedCount() >= FREE_POSTER_REGEN_LIMIT) {
+        FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
+        if (quota.getUsedCount() >= FREE_POSTER_REGEN_LIMIT) {
             throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
         }
         if (!geminiPosterClient.isConfigured()) {
@@ -224,8 +258,8 @@ public class FestivalRecordService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "포스터를 만들려면 사진을 1장 이상 올려주세요.");
         }
 
-        List<byte[]> referenceImages = new ArrayList<>();
-        List<String> mimeTypes = new ArrayList<>();
+        List<byte[]> referenceImages = new ArrayList<>(posterStyleReferenceImages);
+        List<String> mimeTypes = new ArrayList<>(posterStyleReferenceMimeTypes);
         for (RecordImage image : images.subList(0, Math.min(images.size(), MAX_POSTER_REFERENCE_IMAGES))) {
             Path filePath = resolveUploadPath(image.getImageUrl());
             try {
@@ -243,27 +277,52 @@ public class FestivalRecordService {
         deletePhysicalFileIfExists(record.getPosterImageUrl());
         String publicUrl = storePosterFile(generated, recordId);
         record.changePosterImage(publicUrl);
-        record.incrementAiRegeneratedCount();
+        quota.increment();
 
         return toResponse(record);
     }
 
+    private FestivalRecordAiQuota getOrCreateAiQuota(Member member, Event event) {
+        return festivalRecordAiQuotaRepository.findByMember_IdAndEvent_EventId(member.getId(), event.getEventId())
+                .orElseGet(() -> festivalRecordAiQuotaRepository.save(FestivalRecordAiQuota.create(member, event)));
+    }
+
     private String buildPosterPrompt(FestivalRecord record) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("첨부한 사진들을 참고해서 페스티벌/공연 기록용 포스터 이미지를 한 장 만들어줘. ");
-        prompt.append("세로 방향 포스터 레이아웃으로, 사진 속 인물과 분위기를 살려서 콜라주 아트워크 스타일로 합성해줘. ");
-        prompt.append("공연명: ").append(record.getEvent().getName()).append(". ");
+        int styleCount = POSTER_STYLE_REFERENCE_PATHS.size();
+        prompt.append("가장 처음 ").append(styleCount).append("장의 이미지는 스타일 참고용 예시 포스터야. ")
+                .append("예시 속 사진, 인물, 공연명, 문구는 절대 그대로 쓰지 말고, ")
+                .append("폴라로이드/찢어진 종이 프레임으로 사진을 콜라주처럼 배치하는 방식, 굵은 타이포 타이틀, ")
+                .append("마스킹테이프·티켓·스티커 같은 그래픽 요소, 손글씨 느낌의 짧은 문구를 곁들이는 스타일만 참고해줘. ");
+        prompt.append("그 다음에 첨부된 사진들이 실제로 포스터에 들어갈 진짜 사진이야. ")
+                .append("이 사진들 속 인물과 분위기를 살려서 세로 방향 포스터로 합성해줘. ");
+        prompt.append("공연명 \"").append(record.getEvent().getName()).append("\"을 포스터 안에 큰 타이틀 텍스트로 넣어줘. ");
+        String dateRange = formatEventDateRange(record.getEvent());
+        if (dateRange != null) {
+            prompt.append("공연 날짜 \"").append(dateRange).append("\"도 포스터 상단 어딘가에 작게 넣어줘. ");
+        }
         if (record.getMood() != null && !record.getMood().isBlank()) {
             prompt.append("원하는 분위기: ").append(record.getMood()).append(". ");
         }
         if (record.getOneLineReview() != null && !record.getOneLineReview().isBlank()) {
-            prompt.append("한줄평: ").append(record.getOneLineReview()).append(". ");
+            prompt.append("한줄평 \"").append(record.getOneLineReview()).append("\"도 손글씨/타이핑 느낌의 짧은 문구로 이미지 안에 넣어줘. ");
         }
         if (record.getHashtag() != null && !record.getHashtag().isBlank()) {
             prompt.append("키워드: ").append(record.getHashtag()).append(". ");
         }
-        prompt.append("이미지 안에 텍스트나 글자는 넣지 말고 그림만 만들어줘.");
+        prompt.append("타이틀과 문구는 한글이면 오탈자 없이 또박또박한 글자 모양으로 정확하게 그려줘.");
         return prompt.toString();
+    }
+
+    private String formatEventDateRange(Event event) {
+        if (event.getStartDate() == null) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        if (event.getEndDate() == null || event.getEndDate().equals(event.getStartDate())) {
+            return event.getStartDate().format(formatter);
+        }
+        return event.getStartDate().format(formatter) + " - " + event.getEndDate().format(formatter);
     }
 
     @Transactional
@@ -387,6 +446,10 @@ public class FestivalRecordService {
         List<String> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId()).stream()
                 .map(RecordFood::getFoodName)
                 .toList();
+        int aiUsedCount = festivalRecordAiQuotaRepository
+                .findByMember_IdAndEvent_EventId(record.getMember().getId(), event.getEventId())
+                .map(FestivalRecordAiQuota::getUsedCount)
+                .orElse(0);
 
         return new FestivalRecordResponse(
                 record.getRecordId(),
@@ -402,7 +465,7 @@ public class FestivalRecordService {
                 record.getMood(),
                 record.getPosterImageUrl(),
                 record.isShared(),
-                record.getAiRegeneratedCount(),
+                aiUsedCount,
                 images,
                 songs,
                 foods,
