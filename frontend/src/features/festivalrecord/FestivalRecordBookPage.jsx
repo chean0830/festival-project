@@ -4,7 +4,7 @@ import HTMLFlipBook from 'react-pageflip'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import RequireLogin from '../profile/components/RequireLogin'
-import { fetchFestivalRecord, regeneratePoster, shareFestivalRecord } from './api/festivalRecordApi'
+import { fetchFestivalRecord, generatePoster, shareFestivalRecord } from './api/festivalRecordApi'
 import BookCoverPage from './components/BookCoverPage'
 import PosterView from './components/PosterView'
 import StarRating from './components/StarRating'
@@ -135,8 +135,9 @@ export default function FestivalRecordBookPage() {
   const [record, setRecord] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [currentPage, setCurrentPage] = useState(0)
-  // AI 연동 전이라 실제 생성 없이 흐름(뼈대)만 구현: idle -> generating(연출용 지연) -> ready
+  // idle -> generating(Gemini 호출 중) -> ready | error
   const [posterStage, setPosterStage] = useState('idle')
+  const [posterError, setPosterError] = useState(null)
 
   useEffect(() => {
     if (!memberId) {
@@ -148,8 +149,8 @@ export default function FestivalRecordBookPage() {
       .then((data) => {
         if (!cancelled) {
           setRecord(data)
-          // 이미 한 번이라도 생성한 적 있는 기록이면 다시 확인 프롬프트 없이 바로 포스터를 보여준다.
-          if (data.aiRegeneratedCount > 0) {
+          // 이미 포스터를 만든 적 있는 기록이면 다시 확인 프롬프트 없이 바로 보여준다.
+          if (data.posterImageUrl) {
             setPosterStage('ready')
           }
         }
@@ -196,15 +197,22 @@ export default function FestivalRecordBookPage() {
   }
 
   async function handleRegeneratePoster() {
-    const updated = await regeneratePoster(memberId, recordId)
+    const updated = await generatePoster(memberId, recordId)
     setRecord(updated)
     return updated
   }
 
-  function handleGeneratePoster() {
+  async function handleGeneratePoster() {
     setPosterStage('generating')
-    // TODO: AI 연동되면 실제 생성 요청으로 교체. 지금은 흐름만 보여주기 위한 연출용 지연.
-    setTimeout(() => setPosterStage('ready'), 1200)
+    setPosterError(null)
+    try {
+      const updated = await generatePoster(memberId, recordId)
+      setRecord(updated)
+      setPosterStage('ready')
+    } catch (err) {
+      setPosterError(err.message)
+      setPosterStage('idle')
+    }
   }
 
   const TOTAL_PAGES = 8
@@ -283,7 +291,11 @@ export default function FestivalRecordBookPage() {
             {posterStage === 'idle' && (
               <>
                 <p>포스터를 생성하시겠습니까?</p>
-                <p className="fr-poster-cta-hint">지금까지 작성한 글과 사진을 바탕으로 AI가 포스터를 만들어드려요.</p>
+                <p className="fr-poster-cta-hint">
+                  업로드한 사진과 분위기/한줄평/해시태그를 바탕으로 AI가 포스터 이미지를 새로 만들어드려요.
+                  (10~20초 정도 걸릴 수 있어요)
+                </p>
+                {posterError && <p className="record-error-text">{posterError}</p>}
                 <button type="button" className="record-btn-primary" onClick={handleGeneratePoster}>
                   예, 포스터 만들기
                 </button>

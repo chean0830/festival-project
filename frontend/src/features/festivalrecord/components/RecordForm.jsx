@@ -24,6 +24,7 @@ export default function RecordForm({
   const [oneLineReview, setOneLineReview] = useState(initialValues?.oneLineReview ?? '')
   const [memo, setMemo] = useState(initialValues?.memo ?? '')
   const [hashtag, setHashtag] = useState(initialValues?.hashtag ?? '')
+  const [mood, setMood] = useState(initialValues?.mood ?? '')
   const [songs, setSongs] = useState(initialValues?.songs?.length ? initialValues.songs : [{ ...emptySong }])
   const [foods, setFoods] = useState(initialValues?.foods?.length ? initialValues.foods : [''])
   const [newPhotos, setNewPhotos] = useState([])
@@ -112,6 +113,7 @@ export default function RecordForm({
           oneLineReview: oneLineReview || null,
           memo: memo || null,
           hashtag: hashtag || null,
+          mood: mood || null,
           songs: songs.filter((song) => song.songTitle.trim()),
           foods: foods.map((food) => food.trim()).filter(Boolean),
         },
@@ -271,6 +273,18 @@ export default function RecordForm({
       <div className="record-form-field">
         <label htmlFor="record-memo">메모</label>
         <textarea id="record-memo" value={memo} onChange={(e) => setMemo(e.target.value)} rows={3} maxLength={500} />
+      </div>
+
+      <div className="record-form-field">
+        <label htmlFor="record-mood">분위기 (AI 포스터에 반영돼요)</label>
+        <input
+          id="record-mood"
+          type="text"
+          placeholder="예: 여름밤 시원한 바람, 신나고 활기찬 락페 느낌"
+          value={mood}
+          onChange={(e) => setMood(e.target.value)}
+          maxLength={100}
+        />
       </div>
 
       <div className="record-form-field">

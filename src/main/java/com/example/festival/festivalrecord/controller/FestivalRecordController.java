@@ -89,9 +89,9 @@ public class FestivalRecordController {
         return festivalRecordService.reorderImages(memberId, recordId, request.imageIds());
     }
 
-    @PostMapping("/{recordId}/poster/regenerate")
-    public FestivalRecordResponse regeneratePoster(@PathVariable Long memberId, @PathVariable Long recordId) {
-        return festivalRecordService.regeneratePoster(memberId, recordId);
+    @PostMapping("/{recordId}/poster/generate")
+    public FestivalRecordResponse generatePoster(@PathVariable Long memberId, @PathVariable Long recordId) {
+        return festivalRecordService.generatePoster(memberId, recordId);
     }
 
     @PostMapping("/{recordId}/share")

@@ -576,7 +576,9 @@ CREATE TABLE festival_record (
     ai_diary TEXT,
     ai_summary VARCHAR(1000),
 
-    mood VARCHAR(30),
+    mood VARCHAR(100),
+
+    poster_image_url VARCHAR(500),
 
     rating TINYINT
         COMMENT '1 ~ 5',

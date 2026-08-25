@@ -1,5 +1,6 @@
 package com.example.festival.festivalrecord.service;
 
+import com.example.festival.ai.GeminiPosterClient;
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,8 +47,10 @@ import java.util.UUID;
 public class FestivalRecordService {
 
     private static final String RECORD_IMAGE_SUBDIR = "festival-record";
+    private static final String POSTER_SUBDIR = "festival-record/posters";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final int FREE_POSTER_REGEN_LIMIT = 3;
+    private static final int MAX_POSTER_REFERENCE_IMAGES = 6;
     private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
 
     private final FestivalRecordRepository festivalRecordRepository;
@@ -58,6 +62,7 @@ public class FestivalRecordService {
     private final EventRepository eventRepository;
     private final EventVisitRepository eventVisitRepository;
     private final NotificationService notificationService;
+    private final GeminiPosterClient geminiPosterClient;
     private final Path uploadRoot;
 
     public FestivalRecordService(
@@ -70,6 +75,7 @@ public class FestivalRecordService {
             EventRepository eventRepository,
             EventVisitRepository eventVisitRepository,
             NotificationService notificationService,
+            GeminiPosterClient geminiPosterClient,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
@@ -81,6 +87,7 @@ public class FestivalRecordService {
         this.eventRepository = eventRepository;
         this.eventVisitRepository = eventVisitRepository;
         this.notificationService = notificationService;
+        this.geminiPosterClient = geminiPosterClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -103,7 +110,7 @@ public class FestivalRecordService {
 
         FestivalRecord record = FestivalRecord.create(member, event);
         record.updateContent(request.title(), request.content(), request.rating(),
-                request.oneLineReview(), request.memo(), request.hashtag());
+                request.oneLineReview(), request.memo(), request.hashtag(), request.mood());
         festivalRecordRepository.save(record);
 
         replaceSongs(record, request.songs());
@@ -128,7 +135,7 @@ public class FestivalRecordService {
             record.changeEvent(getEventOrThrow(request.eventId()));
         }
         record.updateContent(request.title(), request.content(), request.rating(),
-                request.oneLineReview(), request.memo(), request.hashtag());
+                request.oneLineReview(), request.memo(), request.hashtag(), request.mood());
 
         replaceSongs(record, request.songs());
         replaceFoods(record, request.foods());
@@ -142,6 +149,7 @@ public class FestivalRecordService {
 
         recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId())
                 .forEach(image -> deletePhysicalFileIfExists(image.getImageUrl()));
+        deletePhysicalFileIfExists(record.getPosterImageUrl());
 
         recordImageRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordSongRepository.deleteAllByRecord_RecordId(record.getRecordId());
@@ -197,14 +205,65 @@ public class FestivalRecordService {
         deletePhysicalFileIfExists(image.getImageUrl());
     }
 
+    /**
+     * 업로드된 사진 + 공연명/무드/한줄평/해시태그를 Gemini에 보내 포스터 이미지 한 장을 합성한다.
+     * 무료 생성 횟수(3회) 안에서만 호출할 수 있다 — 이 API는 호출마다 실제 과금이 발생한다.
+     */
     @Transactional
-    public FestivalRecordResponse regeneratePoster(Long memberId, Long recordId) {
+    public FestivalRecordResponse generatePoster(Long memberId, Long recordId) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
         if (record.getAiRegeneratedCount() >= FREE_POSTER_REGEN_LIMIT) {
-            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 재생성 횟수를 모두 사용했습니다.");
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
         }
+        if (!geminiPosterClient.isConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 포스터 생성 기능이 아직 설정되지 않았습니다.");
+        }
+
+        List<RecordImage> images = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId());
+        if (images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "포스터를 만들려면 사진을 1장 이상 올려주세요.");
+        }
+
+        List<byte[]> referenceImages = new ArrayList<>();
+        List<String> mimeTypes = new ArrayList<>();
+        for (RecordImage image : images.subList(0, Math.min(images.size(), MAX_POSTER_REFERENCE_IMAGES))) {
+            Path filePath = resolveUploadPath(image.getImageUrl());
+            try {
+                referenceImages.add(Files.readAllBytes(filePath));
+                String detected = Files.probeContentType(filePath);
+                mimeTypes.add(detected != null ? detected : "image/jpeg");
+            } catch (IOException e) {
+                throw new UncheckedIOException("기록 이미지를 읽는 데 실패했습니다.", e);
+            }
+        }
+
+        String prompt = buildPosterPrompt(record);
+        GeminiPosterClient.GeneratedImage generated = geminiPosterClient.generatePoster(prompt, referenceImages, mimeTypes);
+
+        deletePhysicalFileIfExists(record.getPosterImageUrl());
+        String publicUrl = storePosterFile(generated, recordId);
+        record.changePosterImage(publicUrl);
         record.incrementAiRegeneratedCount();
+
         return toResponse(record);
+    }
+
+    private String buildPosterPrompt(FestivalRecord record) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("첨부한 사진들을 참고해서 페스티벌/공연 기록용 포스터 이미지를 한 장 만들어줘. ");
+        prompt.append("세로 방향 포스터 레이아웃으로, 사진 속 인물과 분위기를 살려서 콜라주 아트워크 스타일로 합성해줘. ");
+        prompt.append("공연명: ").append(record.getEvent().getName()).append(". ");
+        if (record.getMood() != null && !record.getMood().isBlank()) {
+            prompt.append("원하는 분위기: ").append(record.getMood()).append(". ");
+        }
+        if (record.getOneLineReview() != null && !record.getOneLineReview().isBlank()) {
+            prompt.append("한줄평: ").append(record.getOneLineReview()).append(". ");
+        }
+        if (record.getHashtag() != null && !record.getHashtag().isBlank()) {
+            prompt.append("키워드: ").append(record.getHashtag()).append(". ");
+        }
+        prompt.append("이미지 안에 텍스트나 글자는 넣지 말고 그림만 만들어줘.");
+        return prompt.toString();
     }
 
     @Transactional
@@ -340,6 +399,8 @@ public class FestivalRecordService {
                 record.getOneLineReview(),
                 record.getMemo(),
                 record.getHashtag(),
+                record.getMood(),
+                record.getPosterImageUrl(),
                 record.isShared(),
                 record.getAiRegeneratedCount(),
                 images,
@@ -363,6 +424,30 @@ public class FestivalRecordService {
             return fileName;
         } catch (IOException e) {
             throw new UncheckedIOException("기록 이미지 저장에 실패했습니다.", e);
+        }
+    }
+
+    private Path resolveUploadPath(String publicUrl) {
+        String prefix = "/uploads/";
+        if (publicUrl == null || !publicUrl.startsWith(prefix)) {
+            throw new UncheckedIOException(new IOException("잘못된 이미지 경로입니다: " + publicUrl));
+        }
+        return uploadRoot.resolve(Path.of(publicUrl.substring(prefix.length()))).normalize();
+    }
+
+    private String storePosterFile(GeminiPosterClient.GeneratedImage generated, Long recordId) {
+        try {
+            Path targetDir = uploadRoot.resolve(POSTER_SUBDIR);
+            Files.createDirectories(targetDir);
+
+            String extension = generated.mimeType().contains("png") ? ".png" : ".jpg";
+            String fileName = recordId + "_" + UUID.randomUUID() + extension;
+            Path targetPath = targetDir.resolve(fileName).normalize();
+
+            Files.write(targetPath, generated.bytes());
+            return "/uploads/" + POSTER_SUBDIR + "/" + fileName;
+        } catch (IOException e) {
+            throw new UncheckedIOException("포스터 이미지 저장에 실패했습니다.", e);
         }
     }
 

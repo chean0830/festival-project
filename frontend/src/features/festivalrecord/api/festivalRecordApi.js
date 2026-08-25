@@ -98,6 +98,6 @@ export function shareFestivalRecord(memberId, recordId, request) {
   return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/share`, 'POST', request)
 }
 
-export function regeneratePoster(memberId, recordId) {
-  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/regenerate`, 'POST')
+export function generatePoster(memberId, recordId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/generate`, 'POST')
 }

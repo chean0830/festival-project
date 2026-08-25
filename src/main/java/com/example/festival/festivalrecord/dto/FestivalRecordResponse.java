@@ -14,6 +14,8 @@ public record FestivalRecordResponse(
         String oneLineReview,
         String memo,
         String hashtag,
+        String mood,
+        String posterImageUrl,
         boolean shared,
         int aiRegeneratedCount,
         List<RecordImageResponse> images,
