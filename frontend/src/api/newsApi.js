@@ -19,3 +19,9 @@ export async function getAllNews() {
 
   return response.json()
 }
+
+export async function getHomeBanner() {
+  const response = await fetch('/api/home/banner')
+  if (!response.ok) return null
+  return response.json()
+}

@@ -23,6 +23,7 @@ import CommunityPostWritePage from './pages/CommunityPostWritePage'
 import CommunityPostDetailPage from './pages/CommunityPostDetailPage'
 import NewsPage from './pages/NewsPage'
 import VisitMapPage from './pages/VisitMapPage'
+import OpenChatRoomPage from './pages/OpenChatRoomPage'
 import NearbyFoodPage from './pages/NearbyFoodPage'
 import Search from './pages/Search'
 import LoginPage from './pages/LoginPage'
@@ -82,6 +83,7 @@ function App() {
         </Route>
         <Route path="/news" element={<NewsPage />} />
         <Route path="/visits/map" element={<VisitMapPage />} />
+        <Route path="/program/event/:eventId/chat" element={<OpenChatRoomPage />} />
         <Route path="/nearby-food" element={<NearbyFoodPage />} />
         <Route path="/search" element={<Search />} />
 

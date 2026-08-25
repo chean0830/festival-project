@@ -37,7 +37,7 @@ const drawerMenuItems = [
   { label: "내 방문 지도", href: "/visits/map" },
 ];
 
-function Header() {
+function Header({ hideSubnav = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -196,29 +196,31 @@ function Header() {
         </div>
       </div>
 
-      {/* 2줄: 햄버거 메뉴 + 바로가기 */}
-      <div className="header__subnav">
-        <button
-          type="button"
-          className="header__menu-btn"
-          aria-label="전체 메뉴 열기"
-          onClick={() => setIsMenuOpen(true)}
-        >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
+      {/* 2줄: 햄버거 메뉴 + 바로가기 (채팅방 등 몰입형 페이지에서는 hideSubnav로 숨김) */}
+      {!hideSubnav && (
+        <div className="header__subnav">
+          <button
+            type="button"
+            className="header__menu-btn"
+            aria-label="전체 메뉴 열기"
+            onClick={() => setIsMenuOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
 
-        <nav className="header__subnav-links">
-          {subNavItems.map((item) => (
-            <a key={item.href} href={item.href} className="header__subnav-link">
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </div>
+          <nav className="header__subnav-links">
+            {subNavItems.map((item) => (
+              <a key={item.href} href={item.href} className="header__subnav-link">
+                {item.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
 
       {/* 햄버거 눌렀을 때 열리는 메뉴 서랍 */}
       {isMenuOpen && (

@@ -6,7 +6,7 @@ import ProgramCarousel from "../components/home/ProgramCarousel/ProgramCarousel"
 import BannerNotice from "../components/home/BannerNotice/BannerNotice";
 import NewsSection from "../components/home/NewsSection/NewsSection";
 import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
-import { getRecentNews } from "../api/newsApi";
+import { getRecentNews, getHomeBanner } from "../api/newsApi";
 import bannerPhoto from "../assets/home/banner-b.png";
 import "./Home.css";
 
@@ -26,6 +26,21 @@ function Home() {
   const [programItems, setProgramItems] = useState([]);
   const [noticeItems, setNoticeItems] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
+  const [bannerUrl, setBannerUrl] = useState(bannerPhoto);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getHomeBanner()
+      .then((banner) => {
+        if (!cancelled && banner?.imageUrl) setBannerUrl(banner.imageUrl);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +88,7 @@ function Home() {
     <Layout>
       {/* 1. 배너 — 공지사항 자리. 무대 조명 사진을 배경으로 깔아둔 순수 디스플레이용 배너, 클릭 안 됨 */}
       <div className="home__banner">
-        <img src={bannerPhoto} alt="" className="home__banner-photo" />
+        <img src={bannerUrl} alt="" className="home__banner-photo" />
         <div className="home__banner-overlay" />
         <div className="home__banner-inner">
           <BannerNotice items={noticeItems} intervalMs={7000} />
