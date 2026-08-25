@@ -464,6 +464,31 @@
   color: #ef4444;
 }
 
+.profile-used-like-heart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--p-border);
+  background: #fff;
+  color: var(--p-muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.profile-used-like-heart:active {
+  transform: scale(0.9);
+}
+
+.profile-used-like-heart--active {
+  border-color: #e5484d;
+  color: #e5484d;
+}
+
 /* ---------- 다녀온 공연: 연도별 포스터 갤러리 ---------- */
 
 .profile-attended-year-group + .profile-attended-year-group {
