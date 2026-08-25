@@ -43,10 +43,14 @@ public class SecurityConfig {
                                 "/api/auth/find-email",
                                 "/api/auth/password-reset/**",
                                 "/api/home/**",
+                                "/api/search",
+                                "/api/artists/**",
+                                "/uploads/**",
                                 "/oauth2/**",
                                 "/login/oauth2/**",
                                 "/error"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/live-streams",

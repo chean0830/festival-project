@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from './hooks/useCurrentMember'
 import RequireLogin from './components/RequireLogin'
@@ -10,11 +10,12 @@ import {
   uploadProfileImage,
   deleteProfileImage,
   fetchInterestedArtists,
+  addInterestedArtist,
   fetchInterestedEvents,
-  removeInterestedArtist,
-  removeInterestedEvent,
   fetchAttendedEvents,
+  addAttendedEvent,
   fetchUpcomingEvents,
+  addUpcomingEvent,
   fetchMyBadges,
   fetchProfileStats,
 } from './api/profileApi'
@@ -25,10 +26,29 @@ import InterestedArtistList from './components/InterestedArtistList'
 import InterestedEventList from './components/InterestedEventList'
 import AttendedEventGallery from './components/AttendedEventGallery'
 import UpcomingEventList from './components/UpcomingEventList'
+import AddEventModal from './components/AddEventModal'
 import ProfileStats from './components/ProfileStats'
 import NotificationBell from '../notification/components/NotificationBell'
 import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
 import RecordCard from '../festivalrecord/components/RecordCard'
+import { cancelMdOrder, fetchMyMdOrders } from '../../api/mdShopApi'
+import MdOrderHistoryList from './components/MdOrderHistoryList'
+import {
+  fetchMyUsedListings,
+  deleteUsedListing,
+  fetchMyPurchaseRequests,
+  fetchReceivedPurchaseRequests,
+  approveUsedTransaction,
+  completeUsedTransaction,
+  cancelUsedTransaction,
+  fetchMyLikedUsedListings,
+} from '../../api/usedTradeApi'
+import UsedListingHistoryList from './components/UsedListingHistoryList'
+import UsedTransactionHistoryList from './components/UsedTransactionHistoryList'
+import UsedLikedListingList from './components/UsedLikedListingList'
+import { getMyPosts, getLikedPosts, getMyComments } from '../../api/communityApi'
+import ProfilePostList from './components/ProfilePostList'
+import ProfileCommentList from './components/ProfileCommentList'
 import '../festivalrecord/festivalrecord.css'
 import './profile.css'
 
@@ -38,6 +58,7 @@ import './profile.css'
  */
 export default function ProfilePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const currentMember = useCurrentMember()
   const memberId = currentMember?.memberId
   const [profile, setProfile] = useState(null)
@@ -48,14 +69,78 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState([])
   const [stats, setStats] = useState(null)
   const [festivalRecords, setFestivalRecords] = useState([])
+  const [mdOrders, setMdOrders] = useState([])
+  const [usedListings, setUsedListings] = useState([])
+  const [usedPurchaseRequests, setUsedPurchaseRequests] = useState([])
+  const [usedReceivedRequests, setUsedReceivedRequests] = useState([])
+  const [usedLikedListings, setUsedLikedListings] = useState([])
+  const [myPosts, setMyPosts] = useState([])
+  const [likedPosts, setLikedPosts] = useState([])
+  const [myComments, setMyComments] = useState([])
   const [attendedExpanded, setAttendedExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [addModalTarget, setAddModalTarget] = useState(null) // null | 'artist' | 'attended' | 'upcoming'
   const attendedSectionRef = useRef(null)
+  const mdOrdersSectionRef = useRef(null)
+  const usedTradeSectionRef = useRef(null)
 
   function goToAttendedSection(expandAll) {
     if (expandAll) setAttendedExpanded(true)
     attendedSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function handleAddArtist(artistId) {
+    const added = await addInterestedArtist(memberId, artistId)
+    setArtists((prev) => {
+      if (prev.some((artist) => artist.artistId === added.artistId)) return prev
+      return [added, ...prev]
+    })
+  }
+
+  async function handleAddAttendedEvent(eventId) {
+    const added = await addAttendedEvent(memberId, eventId)
+    setAttendedEvents((prev) => {
+      if (prev.some((event) => event.eventId === added.eventId)) return prev
+      return [added, ...prev]
+    })
+  }
+
+  async function handleAddUpcomingEvent(eventId) {
+    const added = await addUpcomingEvent(memberId, eventId)
+    setUpcomingEvents((prev) => {
+      const withoutDuplicate = prev.filter((event) => event.eventId !== added.eventId)
+      return [...withoutDuplicate, added].sort((a, b) => a.startDate.localeCompare(b.startDate))
+    })
+  }
+
+  async function handleCancelMdOrder(orderId) {
+    const canceled = await cancelMdOrder(memberId, orderId)
+    setMdOrders((prev) => prev.map((order) => (order.orderId === canceled.orderId ? canceled : order)))
+  }
+
+  async function handleDeleteUsedListing(listingId) {
+    await deleteUsedListing(memberId, listingId)
+    setUsedListings((prev) =>
+      prev.map((listing) => (listing.listingId === listingId ? { ...listing, status: 'CANCELED' } : listing))
+    )
+  }
+
+  function replaceTransaction(updated) {
+    setUsedPurchaseRequests((prev) => prev.map((tx) => (tx.transactionId === updated.transactionId ? updated : tx)))
+    setUsedReceivedRequests((prev) => prev.map((tx) => (tx.transactionId === updated.transactionId ? updated : tx)))
+  }
+
+  async function handleApproveUsedTransaction(transactionId) {
+    replaceTransaction(await approveUsedTransaction(memberId, transactionId))
+  }
+
+  async function handleCompleteUsedTransaction(transactionId) {
+    replaceTransaction(await completeUsedTransaction(memberId, transactionId))
+  }
+
+  async function handleCancelUsedTransaction(transactionId) {
+    replaceTransaction(await cancelUsedTransaction(memberId, transactionId))
   }
 
   useEffect(() => {
@@ -69,8 +154,24 @@ export default function ProfilePage() {
       setLoading(true)
       setLoadError(null)
       try {
-        const [profileData, artistData, eventData, attendedData, upcomingData, badgeData, statsData, recordData] =
-          await Promise.all([
+        const [
+          profileData,
+          artistData,
+          eventData,
+          attendedData,
+          upcomingData,
+          badgeData,
+          statsData,
+          recordData,
+          mdOrderData,
+          myPostData,
+          likedPostData,
+          myCommentData,
+          usedListingData,
+          usedPurchaseRequestData,
+          usedReceivedRequestData,
+          usedLikedListingData,
+        ] = await Promise.all([
             fetchProfile(memberId),
             fetchInterestedArtists(memberId),
             fetchInterestedEvents(memberId),
@@ -79,6 +180,14 @@ export default function ProfilePage() {
             fetchMyBadges(memberId),
             fetchProfileStats(memberId),
             fetchFestivalRecords(memberId),
+            fetchMyMdOrders(memberId),
+            getMyPosts(memberId),
+            getLikedPosts(memberId),
+            getMyComments(memberId),
+            fetchMyUsedListings(memberId),
+            fetchMyPurchaseRequests(memberId),
+            fetchReceivedPurchaseRequests(memberId),
+            fetchMyLikedUsedListings(memberId),
           ])
         if (!cancelled) {
           setProfile(profileData)
@@ -89,6 +198,14 @@ export default function ProfilePage() {
           setBadges(badgeData)
           setStats(statsData)
           setFestivalRecords(recordData)
+          setMdOrders(mdOrderData)
+          setMyPosts(myPostData)
+          setLikedPosts(likedPostData)
+          setMyComments(myCommentData)
+          setUsedListings(usedListingData)
+          setUsedPurchaseRequests(usedPurchaseRequestData)
+          setUsedReceivedRequests(usedReceivedRequestData)
+          setUsedLikedListings(usedLikedListingData)
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
@@ -108,6 +225,15 @@ export default function ProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId])
+
+  useEffect(() => {
+    if (!loading && location.state?.scrollTo === 'mdOrders') {
+      mdOrdersSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    if (!loading && location.state?.scrollTo === 'usedTrade') {
+      usedTradeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [loading, location.state])
 
   if (currentMember === undefined) {
     return (
@@ -186,14 +312,13 @@ export default function ProfilePage() {
         </div>
 
         <section>
-          <h2>관심 가수</h2>
-          <InterestedArtistList
-            artists={artists}
-            onRemove={async (artistId) => {
-              await removeInterestedArtist(memberId, artistId)
-              setArtists((prev) => prev.filter((artist) => artist.artistId !== artistId))
-            }}
-          />
+          <div className="profile-section-header">
+            <h2>관심 가수</h2>
+            <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('artist')}>
+              가수 추가하기
+            </button>
+          </div>
+          <InterestedArtistList artists={artists} memberId={memberId} />
         </section>
 
         <section>
@@ -207,17 +332,16 @@ export default function ProfilePage() {
 
           <div className="profile-my-events-group">
             <h3>관심 공연</h3>
-            <InterestedEventList
-              events={events}
-              onRemove={async (eventId) => {
-                await removeInterestedEvent(memberId, eventId)
-                setEvents((prev) => prev.filter((event) => event.eventId !== eventId))
-              }}
-            />
+            <InterestedEventList events={events} memberId={memberId} />
           </div>
 
           <div className="profile-my-events-group" ref={attendedSectionRef}>
-            <h3>다녀온 공연</h3>
+            <div className="profile-section-header">
+              <h3>다녀온 공연</h3>
+              <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('attended')}>
+                공연 추가하기
+              </button>
+            </div>
             <AttendedEventGallery
               events={attendedEvents}
               expanded={attendedExpanded}
@@ -226,7 +350,12 @@ export default function ProfilePage() {
           </div>
 
           <div className="profile-my-events-group">
-            <h3>예정된 공연</h3>
+            <div className="profile-section-header">
+              <h3>예정된 공연</h3>
+              <button type="button" className="profile-btn-outline" onClick={() => setAddModalTarget('upcoming')}>
+                공연 추가하기
+              </button>
+            </div>
             <UpcomingEventList events={upcomingEvents} />
           </div>
         </section>
@@ -240,7 +369,12 @@ export default function ProfilePage() {
           </div>
 
           {festivalRecords.length === 0 ? (
-            <p className="profile-empty-text">아직 작성한 페스티벌 기록이 없어요.</p>
+            <div className="profile-empty-state">
+              <p className="profile-empty-text">아직 작성한 페스티벌 기록이 없어요.</p>
+              <button type="button" className="profile-btn-outline" onClick={() => navigate('/festival-log/new')}>
+                새로운 페스티벌 기록 작성하기
+              </button>
+            </div>
           ) : (
             <div className="record-grid">
               {festivalRecords.slice(0, 4).map((record) => (
@@ -249,8 +383,95 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
+
+        <section ref={mdOrdersSectionRef}>
+          <div className="profile-section-header">
+            <h2>MD 사전예약 내역</h2>
+            <a href="/shop/preorder" className="profile-section-more">
+              MD 사전예약 가기 ›
+            </a>
+          </div>
+          <MdOrderHistoryList orders={mdOrders} onCancel={handleCancelMdOrder} />
+        </section>
+
+        <section ref={usedTradeSectionRef}>
+          <div className="profile-section-header">
+            <h2>MD 중고거래</h2>
+            <a href="/shop" className="profile-section-more">
+              MD 중고거래 가기 ›
+            </a>
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 등록한 매물</h3>
+            <UsedListingHistoryList listings={usedListings} onDelete={handleDeleteUsedListing} />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 보낸 구매 요청</h3>
+            <UsedTransactionHistoryList
+              transactions={usedPurchaseRequests}
+              role="buyer"
+              onCancel={handleCancelUsedTransaction}
+            />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 받은 구매 요청</h3>
+            <UsedTransactionHistoryList
+              transactions={usedReceivedRequests}
+              role="seller"
+              onApprove={handleApproveUsedTransaction}
+              onComplete={handleCompleteUsedTransaction}
+              onCancel={handleCancelUsedTransaction}
+            />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 찜한 매물</h3>
+            <UsedLikedListingList listings={usedLikedListings} memberId={memberId} />
+          </div>
+        </section>
+
+        <section>
+          <h2>커뮤니티 활동</h2>
+
+          <div className="profile-my-events-group">
+            <h3>내가 쓴 글</h3>
+            <ProfilePostList posts={myPosts} emptyText="아직 작성한 글이 없어요." />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>좋아요 누른 글</h3>
+            <ProfilePostList posts={likedPosts} emptyText="아직 좋아요 누른 글이 없어요." />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 쓴 댓글</h3>
+            <ProfileCommentList comments={myComments} />
+          </div>
+        </section>
       </div>
       </div>
+
+      {addModalTarget === 'artist' && (
+        <AddEventModal
+          title="관심 가수 추가"
+          searchPlaceholder="아티스트 이름으로 검색"
+          allowedTypes={['artist']}
+          onClose={() => setAddModalTarget(null)}
+          onAdd={handleAddArtist}
+        />
+      )}
+
+      {(addModalTarget === 'attended' || addModalTarget === 'upcoming') && (
+        <AddEventModal
+          title={addModalTarget === 'attended' ? '다녀온 공연 추가' : '예정된 공연 추가'}
+          excludePastEvents={addModalTarget === 'upcoming'}
+          onClose={() => setAddModalTarget(null)}
+          onAdd={addModalTarget === 'attended' ? handleAddAttendedEvent : handleAddUpcomingEvent}
+        />
+      )}
     </Layout>
   )
 }

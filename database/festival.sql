@@ -187,6 +187,9 @@ CREATE TABLE event (
     event_type VARCHAR(20) NOT NULL
         COMMENT 'FESTIVAL, CONCERT',
 
+    artist_country VARCHAR(2) NOT NULL DEFAULT 'KR'
+        COMMENT '출연 아티스트 국적 (venue.country와 별개, 국내공연/내한공연 구분용)',
+
     name VARCHAR(200) NOT NULL,
     description TEXT,
     poster_image VARCHAR(500),
@@ -195,6 +198,8 @@ CREATE TABLE event (
     end_date DATE NOT NULL,
 
     ticket_open_at DATETIME,
+    ticket_url VARCHAR(500)
+        COMMENT '예매 링크 (YES24)',
 
     status VARCHAR(20) NOT NULL DEFAULT 'UPCOMING'
         COMMENT 'UPCOMING, ONGOING, ENDED, CANCELED',
@@ -500,6 +505,8 @@ CREATE TABLE event_news (
         COMMENT 'LINEUP, SCHEDULE, NOTICE, PERFORMANCE, MD, ARTIST',
 
     image_url VARCHAR(500),
+    source_url VARCHAR(500)
+        COMMENT '실제 기사 원문 링크',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -686,7 +693,7 @@ CREATE TABLE post (
     member_id BIGINT NOT NULL,
 
     category VARCHAR(30) NOT NULL
-        COMMENT 'REVIEW, COMPANION, QUESTION, INFORMATION, FREE',
+        COMMENT 'REVIEW, COMPANION, QUESTION, INFORMATION, EVENT, TRANSFER, FREE',
 
     title VARCHAR(200) NOT NULL,
 
@@ -898,6 +905,12 @@ CREATE TABLE used_listing (
 
     seller_id BIGINT NOT NULL,
 
+    category VARCHAR(20) NOT NULL
+        COMMENT 'CLOTHING, ALBUM, FASHION_GOODS, POSTER_PRINT, CHARACTER_GOODS, LIVING_GOODS, ACCESSORY, SLOGAN_TOWEL',
+
+    tags VARCHAR(300)
+        COMMENT '해시태그 검색용 (예: #넬 #페스티벌후드티), 아티스트/공연 테이블과 정식 연결은 하지 않는다',
+
     title VARCHAR(200) NOT NULL,
 
     description TEXT,
@@ -910,10 +923,11 @@ CREATE TABLE used_listing (
 
     region VARCHAR(100),
 
-    image_url VARCHAR(500),
+    image_url VARCHAR(2000)
+        COMMENT '업로드된 이미지 URL을 ","로 이어붙여 저장 (최소 2장)',
 
     status VARCHAR(20) NOT NULL DEFAULT 'ON_SALE'
-        COMMENT 'ON_SALE, RESERVED, SOLD',
+        COMMENT 'ON_SALE, RESERVED, SOLD, CANCELED',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

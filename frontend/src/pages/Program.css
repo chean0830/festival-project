@@ -6,17 +6,24 @@
 }
 
 .program-page__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 4px;
+}
+.program-page__header h1 {
+  margin: 0 0 8px;
+}
+
+.program-page__desc {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: #5a7166;
+  line-height: 1.6;
 }
 
 .program-page__calendar-link {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--color-primary-dark);
 }
@@ -37,7 +44,7 @@
   border: none;
   background: none;
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
 }
@@ -53,6 +60,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 26px;
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid var(--color-border);
 }
@@ -64,7 +72,7 @@
 
 .program-page__tab {
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-md);
   font-weight: 500;
 }
 .program-page__tab:hover {
@@ -84,17 +92,17 @@
 .program-page__group-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: fit-content;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--spacing-sm);
 }
 
 .program-page__group-dot {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
   border-radius: 50%;
   background-color: var(--color-text);
@@ -106,6 +114,7 @@
 
 .program-page__cards {
   display: flex;
+  align-items: flex-start;
   gap: var(--spacing-md);
   overflow-x: auto;
   padding-bottom: 4px;

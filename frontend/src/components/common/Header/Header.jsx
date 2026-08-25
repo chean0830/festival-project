@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { searchItems } from "../../../data/searchMockData";
+import { search } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
+import NotificationBell from "../../../features/notification/components/NotificationBell";
 import "./Header.css";
 
 /**
  * 공통 헤더 — 두 줄 구조
  * 1줄: 로고(FESTLOG) — 비워둔 가운데 — 검색창 + Login
- * 2줄: 햄버거(전체 메뉴) 버튼 + 공연일정 / 커뮤니티 / MD구매 바로가기
+ * 2줄: 햄버거(전체 메뉴) 버튼 + 공연일정 / 커뮤니티 / MD 중고거래 바로가기
  *
  * 햄버거 버튼을 누르면 왼쪽에서 메뉴 서랍(drawer)이 열리고,
  * 그 안에 프로필(로그인 상태) + 전체 메뉴 목록이 나온다.
@@ -19,16 +20,19 @@ import "./Header.css";
 const subNavItems = [
   { label: "공연일정", href: "/program" },
   { label: "커뮤니티", href: "/community" },
-  { label: "MD구매", href: "/shop" },
+  { label: "MD 중고거래", href: "/shop" },
+  { label: "MD 사전예약", href: "/shop/preorder" },
 ];
 
 // 햄버거 눌렀을 때 열리는 전체 메뉴 목록
 const drawerMenuItems = [
   { label: "공연일정", href: "/program" },
   { label: "커뮤니티", href: "/community" },
-  { label: "MD구매", href: "/shop" },
+  { label: "MD 중고거래", href: "/shop" },
+  { label: "MD 사전예약", href: "/shop/preorder" },
   { label: "페스티벌 기록", href: "/festival-log" },
-  { label: "내 주변 음식점", href: "/nearby-food" },
+  { label: "내 주변 쉼표", href: "/nearby-food" },
+  { label: "내 방문 지도", href: "/visits/map" },
   { label: "라이브", href: "/live" },
 ];
 
@@ -64,7 +68,32 @@ function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const searchResults = searchTerm.trim() ? searchItems(searchTerm) : [];
+  const [searchResults, setSearchResults] = useState([]);
+
+  // 입력할 때마다 바로 요청하지 않고, 타이핑이 멈추고 250ms 지나면 검색한다.
+  useEffect(() => {
+    const trimmed = searchTerm.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      search(trimmed)
+        .then((data) => {
+          if (!cancelled) setSearchResults(data);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchResults([]);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchTerm]);
 
   function goToSearchPage(term) {
     const trimmed = term.trim();
@@ -136,6 +165,7 @@ function Header() {
 
             {isLoggedIn ? (
               <div className="header__account">
+                <NotificationBell />
                 <a href="/profile" className="header__profile-btn">
                   내 프로필
                 </a>

@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./ProgramCarousel.css";
 
 /**
  * 공연일정 캐러셀
  * - 가운데 카드가 가장 크게 보이고, 양옆으로 갈수록 작아짐
  * - 일정 시간(3초)마다 자동으로 다음 카드로 넘어감
- * - 카드를 직접 클릭해도 그 카드로 바로 이동함
+ * - 옆에 있는 카드를 클릭하면 그 카드가 가운데로 옴
+ * - 이미 가운데 있는 카드를 클릭하면 해당 공연 상세페이지로 이동함
  * - 마우스를 올리고 있으면 자동 넘김이 잠시 멈춤
  * - 카드가 옆으로 넘어갈 때 회전하며 입체적으로(코버플로우 스타일) 움직임
  *
- * items: [{ id, name, time }, ...] 형태의 배열을 받는다.
+ * items: [{ id, name, time, poster }, ...] 형태의 배열을 받는다.
  */
 
 // activeIndex를 기준으로 이 카드가 몇 칸 떨어져 있는지 계산 (원형으로 이어져 있다고 보고
@@ -22,6 +24,7 @@ function getOffset(index, activeIndex, length) {
 }
 
 function ProgramCarousel({ items, intervalMs = 3000 }) {
+  const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -53,9 +56,15 @@ function ProgramCarousel({ items, intervalMs = 3000 }) {
           <div
             key={item.id}
             className={`program-carousel__card program-carousel__card--pos${clampedOffset}`}
-            onClick={() => setActiveIndex(index)}
+            onClick={() =>
+              offset === 0
+                ? navigate(`/program/event/${item.id}`)
+                : setActiveIndex(index)
+            }
           >
-            <div className="program-carousel__thumb" />
+            <div className="program-carousel__thumb">
+              {item.poster && <img src={item.poster} alt={item.name} />}
+            </div>
             <div className="program-carousel__label">
               <p className="program-carousel__name">{item.name}</p>
               <p className="program-carousel__time">{item.time}</p>
@@ -63,6 +72,8 @@ function ProgramCarousel({ items, intervalMs = 3000 }) {
           </div>
         );
       })}
+
+      <div className="program-carousel__ground-shadow" aria-hidden="true" />
     </div>
   );
 }

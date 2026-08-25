@@ -141,6 +141,14 @@ export default function FestivalRecordListPage() {
               )}
             </>
           )}
+
+          {!loading && !loadError && (
+            <div className="record-bottom-cta">
+              <Link to="/festival-log/new" className="record-btn-primary">
+                새로운 페스티벌 기록 만들기
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

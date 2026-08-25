@@ -1,4 +1,4 @@
-package com.example.festival.profile.dto;
+package com.example.festival.interest.dto;
 
 public record InterestedArtistResponse(
         Long artistId,

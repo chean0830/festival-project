@@ -1,6 +1,7 @@
 package com.example.festival.home.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * 홈 화면 공연일정 캐러셀용 응답 DTO.
@@ -12,6 +13,10 @@ public record EventSummaryDto(
         String venueName,
         LocalDate startDate,
         LocalDate endDate,
-        String posterImage
+        String posterImage,
+        String region,
+        String kind,
+        long popularity,
+        List<String> genres
 ) {
 }

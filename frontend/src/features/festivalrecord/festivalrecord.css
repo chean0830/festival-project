@@ -19,6 +19,11 @@
   margin: 0;
 }
 
+.record-content > h1 {
+  max-width: 640px;
+  margin: 0 auto 24px;
+}
+
 .record-header-row {
   display: flex;
   align-items: center;
@@ -166,7 +171,8 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  max-width: 520px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 .record-form-field {
@@ -288,6 +294,12 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.record-bottom-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
 }
 
 .record-btn-primary {

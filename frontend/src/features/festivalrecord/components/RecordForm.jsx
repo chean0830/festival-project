@@ -8,6 +8,7 @@ const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif
 
 export default function RecordForm({
   eligibleEvents,
+  recordedEventIds = new Set(),
   initialValues,
   existingImages = [],
   onDeleteExistingImage,
@@ -131,6 +132,7 @@ export default function RecordForm({
           {eligibleEvents.map((event) => (
             <option key={event.eventId} value={event.eventId}>
               {event.name}
+              {recordedEventIds.has(event.eventId) ? ' (생성 완료)' : ''}
             </option>
           ))}
         </select>

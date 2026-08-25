@@ -13,7 +13,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("SELECT n FROM Notification n WHERE n.member.id = :memberId OR n.member IS NULL ORDER BY n.createdAt DESC")
     List<Notification> findAllForMember(@Param("memberId") Long memberId);
 
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.member.id = :memberId AND n.read = false")
+    @Query("SELECT COUNT(n) FROM Notification n WHERE "
+            + "(n.member.id = :memberId AND n.read = false) "
+            + "OR (n.member IS NULL AND n.read = false AND NOT EXISTS ("
+            + "    SELECT 1 FROM NotificationRead nr WHERE nr.notification = n AND nr.member.id = :memberId))")
     long countUnreadForMember(@Param("memberId") Long memberId);
 
     boolean existsByMember_IdAndEvent_EventIdAndType(Long memberId, Long eventId, String type);

@@ -1,20 +1,20 @@
 package com.example.festival.profile.service;
 
-import com.example.festival.interest.repository.MemberArtistRepository;
 import com.example.festival.interest.entity.MemberEvent;
+import com.example.festival.interest.repository.MemberArtistRepository;
 import com.example.festival.interest.repository.MemberEventRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
+import com.example.festival.notification.service.NotificationService;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
-import com.example.festival.profile.dto.InterestedArtistResponse;
-import com.example.festival.profile.dto.InterestedEventResponse;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
 import com.example.festival.profile.dto.ProfileStatsResponse;
 import com.example.festival.profile.dto.UpcomingEventResponse;
 import com.example.festival.event.entity.Event;
+import com.example.festival.event.repository.EventRepository;
 import com.example.festival.visit.entity.EventVisit;
 import com.example.festival.visit.repository.EventVisitRepository;
 import com.example.festival.visit.entity.VisitedEventGenre;
@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -44,24 +45,34 @@ public class ProfileService {
 
     private static final String PROFILE_IMAGE_SUBDIR = "profile";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+    private static final String EVENT_PLANNED_STATUS = "PLANNED";
+    private static final String NOTIFICATION_TYPE_UPCOMING_EVENT = "UPCOMING_EVENT_REMINDER";
+    private static final int UPCOMING_EVENT_REMINDER_DAYS_BEFORE = 3;
+    private static final String NOTIFICATION_TYPE_ARTIST_EVENT = "ARTIST_EVENT";
 
     private final MemberRepository memberRepository;
-    private final MemberArtistRepository memberArtistRepository;
     private final MemberEventRepository memberEventRepository;
+    private final MemberArtistRepository memberArtistRepository;
     private final EventVisitRepository eventVisitRepository;
+    private final EventRepository eventRepository;
+    private final NotificationService notificationService;
     private final Path uploadRoot;
 
     public ProfileService(
             MemberRepository memberRepository,
-            MemberArtistRepository memberArtistRepository,
             MemberEventRepository memberEventRepository,
+            MemberArtistRepository memberArtistRepository,
             EventVisitRepository eventVisitRepository,
+            EventRepository eventRepository,
+            NotificationService notificationService,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.memberRepository = memberRepository;
-        this.memberArtistRepository = memberArtistRepository;
         this.memberEventRepository = memberEventRepository;
+        this.memberArtistRepository = memberArtistRepository;
         this.eventVisitRepository = eventVisitRepository;
+        this.eventRepository = eventRepository;
+        this.notificationService = notificationService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -119,33 +130,6 @@ public class ProfileService {
         deletePhysicalFileIfExists(previousImageUrl);
     }
 
-    public List<InterestedArtistResponse> getInterestedArtists(Long memberId) {
-        getMemberOrThrow(memberId);
-        return memberArtistRepository.findAllByMemberIdWithArtist(memberId).stream()
-                .map(ma -> new InterestedArtistResponse(
-                        ma.getArtist().getArtistId(),
-                        ma.getArtist().getName(),
-                        ma.getArtist().getArtistType(),
-                        ma.getArtist().getProfileImage()
-                ))
-                .toList();
-    }
-
-    public List<InterestedEventResponse> getInterestedEvents(Long memberId) {
-        getMemberOrThrow(memberId);
-        return memberEventRepository.findAllByMemberIdWithEvent(memberId).stream()
-                .map(me -> new InterestedEventResponse(
-                        me.getEvent().getEventId(),
-                        me.getEvent().getName(),
-                        me.getEvent().getPosterImage(),
-                        me.getEvent().getStartDate(),
-                        me.getEvent().getEndDate(),
-                        me.getEvent().getStatus(),
-                        me.getStatus()
-                ))
-                .toList();
-    }
-
     public List<AttendedEventResponse> getAttendedEvents(Long memberId) {
         getMemberOrThrow(memberId);
 
@@ -153,50 +137,138 @@ public class ProfileService {
         Map<Long, AttendedEventResponse> byEventId = new LinkedHashMap<>();
         for (EventVisit visit : eventVisitRepository.findAllByMemberIdWithEvent(memberId)) {
             var event = visit.getEvent();
-            byEventId.putIfAbsent(event.getEventId(), new AttendedEventResponse(
-                    event.getEventId(),
-                    event.getName(),
-                    event.getPosterImage(),
-                    event.getStartDate(),
-                    event.getEndDate(),
-                    event.getStartDate().getYear()
-            ));
+            byEventId.putIfAbsent(event.getEventId(), toAttendedEventResponse(event));
         }
         return List.copyOf(byEventId.values());
     }
 
+    @Transactional
+    public AttendedEventResponse addAttendedEvent(Long memberId, Long eventId) {
+        Member member = getMemberOrThrow(memberId);
+        EventVisit existing = eventVisitRepository.findFirstByMember_IdAndEvent_EventId(memberId, eventId).orElse(null);
+        if (existing != null) {
+            return toAttendedEventResponse(existing.getEvent());
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
+
+        eventVisitRepository.save(new EventVisit(member, event, LocalDateTime.now(), false, false));
+        return toAttendedEventResponse(event);
+    }
+
     public List<UpcomingEventResponse> getUpcomingEvents(Long memberId) {
         getMemberOrThrow(memberId);
-        LocalDate today = LocalDate.now();
 
         return memberEventRepository.findUpcomingByMemberId(memberId).stream()
                 .map(MemberEvent::getEvent)
-                .map(event -> new UpcomingEventResponse(
-                        event.getEventId(),
-                        event.getName(),
-                        event.getPosterImage(),
-                        event.getStartDate(),
-                        event.getEndDate(),
-                        ChronoUnit.DAYS.between(today, event.getStartDate())
-                ))
+                .map(this::toUpcomingEventResponse)
                 .toList();
     }
 
     @Transactional
-    public void removeInterestedArtist(Long memberId, Long artistId) {
-        getMemberOrThrow(memberId);
-        long deleted = memberArtistRepository.deleteByMember_IdAndArtist_ArtistId(memberId, artistId);
-        if (deleted == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 가수 등록 내역을 찾을 수 없습니다.");
+    public UpcomingEventResponse addUpcomingEvent(Long memberId, Long eventId) {
+        Member member = getMemberOrThrow(memberId);
+        MemberEvent existing = memberEventRepository.findByMember_IdAndEvent_EventId(memberId, eventId).orElse(null);
+        if (existing != null) {
+            if (existing.getEvent().getEndDate().isBefore(LocalDate.now())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 끝난 공연은 예정된 공연으로 추가할 수 없습니다.");
+            }
+            existing.changeStatus(EVENT_PLANNED_STATUS);
+            return toUpcomingEventResponse(existing.getEvent());
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
+        if (event.getEndDate().isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 끝난 공연은 예정된 공연으로 추가할 수 없습니다.");
+        }
+
+        memberEventRepository.save(new MemberEvent(member, event, EVENT_PLANNED_STATUS));
+        return toUpcomingEventResponse(event);
+    }
+
+    /**
+     * "예정된 공연"(PLANNED)인데 이미 끝난 공연은 "다녀온 공연"으로 자동 전환한다.
+     * PlannedEventAutoAttendScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void autoAttendEndedPlannedEvents() {
+        LocalDateTime now = LocalDateTime.now();
+        for (MemberEvent memberEvent : memberEventRepository.findAllPlannedWithEndedEvent()) {
+            Member member = memberEvent.getMember();
+            Event event = memberEvent.getEvent();
+            boolean alreadyVisited = eventVisitRepository
+                    .findFirstByMember_IdAndEvent_EventId(member.getId(), event.getEventId())
+                    .isPresent();
+            if (!alreadyVisited) {
+                eventVisitRepository.save(new EventVisit(member, event, now, false, false));
+            }
         }
     }
 
+    /**
+     * "예정된 공연"(PLANNED)의 시작일이 임박(D-3 이내)한 회원들에게 마감 임박 알림을 보낸다.
+     * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
+     * UpcomingEventReminderScheduler가 주기적으로 호출한다.
+     */
     @Transactional
-    public void removeInterestedEvent(Long memberId, Long eventId) {
-        getMemberOrThrow(memberId);
-        long deleted = memberEventRepository.deleteByMember_IdAndEvent_EventId(memberId, eventId);
-        if (deleted == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "관심 공연 등록 내역을 찾을 수 없습니다.");
+    public void notifyUpcomingEventReminders() {
+        LocalDate deadline = LocalDate.now().plusDays(UPCOMING_EVENT_REMINDER_DAYS_BEFORE);
+
+        for (MemberEvent memberEvent : memberEventRepository.findAllPlannedStartingSoon(deadline)) {
+            Long memberId = memberEvent.getMember().getId();
+            Event event = memberEvent.getEvent();
+            Long eventId = event.getEventId();
+
+            if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_UPCOMING_EVENT)) {
+                continue;
+            }
+
+            long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+            String dDayText = dDay <= 0 ? "오늘" : dDay + "일 후";
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    NOTIFICATION_TYPE_UPCOMING_EVENT,
+                    "예정된 공연이 곧 시작해요",
+                    event.getName() + " 공연이 " + dDayText + " 시작해요."
+            );
+        }
+    }
+
+    /**
+     * 관심 등록한 아티스트가 출연하는 공연의 시작일이 임박(D-3 이내)한 회원들에게 알림을 보낸다.
+     * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
+     * UpcomingArtistEventReminderScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void notifyUpcomingArtistEventReminders() {
+        LocalDate deadline = LocalDate.now().plusDays(UPCOMING_EVENT_REMINDER_DAYS_BEFORE);
+
+        for (MemberArtistRepository.ArtistUpcomingEventRow row
+                : memberArtistRepository.findUpcomingEventsForInterestedArtists(deadline)) {
+            Long memberId = row.getMemberId();
+            Long eventId = row.getEventId();
+
+            if (notificationService.hasNotified(memberId, eventId, NOTIFICATION_TYPE_ARTIST_EVENT)) {
+                continue;
+            }
+
+            Event event = eventRepository.findById(eventId).orElse(null);
+            if (event == null) {
+                continue;
+            }
+
+            long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+            String dDayText = dDay <= 0 ? "오늘" : dDay + "일 후";
+            notificationService.notifyMember(
+                    memberId,
+                    eventId,
+                    NOTIFICATION_TYPE_ARTIST_EVENT,
+                    "관심 아티스트 공연이 곧 시작해요",
+                    row.getArtistName() + " 출연 - " + event.getName() + " 공연이 " + dDayText + " 시작해요."
+            );
         }
     }
 
@@ -228,6 +300,29 @@ public class ProfileService {
     private Member getMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+    }
+
+    private UpcomingEventResponse toUpcomingEventResponse(Event event) {
+        long dDay = ChronoUnit.DAYS.between(LocalDate.now(), event.getStartDate());
+        return new UpcomingEventResponse(
+                event.getEventId(),
+                event.getName(),
+                event.getPosterImage(),
+                event.getStartDate(),
+                event.getEndDate(),
+                dDay
+        );
+    }
+
+    private AttendedEventResponse toAttendedEventResponse(Event event) {
+        return new AttendedEventResponse(
+                event.getEventId(),
+                event.getName(),
+                event.getPosterImage(),
+                event.getStartDate(),
+                event.getEndDate(),
+                event.getStartDate().getYear()
+        );
     }
 
     private ProfileResponse toProfileResponse(Member member) {

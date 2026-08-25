@@ -1,49 +1,84 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import Button from "../components/common/Button/Button";
 import ProgramCarousel from "../components/home/ProgramCarousel/ProgramCarousel";
 import BannerNotice from "../components/home/BannerNotice/BannerNotice";
+import NewsSection from "../components/home/NewsSection/NewsSection";
+import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
+import { getRecentNews } from "../api/newsApi";
+import bannerPhoto from "../assets/home/banner-b.png";
 import "./Home.css";
+
+const CAROUSEL_MAX_COUNT = 5;
 
 /**
  * 메인 화면
- * 스케치 기준으로 3개 섹션을 배치함:
- * 1. 배너 (공지사항/알림 노출용 — 자동으로 넘어가는 공지 텍스트가 들어감)
- * 2. 공연일정 캐러셀 (가운데 카드가 가장 크고, 시간이 지나면 자동으로 옆으로 넘어감)
+ * 스케치 기준으로 4개 섹션을 배치함:
+ * 1. 배너 (공지사항 — event_news 중 newsType이 NOTICE인 것만 자동으로 넘어가며 보여줌)
+ * 2. 공연일정 캐러셀 (가운데 카드가 가장 크고, 시간이 지나면 자동으로 옆으로 넘어감) — GET /api/home/events
  * 3. 페스티벌 기록 홍보 (나만의 기록 만들기 유도)
- *
- * 지금은 전부 더미(placeholder) 데이터야. 실제 공지/공연 정보가 정해지면
- * noticeItems, programItems 배열만 교체하면 돼.
+ * 4. 뉴스 (NOTICE를 제외한 나머지 소식 — 아티스트 신곡/공연 발표/MD 발표 등) — GET /api/home/news
  */
-
-const noticeItems = [
-  { id: 1, text: "FESTLOG 공식 홈페이지가 오픈했습니다." },
-  { id: 2, text: "8월 29일(토) 티켓 예매가 시작됩니다." },
-  { id: 3, text: "라인업 1차 공개! 지금 확인해보세요." },
-  { id: 4, text: "공식 굿즈(MD) 사전 예약이 곧 시작됩니다." },
-];
-
-const programItems = [
-  { id: 1, name: "OO 페스티벌 1일차", time: "8/29 (토) 18:00" },
-  { id: 2, name: "OO 페스티벌 2일차", time: "8/29 (토) 19:30" },
-  { id: 3, name: "OO 페스티벌 3일차", time: "8/29 (토) 21:00" },
-  { id: 4, name: "OO 페스티벌 4일차", time: "8/30 (일) 18:00" },
-  { id: 5, name: "OO 페스티벌 5일차", time: "8/30 (일) 19:30" },
-  { id: 6, name: "OO 페스티벌 6일차", time: "8/30 (일) 21:00" },
-  { id: 7, name: "OO 페스티벌 7일차", time: "8/31 (월) 18:00" },
-];
 
 function Home() {
   const navigate = useNavigate();
+  const [programItems, setProgramItems] = useState([]);
+  const [noticeItems, setNoticeItems] = useState([]);
+  const [newsItems, setNewsItems] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getUpcomingEvents()
+      .then((events) => {
+        if (cancelled) return;
+        setProgramItems(events.slice(0, CAROUSEL_MAX_COUNT).map(toProgramItem));
+      })
+      .catch(() => {
+        if (!cancelled) setProgramItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getRecentNews()
+      .then((news) => {
+        if (cancelled) return;
+        setNoticeItems(
+          news
+            .filter((item) => item.newsType === "NOTICE")
+            .map((item) => ({ id: item.id, text: item.title }))
+        );
+        setNewsItems(news.filter((item) => item.newsType !== "NOTICE"));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setNoticeItems([]);
+          setNewsItems([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Layout>
-      {/* 1. 배너 — 공지사항 자리. 클릭하면 공지사항 페이지로 이동 (지금은 "/notice"로 임시 연결) */}
-      <a href="/notice" className="home__banner">
+      {/* 1. 배너 — 공지사항 자리. 무대 조명 사진을 배경으로 깔아둔 순수 디스플레이용 배너, 클릭 안 됨 */}
+      <div className="home__banner">
+        <img src={bannerPhoto} alt="" className="home__banner-photo" />
+        <div className="home__banner-overlay" />
         <div className="home__banner-inner">
-          <BannerNotice items={noticeItems} />
+          <BannerNotice items={noticeItems} intervalMs={7000} />
         </div>
-      </a>
+      </div>
 
       {/* 2. 공연일정 미리보기 */}
       <section className="home__section">
@@ -72,6 +107,18 @@ function Home() {
           </Button>
         </div>
         <div className="home__log-promo-image">예시 이미지</div>
+      </section>
+
+      {/* 4. 뉴스 */}
+      <section className="home__section">
+        <div className="home__section-header">
+          <h2>뉴스</h2>
+          <a href="/news" className="home__section-more">
+            더보기 ›
+          </a>
+        </div>
+
+        <NewsSection items={newsItems} />
       </section>
     </Layout>
   );

@@ -7,13 +7,14 @@
 
 .program-calendar-page__lower {
   display: flex;
-  align-items: flex-start;
-  gap: 68px;
+  align-items: center;
+  gap: 100px;
   margin-top: var(--spacing-lg);
+  margin-left: -40px;
 }
 
 .program-calendar-page__calendar {
-  width: 560px;
+  width: 640px;
   flex-shrink: 0;
 }
 
@@ -29,7 +30,7 @@
 }
 
 .program-calendar-page__hot-title {
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
@@ -45,19 +46,25 @@
 
 .program-calendar-page__hot-item {
   position: relative;
+}
+
+.program-calendar-page__hot-link {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-sm) 50% var(--spacing-sm) 0;
+  padding: var(--spacing-sm) 35% var(--spacing-sm) 0;
   color: var(--color-text);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: 500;
+}
+.program-calendar-page__hot-link:hover {
+  color: var(--color-primary-dark);
 }
 .program-calendar-page__hot-item::after {
   content: "";
   position: absolute;
   left: 0;
-  right: 50%;
+  right: 35%;
   bottom: 0;
   height: 1px;
   background-color: rgba(28, 27, 41, 0.12);
@@ -71,7 +78,7 @@
   min-width: 14px;
   color: var(--color-error);
   font-weight: 700;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
 }
 
 .program-calendar-page__hot-item-name {
@@ -81,7 +88,7 @@
 .program-calendar-page__hot-item-time {
   margin-left: auto;
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 400;
 }
 
@@ -95,32 +102,4 @@
   .program-calendar-page__calendar {
     width: 100%;
   }
-}
-
-.program-calendar-page__legend {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-sm);
-  padding: 0 var(--spacing-sm);
-}
-
-.program-calendar-page__legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
-}
-
-.program-calendar-page__legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.program-calendar-page__legend-dot--today {
-  background-color: var(--color-primary);
-}
-.program-calendar-page__legend-dot--event {
-  background-color: var(--color-secondary);
 }

@@ -1,0 +1,217 @@
+.used-trade-page {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.used-trade-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.used-trade-page__header h1 {
+  margin: 0 0 6px;
+}
+
+.used-trade-page__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.used-trade-page__sell-button {
+  flex-shrink: 0;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.used-trade-page__sell-button:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.used-trade-page__search {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.used-trade-page__search input {
+  flex: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+}
+
+.used-trade-page__search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.used-trade-page__search button {
+  flex-shrink: 0;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-radius: 6px;
+  padding: 0 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.used-trade-page__search-clear {
+  border: 1px solid var(--color-border) !important;
+  background: #fff !important;
+  color: var(--color-text-muted) !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+}
+
+.used-trade-page__tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.used-trade-page__tab {
+  flex-shrink: 0;
+}
+
+.used-trade-page__tab {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.used-trade-page__tab:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.used-trade-page__tab--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.used-trade-page__filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.used-trade-page__price-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.used-trade-page__price-filter input {
+  width: 110px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: var(--font-size-sm);
+}
+
+.used-trade-page__price-filter span {
+  color: var(--color-text-muted);
+}
+
+.used-trade-page__price-filter button {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.used-trade-page__onsale-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.used-trade-page__sort {
+  margin-left: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background: #fff;
+}
+
+.used-trade-page__empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 80px var(--spacing-lg);
+}
+
+.used-trade-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.used-trade-page__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+}
+
+.used-trade-page__pagination button {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.used-trade-page__pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.used-trade-page__pagination span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}

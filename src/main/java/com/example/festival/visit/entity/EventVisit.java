@@ -19,8 +19,9 @@ import java.time.LocalDateTime;
 /**
  * event_visit 매핑 (GPS 방문 인증 + 방문 기록 + 스탬프).
  * 이 테이블은 기존 festival.sql에 이미 정의되어 있으며, 새로 추가한 컬럼/테이블은 없다.
- * GPS 인증 자체(체크인 생성)는 프로필 담당 범위가 아니며, 다른 담당자의 기능이다.
- * 프로필에서는 "다녀온 공연" 목록을 보여주기 위해 읽기 전용으로만 사용한다.
+ * GPS 인증 기반 체크인 생성은 여전히 프로필 담당 범위가 아니며, 다른 담당자의 기능이다.
+ * (2026-08-21: 사용자 요청으로 프로필 쪽에서 "검색해서 다녀온 공연 수동 추가" 기능을 별도로 구현함.
+ *  GPS 인증과는 무관한 자기 신고 방식이라 verified=false, stampAcquired=false로 저장한다.)
  */
 @Entity
 @Table(name = "event_visit")
@@ -49,4 +50,20 @@ public class EventVisit {
 
     @Column(name = "stamp_acquired", nullable = false)
     private boolean stampAcquired;
+
+    public EventVisit(Member member, Event event, LocalDateTime visitedAt, boolean verified, boolean stampAcquired) {
+        this.member = member;
+        this.event = event;
+        this.visitedAt = visitedAt;
+        this.verified = verified;
+        this.stampAcquired = stampAcquired;
+    }
+
+    /**
+     * 자기신고(수동 추가)로 남아있던 방문 기록을 GPS 체크인으로 인증 완료 처리한다.
+     */
+    public void verify() {
+        this.verified = true;
+        this.stampAcquired = true;
+    }
 }

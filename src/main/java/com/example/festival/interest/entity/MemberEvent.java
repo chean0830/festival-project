@@ -20,8 +20,7 @@ import java.time.LocalDateTime;
  * member_event 매핑 (관심 공연).
  * 메인 페이지에서 하트를 누르면 이 테이블에 row가 생성/삭제되는 구조를 전제로 한다.
  * 이 엔티티/Repository는 프로필(조회)과 메인 페이지(등록) 담당자가 함께 사용하는 공용 데이터 구조다.
- * (2026-08-20: 프로필에 찜 해제 기능이 필요해져 삭제 API를 프로필 쪽에서 임시로 구현함.
- *  메인 페이지 담당자와 등록/삭제 API 소유권을 다시 조율할 것.)
+ * (2026-08-21: 등록/조회/삭제 API를 interest 패키지에 정식으로 구현함 — InterestController/InterestService 참고.)
  */
 @Entity
 @Table(name = "member_event")
@@ -47,4 +46,14 @@ public class MemberEvent {
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    public MemberEvent(Member member, Event event, String status) {
+        this.member = member;
+        this.event = event;
+        this.status = status;
+    }
+
+    public void changeStatus(String status) {
+        this.status = status;
+    }
 }

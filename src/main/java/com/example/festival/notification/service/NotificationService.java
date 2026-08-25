@@ -6,13 +6,17 @@ import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.notification.dto.NotificationResponse;
 import com.example.festival.notification.entity.Notification;
+import com.example.festival.notification.entity.NotificationRead;
+import com.example.festival.notification.repository.NotificationReadRepository;
 import com.example.festival.notification.repository.NotificationRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 알림 조회/읽음처리 인프라.
@@ -25,23 +29,27 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationReadRepository notificationReadRepository;
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
 
     public NotificationService(
             NotificationRepository notificationRepository,
+            NotificationReadRepository notificationReadRepository,
             MemberRepository memberRepository,
             EventRepository eventRepository
     ) {
         this.notificationRepository = notificationRepository;
+        this.notificationReadRepository = notificationReadRepository;
         this.memberRepository = memberRepository;
         this.eventRepository = eventRepository;
     }
 
     public List<NotificationResponse> getNotifications(Long memberId) {
         getMemberOrThrow(memberId);
+        Set<Long> readBroadcastIds = new HashSet<>(notificationReadRepository.findReadNotificationIdsByMemberId(memberId));
         return notificationRepository.findAllForMember(memberId).stream()
-                .map(this::toResponse)
+                .map(notification -> toResponse(notification, readBroadcastIds))
                 .toList();
     }
 
@@ -58,7 +66,11 @@ public class NotificationService {
 
         Member owner = notification.getMember();
         if (owner == null) {
-            // 전체 공지는 알림 row가 회원 공용이라 개별 읽음 처리를 지원하지 않는다.
+            // 전체 공지는 알림 row가 회원 공용이라, notification_read에 (알림, 회원) 조합으로 따로 기록한다.
+            if (!notificationReadRepository.existsByNotification_NotificationIdAndMember_Id(notificationId, memberId)) {
+                Member member = memberRepository.getReferenceById(memberId);
+                notificationReadRepository.save(new NotificationRead(notification, member));
+            }
             return;
         }
         if (!owner.getId().equals(memberId)) {
@@ -92,14 +104,17 @@ public class NotificationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
     }
 
-    private NotificationResponse toResponse(Notification notification) {
+    private NotificationResponse toResponse(Notification notification, Set<Long> readBroadcastIds) {
+        boolean read = notification.getMember() != null
+                ? notification.isRead()
+                : readBroadcastIds.contains(notification.getNotificationId());
         return new NotificationResponse(
                 notification.getNotificationId(),
                 notification.getType(),
                 notification.getTitle(),
                 notification.getContent(),
                 notification.getEvent() != null ? notification.getEvent().getEventId() : null,
-                notification.isRead(),
+                read,
                 notification.getCreatedAt()
         );
     }
