@@ -3,15 +3,15 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import RequireLogin from "../features/profile/components/RequireLogin";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
-import { fetchMdOrder, payMdOrder } from "../api/mdShopApi";
+import { fetchMdOrder } from "../api/mdShopApi";
 import { formatPrice } from "../utils/formatPrice";
+import { PAYMENT_METHOD_LABELS, requestTossPayment } from "../utils/tossPayment";
 import "./MdOrderPage.css";
-
-const PAYMENT_METHODS = ["카드 결제", "계좌 이체", "간편 결제"];
 
 /**
  * 프로필의 "결제 대기" 예약을 결제하는 페이지.
- * 실제 PG 연동은 없고, 결제 완료 처리를 누르면 주문 status만 PAID로 바뀐다.
+ * 결제 수단을 누르면 Toss Payments 결제창으로 이동하고, 결제가 끝나면
+ * /payment/result에서 서버에 결제 승인을 요청해 주문 status를 PAID로 확정한다.
  */
 function MdOrderPayPage() {
   const { orderId } = useParams();
@@ -92,12 +92,19 @@ function MdOrderPayPage() {
     );
   }
 
-  async function handlePay() {
+  async function handlePay(methodLabel) {
     setSubmitting(true);
     setError(null);
     try {
-      await payMdOrder(memberId, order.orderId);
-      navigate("/profile", { state: { scrollTo: "mdOrders" } });
+      await requestTossPayment({
+        methodLabel,
+        domainPrefix: "MD",
+        domainId: order.orderId,
+        amount: order.totalPrice,
+        orderName: order.productName,
+        customerName: order.shippingName,
+      });
+      // 성공 시 브라우저가 Toss 결제창으로 이동하므로 이후 코드는 실행되지 않는다.
     } catch (err) {
       setError(err.message);
       setSubmitting(false);
@@ -147,8 +154,14 @@ function MdOrderPayPage() {
         <div className="md-order-page__field">
           <label>결제 수단</label>
           <div className="md-order-page__payment-methods">
-            {PAYMENT_METHODS.map((method) => (
-              <button key={method} type="button" className="md-order-page__payment-method" disabled>
+            {PAYMENT_METHOD_LABELS.map((method) => (
+              <button
+                key={method}
+                type="button"
+                className="md-order-page__payment-method md-order-page__payment-method--active"
+                disabled={submitting}
+                onClick={() => handlePay(method)}
+              >
                 {method}
               </button>
             ))}
@@ -156,7 +169,7 @@ function MdOrderPayPage() {
         </div>
 
         <div className="md-order-page__preparing">
-          🚧 실제 결제(PG) 연동은 아직 준비 중입니다. 지금은 결제 완료 처리만 반영돼요.
+          Toss Payments 결제창으로 이동해요. 테스트 결제라 실제로 돈이 빠져나가지 않아요.
         </div>
 
         {error && <p className="md-order-page__error">{error}</p>}
@@ -173,9 +186,6 @@ function MdOrderPayPage() {
             onClick={() => navigate("/profile", { state: { scrollTo: "mdOrders" } })}
           >
             취소
-          </button>
-          <button type="button" className="md-order-page__btn-primary" disabled={submitting} onClick={handlePay}>
-            {submitting ? "처리 중..." : "결제 완료 처리"}
           </button>
         </div>
       </div>

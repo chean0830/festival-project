@@ -9,6 +9,7 @@ import com.example.festival.usedtrade.dto.UsedListingStatusUpdateRequest;
 import com.example.festival.usedtrade.dto.UsedListingSummaryResponse;
 import com.example.festival.usedtrade.dto.UsedTransactionResponse;
 import com.example.festival.usedtrade.service.UsedTradeService;
+import com.example.festival.payment.dto.PaymentConfirmRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -144,6 +145,15 @@ public class UsedTradeController {
     @GetMapping("/api/members/{memberId}/used/transactions/selling")
     public List<UsedTransactionResponse> getReceivedPurchaseRequests(@PathVariable Long memberId) {
         return usedTradeService.getReceivedPurchaseRequests(memberId);
+    }
+
+    @PostMapping("/api/members/{memberId}/used/transactions/{transactionId}/payments/confirm")
+    public UsedTransactionResponse confirmPayment(
+            @PathVariable Long memberId,
+            @PathVariable Long transactionId,
+            @Valid @RequestBody PaymentConfirmRequest request
+    ) {
+        return usedTradeService.confirmPayment(memberId, transactionId, request.paymentKey(), request.orderId(), request.amount());
     }
 
     @PostMapping("/api/members/{memberId}/used/transactions/{transactionId}/approve")

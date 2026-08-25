@@ -697,10 +697,12 @@
   color: var(--color-primary-dark);
 }
 
-.fr-page-ai-placeholder {
-  margin-top: 20px;
-  font-size: 12px;
-  color: var(--color-text-muted);
+.fr-page-ai-diary {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
 }
 
 /* 마지막 내지: 스크랩북처럼 사진을 아무렇게나 모아둔 느낌 (인터랙션 없음) */
@@ -795,42 +797,20 @@
   --fr-poster-bg: #2c2c3a;
 }
 
-.fr-poster--rock {
-  --fr-poster-accent: #e0435c;
-  --fr-poster-bg: #1a1a1a;
-}
-.fr-poster--indie {
-  --fr-poster-accent: #ff8a3d;
-  --fr-poster-bg: #2c2418;
-}
-.fr-poster--summer {
-  --fr-poster-accent: #1e9e52;
-  --fr-poster-bg: #113a2c;
-}
-.fr-poster--sensitive {
-  --fr-poster-accent: #8a7fd6;
-  --fr-poster-bg: #241f36;
-}
-
-.fr-poster-photos {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+.fr-poster--ai {
   background: var(--fr-poster-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.fr-poster-photo {
+.fr-poster-ai-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.85;
 }
 
 .fr-poster-photo-empty {
-  grid-column: span 2;
-  grid-row: span 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -838,90 +818,6 @@
   font-size: 12px;
   text-align: center;
   padding: 20px;
-}
-
-.fr-poster-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 20px;
-  background: linear-gradient(180deg, transparent 0%, var(--fr-poster-bg) 85%);
-  color: #fff;
-}
-
-.fr-poster-event {
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: var(--fr-poster-accent);
-  font-weight: 700;
-}
-
-.fr-poster-title {
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0;
-}
-
-.fr-poster-review {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0;
-}
-
-.fr-poster-hashtags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.fr-poster-hashtags span {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.fr-poster-ai-note {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  text-align: center;
-  max-width: 380px;
-}
-
-.fr-poster-styles {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.fr-poster-styles > span {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.fr-poster-style-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.fr-poster-style-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-background);
-  border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  color: var(--color-text-muted);
-}
-
-.fr-poster-style-btn--active {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
-  background: var(--color-surface);
 }
 
 .fr-poster-actions {

@@ -3,6 +3,7 @@ package com.example.festival.festivalrecord.controller;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
 import com.example.festival.festivalrecord.dto.FestivalRecordResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordSummaryResponse;
+import com.example.festival.festivalrecord.dto.PosterGenerateRequest;
 import com.example.festival.festivalrecord.dto.ReorderImagesRequest;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.service.FestivalRecordService;
@@ -89,9 +90,19 @@ public class FestivalRecordController {
         return festivalRecordService.reorderImages(memberId, recordId, request.imageIds());
     }
 
-    @PostMapping("/{recordId}/poster/regenerate")
-    public FestivalRecordResponse regeneratePoster(@PathVariable Long memberId, @PathVariable Long recordId) {
-        return festivalRecordService.regeneratePoster(memberId, recordId);
+    @PostMapping("/{recordId}/poster/generate")
+    public FestivalRecordResponse generatePoster(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody(required = false) PosterGenerateRequest request
+    ) {
+        String styleRequest = request != null ? request.styleRequest() : null;
+        return festivalRecordService.generatePoster(memberId, recordId, styleRequest);
+    }
+
+    @PostMapping("/{recordId}/ai-diary/generate")
+    public FestivalRecordResponse generateAiDiary(@PathVariable Long memberId, @PathVariable Long recordId) {
+        return festivalRecordService.generateAiDiary(memberId, recordId);
     }
 
     @PostMapping("/{recordId}/share")

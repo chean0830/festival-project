@@ -70,8 +70,17 @@ export function fetchMdOrder(memberId, orderId) {
   return getJson(`/api/members/${memberId}/md/orders/${orderId}`)
 }
 
-export function payMdOrder(memberId, orderId) {
-  return postAction(`/api/members/${memberId}/md/orders/${orderId}/pay`)
+export async function confirmMdOrderPayment(memberId, orderId, { paymentKey, orderId: tossOrderId, amount }) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/md/orders/${orderId}/payments/confirm`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      [csrfHeaderName]: csrfToken,
+    },
+    body: JSON.stringify({ paymentKey, orderId: tossOrderId, amount }),
+  }).then(handleResponse)
 }
 
 export function cancelMdOrder(memberId, orderId) {

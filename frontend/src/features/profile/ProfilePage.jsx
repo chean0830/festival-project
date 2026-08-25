@@ -206,11 +206,6 @@ export default function ProfilePage() {
           setUsedPurchaseRequests(usedPurchaseRequestData)
           setUsedReceivedRequests(usedReceivedRequestData)
           setUsedLikedListings(usedLikedListingData)
-
-          // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
-          if (badgeData.some((badge) => badge.newlyEarned)) {
-            navigate('/profile/badges')
-          }
         }
       } catch (err) {
         if (!cancelled) setLoadError(err.message)
@@ -223,7 +218,6 @@ export default function ProfilePage() {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memberId])
 
   useEffect(() => {
