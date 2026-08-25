@@ -12,8 +12,6 @@ import {
   fetchInterestedArtists,
   addInterestedArtist,
   fetchInterestedEvents,
-  removeInterestedArtist,
-  removeInterestedEvent,
   fetchAttendedEvents,
   addAttendedEvent,
   fetchUpcomingEvents,
@@ -35,6 +33,19 @@ import { fetchFestivalRecords } from '../festivalrecord/api/festivalRecordApi'
 import RecordCard from '../festivalrecord/components/RecordCard'
 import { cancelMdOrder, fetchMyMdOrders } from '../../api/mdShopApi'
 import MdOrderHistoryList from './components/MdOrderHistoryList'
+import {
+  fetchMyUsedListings,
+  deleteUsedListing,
+  fetchMyPurchaseRequests,
+  fetchReceivedPurchaseRequests,
+  approveUsedTransaction,
+  completeUsedTransaction,
+  cancelUsedTransaction,
+  fetchMyLikedUsedListings,
+} from '../../api/usedTradeApi'
+import UsedListingHistoryList from './components/UsedListingHistoryList'
+import UsedTransactionHistoryList from './components/UsedTransactionHistoryList'
+import UsedLikedListingList from './components/UsedLikedListingList'
 import { getMyPosts, getLikedPosts, getMyComments } from '../../api/communityApi'
 import ProfilePostList from './components/ProfilePostList'
 import ProfileCommentList from './components/ProfileCommentList'
@@ -59,6 +70,10 @@ export default function ProfilePage() {
   const [stats, setStats] = useState(null)
   const [festivalRecords, setFestivalRecords] = useState([])
   const [mdOrders, setMdOrders] = useState([])
+  const [usedListings, setUsedListings] = useState([])
+  const [usedPurchaseRequests, setUsedPurchaseRequests] = useState([])
+  const [usedReceivedRequests, setUsedReceivedRequests] = useState([])
+  const [usedLikedListings, setUsedLikedListings] = useState([])
   const [myPosts, setMyPosts] = useState([])
   const [likedPosts, setLikedPosts] = useState([])
   const [myComments, setMyComments] = useState([])
@@ -68,6 +83,7 @@ export default function ProfilePage() {
   const [addModalTarget, setAddModalTarget] = useState(null) // null | 'artist' | 'attended' | 'upcoming'
   const attendedSectionRef = useRef(null)
   const mdOrdersSectionRef = useRef(null)
+  const usedTradeSectionRef = useRef(null)
 
   function goToAttendedSection(expandAll) {
     if (expandAll) setAttendedExpanded(true)
@@ -103,6 +119,30 @@ export default function ProfilePage() {
     setMdOrders((prev) => prev.map((order) => (order.orderId === canceled.orderId ? canceled : order)))
   }
 
+  async function handleDeleteUsedListing(listingId) {
+    await deleteUsedListing(memberId, listingId)
+    setUsedListings((prev) =>
+      prev.map((listing) => (listing.listingId === listingId ? { ...listing, status: 'CANCELED' } : listing))
+    )
+  }
+
+  function replaceTransaction(updated) {
+    setUsedPurchaseRequests((prev) => prev.map((tx) => (tx.transactionId === updated.transactionId ? updated : tx)))
+    setUsedReceivedRequests((prev) => prev.map((tx) => (tx.transactionId === updated.transactionId ? updated : tx)))
+  }
+
+  async function handleApproveUsedTransaction(transactionId) {
+    replaceTransaction(await approveUsedTransaction(memberId, transactionId))
+  }
+
+  async function handleCompleteUsedTransaction(transactionId) {
+    replaceTransaction(await completeUsedTransaction(memberId, transactionId))
+  }
+
+  async function handleCancelUsedTransaction(transactionId) {
+    replaceTransaction(await cancelUsedTransaction(memberId, transactionId))
+  }
+
   useEffect(() => {
     if (!memberId) {
       return undefined
@@ -127,6 +167,10 @@ export default function ProfilePage() {
           myPostData,
           likedPostData,
           myCommentData,
+          usedListingData,
+          usedPurchaseRequestData,
+          usedReceivedRequestData,
+          usedLikedListingData,
         ] = await Promise.all([
             fetchProfile(memberId),
             fetchInterestedArtists(memberId),
@@ -140,6 +184,10 @@ export default function ProfilePage() {
             getMyPosts(memberId),
             getLikedPosts(memberId),
             getMyComments(memberId),
+            fetchMyUsedListings(memberId),
+            fetchMyPurchaseRequests(memberId),
+            fetchReceivedPurchaseRequests(memberId),
+            fetchMyLikedUsedListings(memberId),
           ])
         if (!cancelled) {
           setProfile(profileData)
@@ -154,6 +202,10 @@ export default function ProfilePage() {
           setMyPosts(myPostData)
           setLikedPosts(likedPostData)
           setMyComments(myCommentData)
+          setUsedListings(usedListingData)
+          setUsedPurchaseRequests(usedPurchaseRequestData)
+          setUsedReceivedRequests(usedReceivedRequestData)
+          setUsedLikedListings(usedLikedListingData)
 
           // 새로 획득한 뱃지가 있으면 곧바로 뱃지 페이지로 넘어가서 보여준다.
           if (badgeData.some((badge) => badge.newlyEarned)) {
@@ -177,6 +229,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!loading && location.state?.scrollTo === 'mdOrders') {
       mdOrdersSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    if (!loading && location.state?.scrollTo === 'usedTrade') {
+      usedTradeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }, [loading, location.state])
 
@@ -263,13 +318,7 @@ export default function ProfilePage() {
               가수 추가하기
             </button>
           </div>
-          <InterestedArtistList
-            artists={artists}
-            onRemove={async (artistId) => {
-              await removeInterestedArtist(memberId, artistId)
-              setArtists((prev) => prev.filter((artist) => artist.artistId !== artistId))
-            }}
-          />
+          <InterestedArtistList artists={artists} memberId={memberId} />
         </section>
 
         <section>
@@ -283,13 +332,7 @@ export default function ProfilePage() {
 
           <div className="profile-my-events-group">
             <h3>관심 공연</h3>
-            <InterestedEventList
-              events={events}
-              onRemove={async (eventId) => {
-                await removeInterestedEvent(memberId, eventId)
-                setEvents((prev) => prev.filter((event) => event.eventId !== eventId))
-              }}
-            />
+            <InterestedEventList events={events} memberId={memberId} />
           </div>
 
           <div className="profile-my-events-group" ref={attendedSectionRef}>
@@ -349,6 +392,45 @@ export default function ProfilePage() {
             </a>
           </div>
           <MdOrderHistoryList orders={mdOrders} onCancel={handleCancelMdOrder} />
+        </section>
+
+        <section ref={usedTradeSectionRef}>
+          <div className="profile-section-header">
+            <h2>MD 중고거래</h2>
+            <a href="/shop" className="profile-section-more">
+              MD 중고거래 가기 ›
+            </a>
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 등록한 매물</h3>
+            <UsedListingHistoryList listings={usedListings} onDelete={handleDeleteUsedListing} />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 보낸 구매 요청</h3>
+            <UsedTransactionHistoryList
+              transactions={usedPurchaseRequests}
+              role="buyer"
+              onCancel={handleCancelUsedTransaction}
+            />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 받은 구매 요청</h3>
+            <UsedTransactionHistoryList
+              transactions={usedReceivedRequests}
+              role="seller"
+              onApprove={handleApproveUsedTransaction}
+              onComplete={handleCompleteUsedTransaction}
+              onCancel={handleCancelUsedTransaction}
+            />
+          </div>
+
+          <div className="profile-my-events-group">
+            <h3>내가 찜한 매물</h3>
+            <UsedLikedListingList listings={usedLikedListings} memberId={memberId} />
+          </div>
         </section>
 
         <section>
