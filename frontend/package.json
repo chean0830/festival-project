@@ -10,8 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.24",
+    "@livekit/components-styles": "^1.2.0",
     "@stomp/stompjs": "^7.3.0",
     "html2canvas": "^1.4.1",
+    "livekit-client": "^2.22.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-pageflip": "^2.0.3",

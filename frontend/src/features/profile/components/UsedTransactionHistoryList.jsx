@@ -1,17 +1,20 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { formatPrice } from '../../../utils/formatPrice'
 
 const STATUS_LABEL = {
   REQUEST: '요청됨',
   APPROVED: '승인됨',
+  PAID: '결제완료',
   COMPLETED: '거래완료',
   CANCELED: '취소됨',
 }
 
 /**
  * role="buyer": 내가 보낸 구매 요청 목록. role="seller": 내가 받은 구매 요청 목록.
+ * 구매 흐름: REQUEST -> APPROVED(판매자 승인) -> PAID(구매자 결제) -> COMPLETED(판매자 거래완료 처리).
  */
 export default function UsedTransactionHistoryList({ transactions, role, onApprove, onComplete, onCancel }) {
+  const navigate = useNavigate()
   if (!transactions || transactions.length === 0) {
     return (
       <p className="profile-empty-text">
@@ -54,7 +57,7 @@ export default function UsedTransactionHistoryList({ transactions, role, onAppro
               </>
             )}
 
-            {role === 'seller' && tx.status === 'APPROVED' && (
+            {role === 'seller' && tx.status === 'PAID' && (
               <>
                 <button type="button" className="profile-md-order-status profile-md-order-status--clickable" onClick={() => onComplete(tx.transactionId)}>
                   거래완료
@@ -65,7 +68,17 @@ export default function UsedTransactionHistoryList({ transactions, role, onAppro
               </>
             )}
 
-            {role === 'buyer' && (tx.status === 'REQUEST' || tx.status === 'APPROVED') && (
+            {role === 'buyer' && tx.status === 'APPROVED' && (
+              <button
+                type="button"
+                className="profile-md-order-status profile-md-order-status--clickable"
+                onClick={() => navigate(`/shop/used/transactions/${tx.transactionId}/payment`, { state: { transaction: tx } })}
+              >
+                결제하기
+              </button>
+            )}
+
+            {role === 'buyer' && (tx.status === 'REQUEST' || tx.status === 'APPROVED' || tx.status === 'PAID') && (
               <button type="button" className="profile-md-order-cancel" onClick={() => onCancel(tx.transactionId)}>
                 취소
               </button>

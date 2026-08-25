@@ -18,9 +18,11 @@ import java.time.LocalDateTime;
 
 /**
  * festival_record 테이블 매핑.
- * ai_diary/ai_summary/mood는 스키마상 존재하지만 AI 페스티벌 기록 기능(추후 작업)에서 채워지는
- * 필드라 지금은 사용하지 않는다. ai_regenerated_count는 포스터 무료 재생성 횟수(3회) 제한에
- * 실제로 사용 중 — 프론트 state로만 두면 페이지를 나갔다 들어오면 초기화돼서 결제 유도가 무의미해지므로 DB에 저장한다.
+ * ai_diary/ai_summary는 AI 일기 생성 기능에서 함께 채워진다 (사용자가 입력한 정보를 바탕으로
+ * Gemini 텍스트 모델이 일기 본문과 한 줄 요약을 같이 작성). ai_summary는 기록 목록 카드에 쓴다.
+ * mood는 AI 포스터 생성 프롬프트에 사용한다.
+ * 포스터 무료 생성 횟수 제한은 이 엔티티가 아니라 FestivalRecordAiQuota(회원+공연 단위)에서
+ * 관리한다 — 기록을 지우고 같은 공연으로 새로 만들어도 무료 횟수가 초기화되지 않게 하기 위함.
  */
 @Entity
 @Table(name = "festival_record")
@@ -53,8 +55,11 @@ public class FestivalRecord {
     @Column(name = "ai_summary", length = 1000)
     private String aiSummary;
 
-    @Column(name = "mood", length = 30)
+    @Column(name = "mood", length = 100)
     private String mood;
+
+    @Column(name = "poster_image_url", length = 500)
+    private String posterImageUrl;
 
     @Column(name = "rating")
     private Byte rating;
@@ -71,9 +76,6 @@ public class FestivalRecord {
     @Column(name = "is_shared", nullable = false)
     private boolean shared;
 
-    @Column(name = "ai_regenerated_count", nullable = false)
-    private int aiRegeneratedCount;
-
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -84,7 +86,6 @@ public class FestivalRecord {
         this.member = member;
         this.event = event;
         this.shared = false;
-        this.aiRegeneratedCount = 0;
     }
 
     public static FestivalRecord create(Member member, Event event) {
@@ -95,20 +96,26 @@ public class FestivalRecord {
         this.event = event;
     }
 
-    public void updateContent(String title, String content, Integer rating, String oneLineReview, String memo, String hashtag) {
+    public void updateContent(String title, String content, Integer rating, String oneLineReview, String memo, String hashtag, String mood) {
         this.title = title;
         this.content = content;
         this.rating = rating == null ? null : rating.byteValue();
         this.oneLineReview = oneLineReview;
         this.memo = memo;
         this.hashtag = hashtag;
+        this.mood = mood;
     }
 
     public void markShared() {
         this.shared = true;
     }
 
-    public void incrementAiRegeneratedCount() {
-        this.aiRegeneratedCount += 1;
+    public void changePosterImage(String posterImageUrl) {
+        this.posterImageUrl = posterImageUrl;
+    }
+
+    public void changeAiDiary(String aiDiary, String aiSummary) {
+        this.aiDiary = aiDiary;
+        this.aiSummary = aiSummary;
     }
 }

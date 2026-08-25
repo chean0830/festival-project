@@ -64,8 +64,12 @@ export function login({ email, password }) {
   return authRequest('/api/auth/login', { email, password })
 }
 
-export function logout() {
-  return authRequest('/api/auth/logout', {})
+export async function logout() {
+  const result = await authRequest('/api/auth/logout', {})
+  if (result.message?.includes('OBS')) {
+    window.alert(result.message)
+  }
+  return result
 }
 
 export function findEmail({ nickname, phoneNumber }) {

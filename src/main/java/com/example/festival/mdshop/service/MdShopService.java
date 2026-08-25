@@ -9,11 +9,15 @@ import com.example.festival.mdshop.dto.MdOrderResponse;
 import com.example.festival.mdshop.dto.MdProductResponse;
 import com.example.festival.mdshop.entity.MdOrder;
 import com.example.festival.mdshop.entity.MdProduct;
+import com.example.festival.mdshop.entity.Payment;
 import com.example.festival.mdshop.repository.MdOrderRepository;
 import com.example.festival.mdshop.repository.MdProductRepository;
+import com.example.festival.mdshop.repository.PaymentRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.notification.service.NotificationService;
+import com.example.festival.payment.TossPaymentClient;
+import com.example.festival.payment.dto.TossConfirmResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +33,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * MD 사전예약 상품 조회 + 주문(예약) 생성.
- * 실제 결제(PG) 연동 전이라, 주문 생성 시 결제는 이루어지지 않고 status=PAYMENT_WAIT으로만 기록한다.
+ * MD 사전예약 상품 조회 + 주문(예약) 생성 + Toss Payments 결제 승인/취소.
+ * 주문 생성 시점에는 결제가 이루어지지 않고 status=PAYMENT_WAIT으로 기록되며,
+ * 프론트가 Toss 결제창을 거쳐 돌아온 뒤 confirmPayment로 결제를 승인해야 PAID로 전환된다.
  */
 @Service
 @Transactional(readOnly = true)
@@ -57,6 +62,8 @@ public class MdShopService {
     private final NotificationService notificationService;
     private final EventScheduleRepository eventScheduleRepository;
     private final MemberArtistRepository memberArtistRepository;
+    private final PaymentRepository paymentRepository;
+    private final TossPaymentClient tossPaymentClient;
 
     public MdShopService(
             MdProductRepository mdProductRepository,
@@ -64,7 +71,9 @@ public class MdShopService {
             MemberRepository memberRepository,
             NotificationService notificationService,
             EventScheduleRepository eventScheduleRepository,
-            MemberArtistRepository memberArtistRepository
+            MemberArtistRepository memberArtistRepository,
+            PaymentRepository paymentRepository,
+            TossPaymentClient tossPaymentClient
     ) {
         this.mdProductRepository = mdProductRepository;
         this.mdOrderRepository = mdOrderRepository;
@@ -72,10 +81,17 @@ public class MdShopService {
         this.notificationService = notificationService;
         this.eventScheduleRepository = eventScheduleRepository;
         this.memberArtistRepository = memberArtistRepository;
+        this.paymentRepository = paymentRepository;
+        this.tossPaymentClient = tossPaymentClient;
     }
 
-    public List<MdProductResponse> getPreorderProducts() {
-        return mdProductRepository.findAllByStatusInWithEvent(List.of(PREORDER_STATUS, SOLD_OUT_STATUS)).stream()
+    public List<MdProductResponse> getPreorderProducts(Long eventId) {
+        List<String> visibleStatuses = List.of(PREORDER_STATUS, SOLD_OUT_STATUS);
+        List<MdProduct> products = eventId == null
+                ? mdProductRepository.findAllByStatusInWithEvent(visibleStatuses)
+                : mdProductRepository.findAllByEventIdAndStatusInWithEvent(eventId, visibleStatuses);
+
+        return products.stream()
                 .map(this::toProductResponse)
                 .toList();
     }
@@ -218,14 +234,21 @@ public class MdShopService {
     }
 
     /**
-     * 실제 PG 연동 전이라 진짜 결제는 일어나지 않고, "결제 대기" 예약을 "결제 완료" 상태로만 전환한다.
+     * Toss Payments 결제창에서 돌아온 뒤 결제 승인을 서버에서 확정하고, "결제 대기" 예약을 "결제 완료"로 전환한다.
      */
     @Transactional
-    public MdOrderResponse payOrder(Long memberId, Long orderId) {
+    public MdOrderResponse confirmPayment(Long memberId, Long orderId, String paymentKey, String tossOrderId, BigDecimal amount) {
         MdOrder order = getOrderOrThrow(memberId, orderId);
         if (!ORDER_INITIAL_STATUS.equals(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 대기 상태의 예약만 결제할 수 있습니다.");
         }
+        if (order.getTotalPrice().compareTo(amount) != 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 금액이 예약 금액과 일치하지 않습니다.");
+        }
+
+        TossConfirmResponse confirmed = tossPaymentClient.confirm(paymentKey, tossOrderId, amount);
+        paymentRepository.save(new Payment(order, tossOrderId, paymentKey, confirmed.method(), amount, "SUCCESS", LocalDateTime.now()));
+
         order.changeStatus(ORDER_PAID_STATUS);
 
         notificationService.notifyMember(
@@ -248,6 +271,14 @@ public class MdShopService {
         if ("SHIPPED".equals(order.getStatus()) || "COMPLETED".equals(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 배송이 진행된 예약은 취소할 수 없습니다.");
         }
+
+        if (ORDER_PAID_STATUS.equals(order.getStatus())) {
+            Payment payment = paymentRepository.findByOrder_OrderIdAndStatus(orderId, "SUCCESS")
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 내역을 찾을 수 없습니다."));
+            tossPaymentClient.cancel(payment.getPaymentKey(), "구매자 예약 취소");
+            payment.markCanceled();
+        }
+
         order.changeStatus(ORDER_CANCELED_STATUS);
 
         MdProduct product = order.getProduct();

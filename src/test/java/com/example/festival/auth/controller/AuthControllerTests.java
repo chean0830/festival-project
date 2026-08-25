@@ -12,6 +12,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,7 +40,8 @@ class AuthControllerTests {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("member@example.com"))
-                .andExpect(jsonPath("$.nickname").value("festivalUser"));
+                .andExpect(jsonPath("$.nickname").value("festivalUser"))
+                .andExpect(jsonPath("$.role").value("USER"));
 
         mockMvc.perform(post("/api/auth/login")
                         .with(csrf())
@@ -65,5 +67,20 @@ class AuthControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.found").value(true))
                 .andExpect(jsonPath("$.maskedEmail").value("mem***@example.com"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void normalMemberCannotCreateLiveStream() throws Exception {
+        mockMvc.perform(post("/api/live-streams")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "eventId": 1,
+                                  "title": "일반 회원 방송"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
     }
 }

@@ -1,5 +1,6 @@
 package com.example.festival.auth.handler;
 
+import com.example.festival.auth.controller.AuthController;
 import com.example.festival.auth.security.MemberPrincipal;
 import com.example.festival.auth.service.OAuth2AccountService;
 
@@ -59,6 +60,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        response.sendRedirect(frontendUrl + "/login?oauth=success");
+        Object storedReturnTo = request.getSession().getAttribute(AuthController.OAUTH_RETURN_TO_SESSION_KEY);
+        request.getSession().removeAttribute(AuthController.OAUTH_RETURN_TO_SESSION_KEY);
+        String returnTo = storedReturnTo instanceof String value
+                && value.startsWith("/")
+                && !value.startsWith("//")
+                ? value
+                : "/";
+        response.sendRedirect(frontendUrl + returnTo);
     }
 }

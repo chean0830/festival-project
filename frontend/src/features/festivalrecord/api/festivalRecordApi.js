@@ -98,6 +98,18 @@ export function shareFestivalRecord(memberId, recordId, request) {
   return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/share`, 'POST', request)
 }
 
-export function regeneratePoster(memberId, recordId) {
-  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/regenerate`, 'POST')
+export function generatePoster(memberId, recordId, styleRequest) {
+  return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/poster/generate`, 'POST', { styleRequest: styleRequest || null })
+}
+
+export function generateAiDiary(memberId, recordId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/generate`, 'POST')
+}
+
+export function selectPosterVersion(memberId, recordId, versionId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/versions/${versionId}/select`, 'POST')
+}
+
+export function selectDiaryVersion(memberId, recordId, versionId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/versions/${versionId}/select`, 'POST')
 }

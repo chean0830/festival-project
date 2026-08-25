@@ -1,22 +1,32 @@
 package com.example.festival.festivalrecord.service;
 
+import com.example.festival.ai.GeminiPosterClient;
+import com.example.festival.ai.GeminiTextClient;
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
+import com.example.festival.festivalrecord.dto.DiaryVersionResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
 import com.example.festival.festivalrecord.dto.FestivalRecordResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordSummaryResponse;
+import com.example.festival.festivalrecord.dto.PosterVersionResponse;
 import com.example.festival.festivalrecord.dto.RecordImageResponse;
 import com.example.festival.festivalrecord.dto.RecordSongResponse;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.dto.SongInput;
 import com.example.festival.festivalrecord.entity.FestivalRecord;
+import com.example.festival.festivalrecord.entity.FestivalRecordAiQuota;
+import com.example.festival.festivalrecord.entity.RecordDiaryVersion;
 import com.example.festival.festivalrecord.entity.RecordFood;
 import com.example.festival.festivalrecord.entity.RecordImage;
+import com.example.festival.festivalrecord.entity.RecordPosterVersion;
 import com.example.festival.festivalrecord.entity.RecordShare;
 import com.example.festival.festivalrecord.entity.RecordSong;
+import com.example.festival.festivalrecord.repository.FestivalRecordAiQuotaRepository;
 import com.example.festival.festivalrecord.repository.FestivalRecordRepository;
+import com.example.festival.festivalrecord.repository.RecordDiaryVersionRepository;
 import com.example.festival.festivalrecord.repository.RecordFoodRepository;
 import com.example.festival.festivalrecord.repository.RecordImageRepository;
+import com.example.festival.festivalrecord.repository.RecordPosterVersionRepository;
 import com.example.festival.festivalrecord.repository.RecordShareRepository;
 import com.example.festival.festivalrecord.repository.RecordSongRepository;
 import com.example.festival.member.entity.Member;
@@ -25,6 +35,7 @@ import com.example.festival.notification.service.NotificationService;
 import com.example.festival.visit.entity.EventVisit;
 import com.example.festival.visit.repository.EventVisitRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,56 +43,96 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class FestivalRecordService {
 
     private static final String RECORD_IMAGE_SUBDIR = "festival-record";
+    private static final String POSTER_SUBDIR = "festival-record/posters";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final int FREE_POSTER_REGEN_LIMIT = 3;
+    private static final int FREE_DIARY_REGEN_LIMIT = 3;
+    private static final int MAX_POSTER_REFERENCE_IMAGES = 6;
     private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
+    private static final List<String> POSTER_STYLE_REFERENCE_PATHS = List.of(
+            "ai/poster-style/example-1.jpg",
+            "ai/poster-style/example-2.jpg",
+            "ai/poster-style/example-3.jpg"
+    );
 
     private final FestivalRecordRepository festivalRecordRepository;
+    private final FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository;
     private final RecordImageRepository recordImageRepository;
     private final RecordSongRepository recordSongRepository;
     private final RecordFoodRepository recordFoodRepository;
     private final RecordShareRepository recordShareRepository;
+    private final RecordPosterVersionRepository recordPosterVersionRepository;
+    private final RecordDiaryVersionRepository recordDiaryVersionRepository;
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
     private final EventVisitRepository eventVisitRepository;
     private final NotificationService notificationService;
+    private final GeminiPosterClient geminiPosterClient;
+    private final GeminiTextClient geminiTextClient;
     private final Path uploadRoot;
+    private final List<byte[]> posterStyleReferenceImages;
+    private final List<String> posterStyleReferenceMimeTypes;
 
     public FestivalRecordService(
             FestivalRecordRepository festivalRecordRepository,
+            FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository,
             RecordImageRepository recordImageRepository,
             RecordSongRepository recordSongRepository,
             RecordFoodRepository recordFoodRepository,
             RecordShareRepository recordShareRepository,
+            RecordPosterVersionRepository recordPosterVersionRepository,
+            RecordDiaryVersionRepository recordDiaryVersionRepository,
             MemberRepository memberRepository,
             EventRepository eventRepository,
             EventVisitRepository eventVisitRepository,
             NotificationService notificationService,
+            GeminiPosterClient geminiPosterClient,
+            GeminiTextClient geminiTextClient,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
+        this.festivalRecordAiQuotaRepository = festivalRecordAiQuotaRepository;
         this.recordImageRepository = recordImageRepository;
         this.recordSongRepository = recordSongRepository;
         this.recordFoodRepository = recordFoodRepository;
         this.recordShareRepository = recordShareRepository;
+        this.recordPosterVersionRepository = recordPosterVersionRepository;
+        this.recordDiaryVersionRepository = recordDiaryVersionRepository;
         this.memberRepository = memberRepository;
         this.eventRepository = eventRepository;
         this.eventVisitRepository = eventVisitRepository;
         this.notificationService = notificationService;
+        this.geminiPosterClient = geminiPosterClient;
+        this.geminiTextClient = geminiTextClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
+        this.posterStyleReferenceImages = new ArrayList<>();
+        this.posterStyleReferenceMimeTypes = new ArrayList<>();
+        for (String resourcePath : POSTER_STYLE_REFERENCE_PATHS) {
+            try (InputStream in = new ClassPathResource(resourcePath).getInputStream()) {
+                posterStyleReferenceImages.add(in.readAllBytes());
+                posterStyleReferenceMimeTypes.add("image/jpeg");
+            } catch (IOException e) {
+                throw new UncheckedIOException("포스터 스타일 참고 이미지를 불러오지 못했습니다: " + resourcePath, e);
+            }
+        }
     }
 
     public List<FestivalRecordSummaryResponse> getRecords(Long memberId) {
@@ -101,9 +152,13 @@ public class FestivalRecordService {
         Member member = getMemberOrThrow(memberId);
         Event event = getEventOrThrow(request.eventId());
 
+        if (festivalRecordRepository.existsByMember_IdAndEvent_EventId(memberId, event.getEventId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 기록을 작성한 공연이에요. 기존 기록을 수정해주세요.");
+        }
+
         FestivalRecord record = FestivalRecord.create(member, event);
         record.updateContent(request.title(), request.content(), request.rating(),
-                request.oneLineReview(), request.memo(), request.hashtag());
+                request.oneLineReview(), request.memo(), request.hashtag(), request.mood());
         festivalRecordRepository.save(record);
 
         replaceSongs(record, request.songs());
@@ -125,10 +180,13 @@ public class FestivalRecordService {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
 
         if (!request.eventId().equals(record.getEvent().getEventId())) {
+            if (festivalRecordRepository.existsByMember_IdAndEvent_EventId(memberId, request.eventId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "이미 기록을 작성한 공연이에요. 기존 기록을 수정해주세요.");
+            }
             record.changeEvent(getEventOrThrow(request.eventId()));
         }
         record.updateContent(request.title(), request.content(), request.rating(),
-                request.oneLineReview(), request.memo(), request.hashtag());
+                request.oneLineReview(), request.memo(), request.hashtag(), request.mood());
 
         replaceSongs(record, request.songs());
         replaceFoods(record, request.foods());
@@ -142,11 +200,16 @@ public class FestivalRecordService {
 
         recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId())
                 .forEach(image -> deletePhysicalFileIfExists(image.getImageUrl()));
+        deletePhysicalFileIfExists(record.getPosterImageUrl());
+        recordPosterVersionRepository.findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId())
+                .forEach(version -> deletePhysicalFileIfExists(version.getImageUrl()));
 
         recordImageRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordSongRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordFoodRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordShareRepository.deleteAllByRecord_RecordId(record.getRecordId());
+        recordPosterVersionRepository.deleteAllByRecord_RecordId(record.getRecordId());
+        recordDiaryVersionRepository.deleteAllByRecord_RecordId(record.getRecordId());
         festivalRecordRepository.delete(record);
     }
 
@@ -197,14 +260,222 @@ public class FestivalRecordService {
         deletePhysicalFileIfExists(image.getImageUrl());
     }
 
+    /**
+     * 업로드된 사진 + 공연명/무드/한줄평/해시태그를 Gemini에 보내 포스터 이미지 한 장을 합성한다.
+     * 무료 생성 횟수(3회)는 기록이 아니라 (회원, 공연) 단위로 세므로, 기록을 지우고 같은 공연으로
+     * 새 기록을 만들어도 초기화되지 않는다. 이 API는 호출마다 실제 과금이 발생한다.
+     */
     @Transactional
-    public FestivalRecordResponse regeneratePoster(Long memberId, Long recordId) {
+    public FestivalRecordResponse generatePoster(Long memberId, Long recordId, String styleRequest) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
-        if (record.getAiRegeneratedCount() >= FREE_POSTER_REGEN_LIMIT) {
-            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 재생성 횟수를 모두 사용했습니다.");
+        FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
+        if (quota.getUsedCount() >= FREE_POSTER_REGEN_LIMIT) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
         }
-        record.incrementAiRegeneratedCount();
+        if (!geminiPosterClient.isConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 포스터 생성 기능이 아직 설정되지 않았습니다.");
+        }
+
+        List<RecordImage> images = recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId());
+        if (images.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "포스터를 만들려면 사진을 1장 이상 올려주세요.");
+        }
+
+        List<byte[]> referenceImages = new ArrayList<>(posterStyleReferenceImages);
+        List<String> mimeTypes = new ArrayList<>(posterStyleReferenceMimeTypes);
+        for (RecordImage image : images.subList(0, Math.min(images.size(), MAX_POSTER_REFERENCE_IMAGES))) {
+            Path filePath = resolveUploadPath(image.getImageUrl());
+            try {
+                referenceImages.add(Files.readAllBytes(filePath));
+                String detected = Files.probeContentType(filePath);
+                mimeTypes.add(detected != null ? detected : "image/jpeg");
+            } catch (IOException e) {
+                throw new UncheckedIOException("기록 이미지를 읽는 데 실패했습니다.", e);
+            }
+        }
+
+        String prompt = buildPosterPrompt(record, styleRequest);
+        GeminiPosterClient.GeneratedImage generated = geminiPosterClient.generatePoster(prompt, referenceImages, mimeTypes);
+
+        String publicUrl = storePosterFile(generated, recordId);
+        recordPosterVersionRepository.save(RecordPosterVersion.of(record, publicUrl, styleRequest));
+        record.changePosterImage(publicUrl);
+        quota.increment();
+
         return toResponse(record);
+    }
+
+    /**
+     * 이전에 생성했던 포스터 버전 중 하나를 다시 현재 포스터로 선택한다. 무료 횟수는 소모하지 않는다.
+     */
+    @Transactional
+    public FestivalRecordResponse selectPosterVersion(Long memberId, Long recordId, Long versionId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        RecordPosterVersion version = recordPosterVersionRepository.findByVersionIdAndRecord_RecordId(versionId, record.getRecordId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "포스터 버전을 찾을 수 없습니다."));
+        record.changePosterImage(version.getImageUrl());
+        return toResponse(record);
+    }
+
+    private FestivalRecordAiQuota getOrCreateAiQuota(Member member, Event event) {
+        return festivalRecordAiQuotaRepository.findByMember_IdAndEvent_EventId(member.getId(), event.getEventId())
+                .orElseGet(() -> festivalRecordAiQuotaRepository.save(FestivalRecordAiQuota.create(member, event)));
+    }
+
+    private String buildPosterPrompt(FestivalRecord record, String styleRequest) {
+        StringBuilder prompt = new StringBuilder();
+        int styleCount = POSTER_STYLE_REFERENCE_PATHS.size();
+        prompt.append("가장 처음 ").append(styleCount).append("장의 이미지는 스타일 참고용 예시 포스터야. ")
+                .append("예시 속 사진, 인물, 공연명, 문구는 절대 그대로 쓰지 말고, ")
+                .append("폴라로이드/찢어진 종이 프레임으로 사진을 콜라주처럼 배치하는 방식, 굵은 타이포 타이틀, ")
+                .append("마스킹테이프·티켓·스티커 같은 그래픽 요소, 손글씨 느낌의 짧은 문구를 곁들이는 스타일만 참고해줘. ");
+        prompt.append("그 다음에 첨부된 사진들이 실제로 포스터에 들어갈 진짜 사진이야. ")
+                .append("이 사진들 속 인물과 분위기를 살려서 세로 방향 포스터로 합성해줘. ");
+        if (styleRequest != null && !styleRequest.isBlank()) {
+            prompt.append("사용자가 이번 포스터에 원하는 느낌: \"").append(styleRequest).append("\". ")
+                    .append("색감과 전체 톤은 이 요청을 가장 우선으로 반영해줘. ");
+        }
+        prompt.append("공연명 \"").append(record.getEvent().getName()).append("\"을 포스터 안에 큰 타이틀 텍스트로 넣어줘. ");
+        String dateRange = formatEventDateRange(record.getEvent());
+        if (dateRange != null) {
+            prompt.append("공연 날짜 \"").append(dateRange).append("\"도 포스터 상단 어딘가에 작게 넣어줘. ");
+        }
+        if (record.getMood() != null && !record.getMood().isBlank()) {
+            prompt.append("원하는 분위기: ").append(record.getMood()).append(". ");
+        }
+        if (record.getOneLineReview() != null && !record.getOneLineReview().isBlank()) {
+            prompt.append("한줄평 \"").append(record.getOneLineReview()).append("\"도 손글씨/타이핑 느낌의 짧은 문구로 이미지 안에 넣어줘. ");
+        }
+        if (record.getHashtag() != null && !record.getHashtag().isBlank()) {
+            prompt.append("키워드: ").append(record.getHashtag()).append(". ");
+        }
+        prompt.append("타이틀과 문구는 한글이면 오탈자 없이 또박또박한 글자 모양으로 정확하게 그려줘.");
+        return prompt.toString();
+    }
+
+    private String formatEventDateRange(Event event) {
+        if (event.getStartDate() == null) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        if (event.getEndDate() == null || event.getEndDate().equals(event.getStartDate())) {
+            return event.getStartDate().format(formatter);
+        }
+        return event.getStartDate().format(formatter) + " - " + event.getEndDate().format(formatter);
+    }
+
+    /**
+     * 사용자가 입력한 기록 내용(제목/본문/한줄평/메모/무드/해시태그/평점/셋리스트/먹거리)을
+     * 모두 모아서 그 날 하루를 돌아보는 일기 형식의 글을 Gemini 텍스트 모델로 생성한다.
+     */
+    @Transactional
+    public FestivalRecordResponse generateAiDiary(Long memberId, Long recordId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
+        if (quota.getDiaryUsedCount() >= FREE_DIARY_REGEN_LIMIT) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
+        }
+        if (!geminiTextClient.isConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 일기 생성 기능이 아직 설정되지 않았습니다.");
+        }
+
+        List<RecordSong> songs = recordSongRepository.findAllByRecord_RecordId(record.getRecordId());
+        List<RecordFood> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId());
+
+        String prompt = buildAiDiaryPrompt(record, songs, foods);
+        String raw = geminiTextClient.generateText(prompt);
+        DiaryText diaryText = parseDiaryText(raw);
+
+        recordDiaryVersionRepository.save(RecordDiaryVersion.of(record, diaryText.content(), diaryText.summary()));
+        record.changeAiDiary(diaryText.content(), diaryText.summary());
+        quota.incrementDiary();
+        return toResponse(record);
+    }
+
+    /**
+     * 이전에 생성했던 AI 일기 버전 중 하나를 다시 현재 일기로 선택한다. 무료 횟수는 소모하지 않는다.
+     */
+    @Transactional
+    public FestivalRecordResponse selectDiaryVersion(Long memberId, Long recordId, Long versionId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        RecordDiaryVersion version = recordDiaryVersionRepository.findByVersionIdAndRecord_RecordId(versionId, record.getRecordId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "일기 버전을 찾을 수 없습니다."));
+        record.changeAiDiary(version.getContent(), version.getSummary());
+        return toResponse(record);
+    }
+
+    private record DiaryText(String content, String summary) {
+    }
+
+    /**
+     * Gemini 응답을 "[요약]...[본문]..." 형식으로 파싱한다. 마커가 없으면(모델이 지시를 안 따른 경우)
+     * 전체를 본문으로 두고 요약은 비워둔다.
+     */
+    private DiaryText parseDiaryText(String raw) {
+        String summaryMarker = "[요약]";
+        String bodyMarker = "[본문]";
+        int summaryIdx = raw.indexOf(summaryMarker);
+        int bodyIdx = raw.indexOf(bodyMarker);
+        if (summaryIdx >= 0 && bodyIdx > summaryIdx) {
+            String summary = raw.substring(summaryIdx + summaryMarker.length(), bodyIdx).trim();
+            String content = raw.substring(bodyIdx + bodyMarker.length()).trim();
+            return new DiaryText(content, summary.isBlank() ? null : summary);
+        }
+        return new DiaryText(raw.trim(), null);
+    }
+
+    private String buildAiDiaryPrompt(FestivalRecord record, List<RecordSong> songs, List<RecordFood> foods) {
+        Event event = record.getEvent();
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("아래는 사용자가 공연/페스티벌을 다녀온 뒤 남긴 기록이야. ")
+                .append("이 정보들만 가지고 그 날 하루 있었던 일을 되돌아보는 1인칭 일기를 자연스러운 한국어로 써줘. ")
+                .append("주어지지 않은 사실은 지어내지 말고, 있는 정보들을 자연스럽게 이어서 서술해줘. ")
+                .append("다음 형식을 정확히 지켜서 출력해줘. 다른 설명은 붙이지 마.\n")
+                .append("[요약]\n(이 날을 한 문장, 40자 이내로 요약)\n")
+                .append("[본문]\n(문단 구분이 있는 400~600자 분량의 일기 본문)\n\n");
+
+        prompt.append("공연명: ").append(event.getName()).append("\n");
+        String dateRange = formatEventDateRange(event);
+        if (dateRange != null) {
+            prompt.append("날짜: ").append(dateRange).append("\n");
+        }
+        if (event.getVenue() != null && event.getVenue().getName() != null) {
+            prompt.append("장소: ").append(event.getVenue().getName()).append("\n");
+        }
+        if (record.getTitle() != null && !record.getTitle().isBlank()) {
+            prompt.append("기록 제목: ").append(record.getTitle()).append("\n");
+        }
+        if (record.getContent() != null && !record.getContent().isBlank()) {
+            prompt.append("자유 기록: ").append(record.getContent()).append("\n");
+        }
+        if (record.getMood() != null && !record.getMood().isBlank()) {
+            prompt.append("그날의 분위기: ").append(record.getMood()).append("\n");
+        }
+        if (record.getRating() != null) {
+            prompt.append("만족도: 5점 중 ").append(record.getRating()).append("점\n");
+        }
+        if (record.getOneLineReview() != null && !record.getOneLineReview().isBlank()) {
+            prompt.append("한줄평: ").append(record.getOneLineReview()).append("\n");
+        }
+        if (!songs.isEmpty()) {
+            String setlist = songs.stream()
+                    .map(song -> song.getArtistName() != null
+                            ? song.getSongTitle() + " - " + song.getArtistName()
+                            : song.getSongTitle())
+                    .collect(Collectors.joining(", "));
+            prompt.append("기억에 남는 곡: ").append(setlist).append("\n");
+        }
+        if (!foods.isEmpty()) {
+            String foodList = foods.stream().map(RecordFood::getFoodName).collect(Collectors.joining(", "));
+            prompt.append("먹은 음식: ").append(foodList).append("\n");
+        }
+        if (record.getMemo() != null && !record.getMemo().isBlank()) {
+            prompt.append("메모: ").append(record.getMemo()).append("\n");
+        }
+        if (record.getHashtag() != null && !record.getHashtag().isBlank()) {
+            prompt.append("키워드: ").append(record.getHashtag()).append("\n");
+        }
+        return prompt.toString();
     }
 
     @Transactional
@@ -300,6 +571,7 @@ public class FestivalRecordService {
                 record.getTitle(),
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
+                record.getAiSummary(),
                 record.getCreatedAt()
         );
     }
@@ -328,6 +600,19 @@ public class FestivalRecordService {
         List<String> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId()).stream()
                 .map(RecordFood::getFoodName)
                 .toList();
+        Optional<FestivalRecordAiQuota> quota = festivalRecordAiQuotaRepository
+                .findByMember_IdAndEvent_EventId(record.getMember().getId(), event.getEventId());
+        int aiUsedCount = quota.map(FestivalRecordAiQuota::getUsedCount).orElse(0);
+        int aiDiaryUsedCount = quota.map(FestivalRecordAiQuota::getDiaryUsedCount).orElse(0);
+
+        List<PosterVersionResponse> posterVersions = recordPosterVersionRepository
+                .findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId()).stream()
+                .map(v -> new PosterVersionResponse(v.getVersionId(), v.getImageUrl(), v.getStyleRequest(), v.getCreatedAt()))
+                .toList();
+        List<DiaryVersionResponse> diaryVersions = recordDiaryVersionRepository
+                .findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId()).stream()
+                .map(v -> new DiaryVersionResponse(v.getVersionId(), v.getContent(), v.getSummary(), v.getCreatedAt()))
+                .toList();
 
         return new FestivalRecordResponse(
                 record.getRecordId(),
@@ -336,15 +621,24 @@ public class FestivalRecordService {
                 event.getPosterImage(),
                 record.getTitle(),
                 record.getContent(),
+                record.getAiDiary(),
+                record.getAiSummary(),
+                aiDiaryUsedCount,
+                FREE_DIARY_REGEN_LIMIT,
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
                 record.getMemo(),
                 record.getHashtag(),
+                record.getMood(),
+                record.getPosterImageUrl(),
                 record.isShared(),
-                record.getAiRegeneratedCount(),
+                aiUsedCount,
+                FREE_POSTER_REGEN_LIMIT,
                 images,
                 songs,
                 foods,
+                posterVersions,
+                diaryVersions,
                 record.getCreatedAt(),
                 record.getUpdatedAt()
         );
@@ -363,6 +657,30 @@ public class FestivalRecordService {
             return fileName;
         } catch (IOException e) {
             throw new UncheckedIOException("기록 이미지 저장에 실패했습니다.", e);
+        }
+    }
+
+    private Path resolveUploadPath(String publicUrl) {
+        String prefix = "/uploads/";
+        if (publicUrl == null || !publicUrl.startsWith(prefix)) {
+            throw new UncheckedIOException(new IOException("잘못된 이미지 경로입니다: " + publicUrl));
+        }
+        return uploadRoot.resolve(Path.of(publicUrl.substring(prefix.length()))).normalize();
+    }
+
+    private String storePosterFile(GeminiPosterClient.GeneratedImage generated, Long recordId) {
+        try {
+            Path targetDir = uploadRoot.resolve(POSTER_SUBDIR);
+            Files.createDirectories(targetDir);
+
+            String extension = generated.mimeType().contains("png") ? ".png" : ".jpg";
+            String fileName = recordId + "_" + UUID.randomUUID() + extension;
+            Path targetPath = targetDir.resolve(fileName).normalize();
+
+            Files.write(targetPath, generated.bytes());
+            return "/uploads/" + POSTER_SUBDIR + "/" + fileName;
+        } catch (IOException e) {
+            throw new UncheckedIOException("포스터 이미지 저장에 실패했습니다.", e);
         }
     }
 

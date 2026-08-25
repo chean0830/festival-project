@@ -156,6 +156,19 @@ export function fetchReceivedPurchaseRequests(memberId) {
   return getJson(`/api/members/${memberId}/used/transactions/selling`)
 }
 
+export async function confirmUsedTransactionPayment(memberId, transactionId, { paymentKey, orderId: tossOrderId, amount }) {
+  await ensureCsrfToken()
+  return fetch(`/api/members/${memberId}/used/transactions/${transactionId}/payments/confirm`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      [csrfHeaderName]: csrfToken,
+    },
+    body: JSON.stringify({ paymentKey, orderId: tossOrderId, amount }),
+  }).then(handleResponse)
+}
+
 export function approveUsedTransaction(memberId, transactionId) {
   return postAction(`/api/members/${memberId}/used/transactions/${transactionId}/approve`)
 }

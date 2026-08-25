@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { search } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
@@ -22,6 +22,7 @@ const subNavItems = [
   { label: "커뮤니티", href: "/community" },
   { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
+  { label: "라이브", href: "/live" },
 ];
 
 // 햄버거 눌렀을 때 열리는 전체 메뉴 목록
@@ -30,10 +31,10 @@ const drawerMenuItems = [
   { label: "커뮤니티", href: "/community" },
   { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
+  { label: "라이브", href: "/live" },
   { label: "페스티벌 기록", href: "/festival-log" },
   { label: "내 주변 쉼표", href: "/nearby-food" },
   { label: "내 방문 지도", href: "/visits/map" },
-  { label: "라이브", href: "/live" },
 ];
 
 function Header({ hideSubnav = false }) {
@@ -42,14 +43,19 @@ function Header({ hideSubnav = false }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const currentMember = useCurrentMember();
   const isLoggedIn = Boolean(currentMember?.memberId);
 
   async function handleLogout() {
     await logout();
-    window.location.href = "/";
+    window.location.href = location.pathname.startsWith("/live") ? "/live" : "/";
   }
+
+  const loginHref = location.pathname.startsWith("/live")
+    ? "/login?returnTo=%2Flive"
+    : "/login";
 
   // 검색창 바깥을 클릭하면 드롭다운을 닫는다.
   useEffect(() => {
@@ -169,7 +175,7 @@ function Header({ hideSubnav = false }) {
                 </button>
               </div>
             ) : (
-              <a href="/login" className="header__login-btn">
+              <a href={loginHref} className="header__login-btn">
                 <svg
                   viewBox="0 0 24 24"
                   width="16"
@@ -254,7 +260,7 @@ function Header({ hideSubnav = false }) {
               ) : (
                 <>
                   <p className="header__drawer-profile-text">로그인이 필요해요</p>
-                  <a href="/login" className="header__login-btn header__login-btn--sm">
+                  <a href={loginHref} className="header__login-btn header__login-btn--sm">
                     Login
                   </a>
                 </>

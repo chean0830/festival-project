@@ -76,7 +76,7 @@ CREATE TABLE social_account (
 
 
 -- ============================================================
--- 2-1. PASSWORD RESET TOKEN
+-- 2-2. PASSWORD RESET TOKEN
 -- 비밀번호 재설정용 1회성 토큰
 -- ============================================================
 
@@ -576,7 +576,9 @@ CREATE TABLE festival_record (
     ai_diary TEXT,
     ai_summary VARCHAR(1000),
 
-    mood VARCHAR(30),
+    mood VARCHAR(100),
+
+    poster_image_url VARCHAR(500),
 
     rating TINYINT
         COMMENT '1 ~ 5',
@@ -589,8 +591,6 @@ CREATE TABLE festival_record (
 
     is_shared BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ai_regenerated_count INT NOT NULL DEFAULT 0,
-
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -600,6 +600,77 @@ CREATE TABLE festival_record (
 
     FOREIGN KEY (event_id)
         REFERENCES event(event_id)
+);
+
+
+-- ============================================================
+-- 22-1. FESTIVAL RECORD AI QUOTA
+-- AI 포스터 무료 생성 횟수를 (회원, 공연) 단위로 관리 - 기록을 지우고
+-- 같은 공연으로 새 기록을 만들어도 무료 횟수가 초기화되지 않게 하기 위함
+-- ============================================================
+
+CREATE TABLE festival_record_ai_quota (
+    quota_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    member_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+
+    used_count INT NOT NULL DEFAULT 0,
+    diary_used_count INT NOT NULL DEFAULT 0,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE (member_id, event_id),
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id),
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+);
+
+
+-- ============================================================
+-- 22-2. RECORD POSTER VERSION
+-- 생성할 때마다 덮어쓰지 않고 버전을 남겨서, 나중에 갤러리에서 골라 쓸 수 있게 한다.
+-- festival_record.poster_image_url은 이 중 현재 선택된 버전을 가리킨다.
+-- ============================================================
+
+CREATE TABLE record_poster_version (
+    version_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    record_id BIGINT NOT NULL,
+
+    image_url VARCHAR(500) NOT NULL,
+    style_request VARCHAR(200),
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (record_id)
+        REFERENCES festival_record(record_id)
+);
+
+
+-- ============================================================
+-- 22-3. RECORD DIARY VERSION
+-- AI 일기도 포스터와 동일하게 생성할 때마다 버전을 남긴다.
+-- festival_record.ai_diary/ai_summary는 이 중 현재 선택된 버전을 가리킨다.
+-- ============================================================
+
+CREATE TABLE record_diary_version (
+    version_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    record_id BIGINT NOT NULL,
+
+    content TEXT NOT NULL,
+    summary VARCHAR(1000),
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (record_id)
+        REFERENCES festival_record(record_id)
 );
 
 
@@ -877,6 +948,9 @@ CREATE TABLE payment (
 
     order_id BIGINT NOT NULL,
 
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호 (order_id와 별개)',
+
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
     payment_method VARCHAR(30) NOT NULL,
@@ -976,7 +1050,7 @@ CREATE TABLE used_transaction (
     price DECIMAL(10,0) NOT NULL,
 
     status VARCHAR(20) NOT NULL
-        COMMENT 'REQUEST, APPROVED, COMPLETED, CANCELED',
+        COMMENT 'REQUEST, APPROVED, PAID, COMPLETED, CANCELED',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -987,6 +1061,37 @@ CREATE TABLE used_transaction (
 
     FOREIGN KEY (buyer_id)
         REFERENCES member(member_id)
+);
+
+
+-- ============================================================
+-- 36-1. USED TRANSACTION PAYMENT
+-- 중고거래 결제 (Toss Payments)
+-- ============================================================
+
+CREATE TABLE used_transaction_payment (
+    payment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    transaction_id BIGINT NOT NULL,
+
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호',
+
+    payment_key VARCHAR(100) NOT NULL UNIQUE,
+
+    payment_method VARCHAR(30) NOT NULL,
+
+    amount DECIMAL(10,0) NOT NULL,
+
+    status VARCHAR(20) NOT NULL
+        COMMENT 'SUCCESS, FAIL, CANCELED',
+
+    paid_at DATETIME,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (transaction_id)
+        REFERENCES used_transaction(transaction_id)
 );
 
 
@@ -1114,11 +1219,16 @@ CREATE TABLE live_stream (
 
     event_id BIGINT NOT NULL,
 
+    host_member_id BIGINT NOT NULL,
+
     title VARCHAR(200) NOT NULL,
 
     description VARCHAR(1000),
 
     thumbnail_url VARCHAR(500),
+
+    source_type VARCHAR(20) NOT NULL DEFAULT 'BROWSER'
+        COMMENT 'BROWSER',
 
     stream_url VARCHAR(500),
 
@@ -1138,7 +1248,10 @@ CREATE TABLE live_stream (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (event_id)
-        REFERENCES event(event_id)
+        REFERENCES event(event_id),
+
+    FOREIGN KEY (host_member_id)
+        REFERENCES member(member_id)
 );
 
 
