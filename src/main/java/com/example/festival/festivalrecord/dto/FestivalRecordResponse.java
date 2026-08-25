@@ -10,6 +10,8 @@ public record FestivalRecordResponse(
         String eventPosterImage,
         String title,
         String content,
+        String aiDiary,
+        int aiDiaryUsedCount,
         Integer rating,
         String oneLineReview,
         String memo,

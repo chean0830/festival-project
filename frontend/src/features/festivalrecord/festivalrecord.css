@@ -697,10 +697,12 @@
   color: var(--color-primary-dark);
 }
 
-.fr-page-ai-placeholder {
-  margin-top: 20px;
-  font-size: 12px;
-  color: var(--color-text-muted);
+.fr-page-ai-diary {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
 }
 
 /* 마지막 내지: 스크랩북처럼 사진을 아무렇게나 모아둔 느낌 (인터랙션 없음) */

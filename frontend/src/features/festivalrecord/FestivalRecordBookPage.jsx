@@ -4,7 +4,7 @@ import HTMLFlipBook from 'react-pageflip'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import RequireLogin from '../profile/components/RequireLogin'
-import { fetchFestivalRecord, generatePoster, shareFestivalRecord } from './api/festivalRecordApi'
+import { fetchFestivalRecord, generateAiDiary, generatePoster, shareFestivalRecord } from './api/festivalRecordApi'
 import BookCoverPage from './components/BookCoverPage'
 import PosterView from './components/PosterView'
 import StarRating from './components/StarRating'
@@ -98,13 +98,38 @@ function FoodMemoContent({ record }) {
   )
 }
 
-function ReviewContent({ record }) {
+const FREE_DIARY_REGEN_LIMIT = 3
+
+function ReviewContent({ record, onGenerateDiary, isGeneratingDiary, diaryError }) {
+  const diaryLimitReached = (record.aiDiaryUsedCount ?? 0) >= FREE_DIARY_REGEN_LIMIT
   return (
     <>
       <h3>한줄평</h3>
       {record.oneLineReview && <p className="fr-page-review">“{record.oneLineReview}”</p>}
       {record.hashtag && <p className="fr-page-hashtag">{record.hashtag}</p>}
-      <p className="fr-page-ai-placeholder">📝 AI 일기는 준비 중이에요. 조금만 기다려주세요!</p>
+
+      <h3>AI 일기</h3>
+      {record.aiDiary ? (
+        <p className="fr-page-ai-diary">{record.aiDiary}</p>
+      ) : (
+        <p className="fr-page-empty">아직 만들어진 AI 일기가 없어요.</p>
+      )}
+      {diaryError && <p className="record-error-text">{diaryError}</p>}
+      <button
+        type="button"
+        className="record-btn-ghost"
+        onClick={onGenerateDiary}
+        disabled={isGeneratingDiary || diaryLimitReached}
+      >
+        {diaryLimitReached
+          ? '🔒 AI 일기 다시 쓰기'
+          : isGeneratingDiary
+            ? '✨ AI가 쓰는 중...'
+            : record.aiDiary
+              ? '🔄 AI 일기 다시 쓰기'
+              : '📝 AI 일기 쓰기'}
+      </button>
+      {diaryLimitReached && <p className="fr-poster-regen-limit">무료 생성 {FREE_DIARY_REGEN_LIMIT}회를 모두 사용했어요.</p>}
     </>
   )
 }
@@ -138,6 +163,9 @@ export default function FestivalRecordBookPage() {
   // idle -> generating(Gemini 호출 중) -> ready | error
   const [posterStage, setPosterStage] = useState('idle')
   const [posterError, setPosterError] = useState(null)
+  const [posterStyleRequest, setPosterStyleRequest] = useState('')
+  const [isGeneratingDiary, setIsGeneratingDiary] = useState(false)
+  const [diaryError, setDiaryError] = useState(null)
 
   useEffect(() => {
     if (!memberId) {
@@ -197,16 +225,29 @@ export default function FestivalRecordBookPage() {
   }
 
   async function handleRegeneratePoster() {
-    const updated = await generatePoster(memberId, recordId)
+    const updated = await generatePoster(memberId, recordId, posterStyleRequest)
     setRecord(updated)
     return updated
+  }
+
+  async function handleGenerateAiDiary() {
+    setIsGeneratingDiary(true)
+    setDiaryError(null)
+    try {
+      const updated = await generateAiDiary(memberId, recordId)
+      setRecord(updated)
+    } catch (err) {
+      setDiaryError(err.message)
+    } finally {
+      setIsGeneratingDiary(false)
+    }
   }
 
   async function handleGeneratePoster() {
     setPosterStage('generating')
     setPosterError(null)
     try {
-      const updated = await generatePoster(memberId, recordId)
+      const updated = await generatePoster(memberId, recordId, posterStyleRequest)
       setRecord(updated)
       setPosterStage('ready')
     } catch (err) {
@@ -259,7 +300,12 @@ export default function FestivalRecordBookPage() {
                 <FoodMemoContent record={record} />
               </Page>
               <Page number="5">
-                <ReviewContent record={record} />
+                <ReviewContent
+                  record={record}
+                  onGenerateDiary={handleGenerateAiDiary}
+                  isGeneratingDiary={isGeneratingDiary}
+                  diaryError={diaryError}
+                />
               </Page>
               <Page number="6">
                 <PhotoCollageContent record={record} />
@@ -295,6 +341,17 @@ export default function FestivalRecordBookPage() {
                   업로드한 사진과 분위기/한줄평/해시태그를 바탕으로 AI가 포스터 이미지를 새로 만들어드려요.
                   (10~20초 정도 걸릴 수 있어요)
                 </p>
+                <div className="record-form-field">
+                  <label htmlFor="poster-style-request">어떤 느낌의 포스터를 원하시나요?</label>
+                  <textarea
+                    id="poster-style-request"
+                    value={posterStyleRequest}
+                    onChange={(e) => setPosterStyleRequest(e.target.value)}
+                    placeholder="예) 푸르고 시원한 청량 여름느낌, 에너지 폭발 쿨한 느낌"
+                    rows={2}
+                    maxLength={200}
+                  />
+                </div>
                 {posterError && <p className="record-error-text">{posterError}</p>}
                 <button type="button" className="record-btn-primary" onClick={handleGeneratePoster}>
                   예, 포스터 만들기
@@ -305,7 +362,13 @@ export default function FestivalRecordBookPage() {
             {posterStage === 'generating' && <p className="fr-poster-cta-hint">✨ AI가 포스터를 만들고 있어요...</p>}
 
             {posterStage === 'ready' && (
-              <PosterView record={record} onShare={handleShare} onRegenerate={handleRegeneratePoster} />
+              <PosterView
+                record={record}
+                onShare={handleShare}
+                onRegenerate={handleRegeneratePoster}
+                styleRequest={posterStyleRequest}
+                onStyleRequestChange={setPosterStyleRequest}
+              />
             )}
           </section>
         </div>

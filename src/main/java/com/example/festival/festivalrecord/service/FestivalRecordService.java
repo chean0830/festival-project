@@ -1,6 +1,7 @@
 package com.example.festival.festivalrecord.service;
 
 import com.example.festival.ai.GeminiPosterClient;
+import com.example.festival.ai.GeminiTextClient;
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
@@ -44,8 +45,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -55,6 +58,7 @@ public class FestivalRecordService {
     private static final String POSTER_SUBDIR = "festival-record/posters";
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final int FREE_POSTER_REGEN_LIMIT = 3;
+    private static final int FREE_DIARY_REGEN_LIMIT = 3;
     private static final int MAX_POSTER_REFERENCE_IMAGES = 6;
     private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
     private static final List<String> POSTER_STYLE_REFERENCE_PATHS = List.of(
@@ -74,6 +78,7 @@ public class FestivalRecordService {
     private final EventVisitRepository eventVisitRepository;
     private final NotificationService notificationService;
     private final GeminiPosterClient geminiPosterClient;
+    private final GeminiTextClient geminiTextClient;
     private final Path uploadRoot;
     private final List<byte[]> posterStyleReferenceImages;
     private final List<String> posterStyleReferenceMimeTypes;
@@ -90,6 +95,7 @@ public class FestivalRecordService {
             EventVisitRepository eventVisitRepository,
             NotificationService notificationService,
             GeminiPosterClient geminiPosterClient,
+            GeminiTextClient geminiTextClient,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
@@ -103,6 +109,7 @@ public class FestivalRecordService {
         this.eventVisitRepository = eventVisitRepository;
         this.notificationService = notificationService;
         this.geminiPosterClient = geminiPosterClient;
+        this.geminiTextClient = geminiTextClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
         this.posterStyleReferenceImages = new ArrayList<>();
         this.posterStyleReferenceMimeTypes = new ArrayList<>();
@@ -243,7 +250,7 @@ public class FestivalRecordService {
      * 새 기록을 만들어도 초기화되지 않는다. 이 API는 호출마다 실제 과금이 발생한다.
      */
     @Transactional
-    public FestivalRecordResponse generatePoster(Long memberId, Long recordId) {
+    public FestivalRecordResponse generatePoster(Long memberId, Long recordId, String styleRequest) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
         FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
         if (quota.getUsedCount() >= FREE_POSTER_REGEN_LIMIT) {
@@ -271,7 +278,7 @@ public class FestivalRecordService {
             }
         }
 
-        String prompt = buildPosterPrompt(record);
+        String prompt = buildPosterPrompt(record, styleRequest);
         GeminiPosterClient.GeneratedImage generated = geminiPosterClient.generatePoster(prompt, referenceImages, mimeTypes);
 
         deletePhysicalFileIfExists(record.getPosterImageUrl());
@@ -287,7 +294,7 @@ public class FestivalRecordService {
                 .orElseGet(() -> festivalRecordAiQuotaRepository.save(FestivalRecordAiQuota.create(member, event)));
     }
 
-    private String buildPosterPrompt(FestivalRecord record) {
+    private String buildPosterPrompt(FestivalRecord record, String styleRequest) {
         StringBuilder prompt = new StringBuilder();
         int styleCount = POSTER_STYLE_REFERENCE_PATHS.size();
         prompt.append("가장 처음 ").append(styleCount).append("장의 이미지는 스타일 참고용 예시 포스터야. ")
@@ -296,6 +303,10 @@ public class FestivalRecordService {
                 .append("마스킹테이프·티켓·스티커 같은 그래픽 요소, 손글씨 느낌의 짧은 문구를 곁들이는 스타일만 참고해줘. ");
         prompt.append("그 다음에 첨부된 사진들이 실제로 포스터에 들어갈 진짜 사진이야. ")
                 .append("이 사진들 속 인물과 분위기를 살려서 세로 방향 포스터로 합성해줘. ");
+        if (styleRequest != null && !styleRequest.isBlank()) {
+            prompt.append("사용자가 이번 포스터에 원하는 느낌: \"").append(styleRequest).append("\". ")
+                    .append("색감과 전체 톤은 이 요청을 가장 우선으로 반영해줘. ");
+        }
         prompt.append("공연명 \"").append(record.getEvent().getName()).append("\"을 포스터 안에 큰 타이틀 텍스트로 넣어줘. ");
         String dateRange = formatEventDateRange(record.getEvent());
         if (dateRange != null) {
@@ -323,6 +334,84 @@ public class FestivalRecordService {
             return event.getStartDate().format(formatter);
         }
         return event.getStartDate().format(formatter) + " - " + event.getEndDate().format(formatter);
+    }
+
+    /**
+     * 사용자가 입력한 기록 내용(제목/본문/한줄평/메모/무드/해시태그/평점/셋리스트/먹거리)을
+     * 모두 모아서 그 날 하루를 돌아보는 일기 형식의 글을 Gemini 텍스트 모델로 생성한다.
+     */
+    @Transactional
+    public FestivalRecordResponse generateAiDiary(Long memberId, Long recordId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
+        if (quota.getDiaryUsedCount() >= FREE_DIARY_REGEN_LIMIT) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
+        }
+        if (!geminiTextClient.isConfigured()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 일기 생성 기능이 아직 설정되지 않았습니다.");
+        }
+
+        List<RecordSong> songs = recordSongRepository.findAllByRecord_RecordId(record.getRecordId());
+        List<RecordFood> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId());
+
+        String prompt = buildAiDiaryPrompt(record, songs, foods);
+        String diary = geminiTextClient.generateText(prompt);
+
+        record.changeAiDiary(diary);
+        quota.incrementDiary();
+        return toResponse(record);
+    }
+
+    private String buildAiDiaryPrompt(FestivalRecord record, List<RecordSong> songs, List<RecordFood> foods) {
+        Event event = record.getEvent();
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("아래는 사용자가 공연/페스티벌을 다녀온 뒤 남긴 기록이야. ")
+                .append("이 정보들만 가지고 그 날 하루 있었던 일을 되돌아보는 1인칭 일기를 자연스러운 한국어로 써줘. ")
+                .append("주어지지 않은 사실은 지어내지 말고, 있는 정보들을 자연스럽게 이어서 서술해줘. ")
+                .append("문단 구분이 있는 400~600자 분량의 글로 작성해줘. 일기 본문만 출력하고 제목이나 다른 설명은 붙이지 마.\n\n");
+
+        prompt.append("공연명: ").append(event.getName()).append("\n");
+        String dateRange = formatEventDateRange(event);
+        if (dateRange != null) {
+            prompt.append("날짜: ").append(dateRange).append("\n");
+        }
+        if (event.getVenue() != null && event.getVenue().getName() != null) {
+            prompt.append("장소: ").append(event.getVenue().getName()).append("\n");
+        }
+        if (record.getTitle() != null && !record.getTitle().isBlank()) {
+            prompt.append("기록 제목: ").append(record.getTitle()).append("\n");
+        }
+        if (record.getContent() != null && !record.getContent().isBlank()) {
+            prompt.append("자유 기록: ").append(record.getContent()).append("\n");
+        }
+        if (record.getMood() != null && !record.getMood().isBlank()) {
+            prompt.append("그날의 분위기: ").append(record.getMood()).append("\n");
+        }
+        if (record.getRating() != null) {
+            prompt.append("만족도: 5점 중 ").append(record.getRating()).append("점\n");
+        }
+        if (record.getOneLineReview() != null && !record.getOneLineReview().isBlank()) {
+            prompt.append("한줄평: ").append(record.getOneLineReview()).append("\n");
+        }
+        if (!songs.isEmpty()) {
+            String setlist = songs.stream()
+                    .map(song -> song.getArtistName() != null
+                            ? song.getSongTitle() + " - " + song.getArtistName()
+                            : song.getSongTitle())
+                    .collect(Collectors.joining(", "));
+            prompt.append("기억에 남는 곡: ").append(setlist).append("\n");
+        }
+        if (!foods.isEmpty()) {
+            String foodList = foods.stream().map(RecordFood::getFoodName).collect(Collectors.joining(", "));
+            prompt.append("먹은 음식: ").append(foodList).append("\n");
+        }
+        if (record.getMemo() != null && !record.getMemo().isBlank()) {
+            prompt.append("메모: ").append(record.getMemo()).append("\n");
+        }
+        if (record.getHashtag() != null && !record.getHashtag().isBlank()) {
+            prompt.append("키워드: ").append(record.getHashtag()).append("\n");
+        }
+        return prompt.toString();
     }
 
     @Transactional
@@ -446,10 +535,10 @@ public class FestivalRecordService {
         List<String> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId()).stream()
                 .map(RecordFood::getFoodName)
                 .toList();
-        int aiUsedCount = festivalRecordAiQuotaRepository
-                .findByMember_IdAndEvent_EventId(record.getMember().getId(), event.getEventId())
-                .map(FestivalRecordAiQuota::getUsedCount)
-                .orElse(0);
+        Optional<FestivalRecordAiQuota> quota = festivalRecordAiQuotaRepository
+                .findByMember_IdAndEvent_EventId(record.getMember().getId(), event.getEventId());
+        int aiUsedCount = quota.map(FestivalRecordAiQuota::getUsedCount).orElse(0);
+        int aiDiaryUsedCount = quota.map(FestivalRecordAiQuota::getDiaryUsedCount).orElse(0);
 
         return new FestivalRecordResponse(
                 record.getRecordId(),
@@ -458,6 +547,8 @@ public class FestivalRecordService {
                 event.getPosterImage(),
                 record.getTitle(),
                 record.getContent(),
+                record.getAiDiary(),
+                aiDiaryUsedCount,
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
                 record.getMemo(),

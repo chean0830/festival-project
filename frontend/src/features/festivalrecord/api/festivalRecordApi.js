@@ -98,6 +98,10 @@ export function shareFestivalRecord(memberId, recordId, request) {
   return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/share`, 'POST', request)
 }
 
-export function generatePoster(memberId, recordId) {
-  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/generate`, 'POST')
+export function generatePoster(memberId, recordId, styleRequest) {
+  return mutateJson(`/api/members/${memberId}/festival-records/${recordId}/poster/generate`, 'POST', { styleRequest: styleRequest || null })
+}
+
+export function generateAiDiary(memberId, recordId) {
+  return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/generate`, 'POST')
 }

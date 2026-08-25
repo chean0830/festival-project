@@ -616,6 +616,7 @@ CREATE TABLE festival_record_ai_quota (
     event_id BIGINT NOT NULL,
 
     used_count INT NOT NULL DEFAULT 0,
+    diary_used_count INT NOT NULL DEFAULT 0,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -8,7 +8,7 @@ const SHARE_PLATFORMS = [
 
 const FREE_REGEN_LIMIT = 3
 
-export default function PosterView({ record, onShare, onRegenerate }) {
+export default function PosterView({ record, onShare, onRegenerate, styleRequest, onStyleRequestChange }) {
   // 서버(festival_record.ai_regenerated_count)에 저장된 값으로 초기화한다.
   // state로만 두면 페이지를 나갔다 들어왔을 때 초기화돼서 무료 횟수 제한이 무의미해진다.
   const [regenCount, setRegenCount] = useState(record.aiRegeneratedCount ?? 0)
@@ -50,6 +50,20 @@ export default function PosterView({ record, onShare, onRegenerate }) {
           <div className="fr-poster-photo-empty">아직 만들어진 포스터가 없어요</div>
         )}
       </div>
+
+      {!regenLimitReached && (
+        <div className="record-form-field">
+          <label htmlFor="poster-style-request-regen">어떤 느낌의 포스터를 원하시나요?</label>
+          <textarea
+            id="poster-style-request-regen"
+            value={styleRequest}
+            onChange={(e) => onStyleRequestChange(e.target.value)}
+            placeholder="예) 푸르고 시원한 청량 여름느낌, 에너지 폭발 쿨한 느낌"
+            rows={2}
+            maxLength={200}
+          />
+        </div>
+      )}
 
       <div className="fr-poster-actions">
         <button

@@ -16,8 +16,9 @@ import lombok.NoArgsConstructor;
 
 /**
  * festival_record_ai_quota 매핑.
- * AI 포스터 무료 생성 횟수(3회)를 festival_record가 아니라 (회원, 공연) 단위로 센다.
+ * AI 포스터/AI 일기 무료 생성 횟수(각 3회)를 festival_record가 아니라 (회원, 공연) 단위로 센다.
  * 기록을 삭제하고 같은 공연으로 새 기록을 다시 만들어도 무료 횟수가 초기화되지 않게 하기 위함.
+ * usedCount는 포스터, diaryUsedCount는 AI 일기 생성 횟수로 서로 별개다.
  */
 @Entity
 @Table(name = "festival_record_ai_quota")
@@ -41,10 +42,14 @@ public class FestivalRecordAiQuota {
     @Column(name = "used_count", nullable = false)
     private int usedCount;
 
+    @Column(name = "diary_used_count", nullable = false)
+    private int diaryUsedCount;
+
     private FestivalRecordAiQuota(Member member, Event event) {
         this.member = member;
         this.event = event;
         this.usedCount = 0;
+        this.diaryUsedCount = 0;
     }
 
     public static FestivalRecordAiQuota create(Member member, Event event) {
@@ -53,5 +58,9 @@ public class FestivalRecordAiQuota {
 
     public void increment() {
         this.usedCount += 1;
+    }
+
+    public void incrementDiary() {
+        this.diaryUsedCount += 1;
     }
 }
