@@ -11,6 +11,11 @@ import MdOrderShippingPage from './pages/MdOrderShippingPage'
 import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
 import MdOrderCompletePage from './pages/MdOrderCompletePage'
 import MdOrderPayPage from './pages/MdOrderPayPage'
+import UsedTradePage from './pages/UsedTradePage'
+import UsedListingDetailPage from './pages/UsedListingDetailPage'
+import UsedListingCreatePage from './pages/UsedListingCreatePage'
+import UsedListingEditPage from './pages/UsedListingEditPage'
+import UsedSellerListingsPage from './pages/UsedSellerListingsPage'
 import CommunityLayout from './components/community/CommunityLayout'
 import CommunityPage from './pages/CommunityPage'
 import CommunityPostWritePage from './pages/CommunityPostWritePage'
@@ -38,9 +43,10 @@ import FestivalRecordBookPage from './features/festivalrecord/FestivalRecordBook
  * - "/login", "/signup", "/account/recovery", "/password/reset/confirm" : 인증 관련 페이지
  * - "/profile", "/profile/badges" : 내 프로필 / 나의 뱃지 (로그인한 사용자 기준, 비로그인 시 로그인 안내)
  *
- * MD구매 등 다른 메뉴들은 아직 페이지가 없어서
- * 눌러도 흰 화면(라우트 없음)이 뜰 거야. 각 기능 브랜치가 합쳐지면
- * 여기에 Route를 하나씩 추가해주면 돼.
+ * "/shop" : MD 중고거래 (아티스트 MD/페스티벌 MD/음반 한정)
+ *
+ * 아직 페이지가 없는 다른 메뉴들은 눌러도 흰 화면(라우트 없음)이 뜰 거야.
+ * 각 기능 브랜치가 합쳐지면 여기에 Route를 하나씩 추가해주면 돼.
  */
 function App() {
   return (
@@ -53,6 +59,11 @@ function App() {
         <Route path="/program/:category" element={<ProgramCategory />} />
         <Route path="/program/event/:eventId" element={<ProgramEventDetail />} />
         <Route path="/artists/:artistId" element={<ArtistDetailPage />} />
+        <Route path="/shop" element={<UsedTradePage />} />
+        <Route path="/shop/used/new" element={<UsedListingCreatePage />} />
+        <Route path="/shop/used/sellers/:sellerId" element={<UsedSellerListingsPage />} />
+        <Route path="/shop/used/:listingId/edit" element={<UsedListingEditPage />} />
+        <Route path="/shop/used/:listingId" element={<UsedListingDetailPage />} />
         <Route path="/shop/preorder" element={<MdPreorderPage />} />
         <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />

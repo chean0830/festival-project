@@ -10,7 +10,7 @@ import "./Header.css";
 /**
  * 공통 헤더 — 두 줄 구조
  * 1줄: 로고(FESTLOG) — 비워둔 가운데 — 검색창 + Login
- * 2줄: 햄버거(전체 메뉴) 버튼 + 공연일정 / 커뮤니티 / MD구매 바로가기
+ * 2줄: 햄버거(전체 메뉴) 버튼 + 공연일정 / 커뮤니티 / MD 중고거래 바로가기
  *
  * 햄버거 버튼을 누르면 왼쪽에서 메뉴 서랍(drawer)이 열리고,
  * 그 안에 프로필(로그인 상태) + 전체 메뉴 목록이 나온다.
@@ -20,7 +20,7 @@ import "./Header.css";
 const subNavItems = [
   { label: "공연일정", href: "/program" },
   { label: "커뮤니티", href: "/community" },
-  { label: "MD구매", href: "/shop" },
+  { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
 ];
 
@@ -28,7 +28,7 @@ const subNavItems = [
 const drawerMenuItems = [
   { label: "공연일정", href: "/program" },
   { label: "커뮤니티", href: "/community" },
-  { label: "MD구매", href: "/shop" },
+  { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
   { label: "페스티벌 기록", href: "/festival-log" },
   { label: "내 주변 쉼표", href: "/nearby-food" },
