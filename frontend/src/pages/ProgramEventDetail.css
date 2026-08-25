@@ -204,6 +204,37 @@
   margin: 0;
 }
 
+.event-detail__checkin-btn {
+  width: 100%;
+  max-width: 320px;
+  margin-top: var(--spacing-sm);
+  padding: 10px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.event-detail__checkin-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+.event-detail__checkin-btn:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.event-detail__checkin-message {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-dark);
+}
+.event-detail__checkin-message--error {
+  color: #e5484d;
+}
+
 .event-detail__lineup-toggle {
   width: 100%;
   max-width: 320px;

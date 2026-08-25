@@ -18,6 +18,13 @@ public interface EventVisitRepository extends JpaRepository<EventVisit, Long> {
     Optional<EventVisit> findFirstByMember_IdAndEvent_EventId(Long memberId, Long eventId);
 
     /**
+     * GPS 인증된 방문 기록만 지도 핀용으로 조회 (venue 좌표 포함).
+     */
+    @Query("SELECT ev FROM EventVisit ev JOIN FETCH ev.event e JOIN FETCH e.venue "
+            + "WHERE ev.member.id = :memberId AND ev.verified = true ORDER BY e.startDate DESC")
+    List<EventVisit> findAllVerifiedByMemberIdWithEvent(@Param("memberId") Long memberId);
+
+    /**
      * 방문한 공연들의 장르 태그를 (event_id, genre_name) 쌍으로 반환한다.
      * "나의 뱃지" 장르 조건(락 스피릿, 힙합 러버, 장르 컬렉터) 평가에만 사용하는 읽기 전용 조회.
      */
