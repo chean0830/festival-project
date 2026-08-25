@@ -4,23 +4,29 @@ import com.example.festival.ai.GeminiPosterClient;
 import com.example.festival.ai.GeminiTextClient;
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
+import com.example.festival.festivalrecord.dto.DiaryVersionResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
 import com.example.festival.festivalrecord.dto.FestivalRecordResponse;
 import com.example.festival.festivalrecord.dto.FestivalRecordSummaryResponse;
+import com.example.festival.festivalrecord.dto.PosterVersionResponse;
 import com.example.festival.festivalrecord.dto.RecordImageResponse;
 import com.example.festival.festivalrecord.dto.RecordSongResponse;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.dto.SongInput;
 import com.example.festival.festivalrecord.entity.FestivalRecord;
 import com.example.festival.festivalrecord.entity.FestivalRecordAiQuota;
+import com.example.festival.festivalrecord.entity.RecordDiaryVersion;
 import com.example.festival.festivalrecord.entity.RecordFood;
 import com.example.festival.festivalrecord.entity.RecordImage;
+import com.example.festival.festivalrecord.entity.RecordPosterVersion;
 import com.example.festival.festivalrecord.entity.RecordShare;
 import com.example.festival.festivalrecord.entity.RecordSong;
 import com.example.festival.festivalrecord.repository.FestivalRecordAiQuotaRepository;
 import com.example.festival.festivalrecord.repository.FestivalRecordRepository;
+import com.example.festival.festivalrecord.repository.RecordDiaryVersionRepository;
 import com.example.festival.festivalrecord.repository.RecordFoodRepository;
 import com.example.festival.festivalrecord.repository.RecordImageRepository;
+import com.example.festival.festivalrecord.repository.RecordPosterVersionRepository;
 import com.example.festival.festivalrecord.repository.RecordShareRepository;
 import com.example.festival.festivalrecord.repository.RecordSongRepository;
 import com.example.festival.member.entity.Member;
@@ -73,6 +79,8 @@ public class FestivalRecordService {
     private final RecordSongRepository recordSongRepository;
     private final RecordFoodRepository recordFoodRepository;
     private final RecordShareRepository recordShareRepository;
+    private final RecordPosterVersionRepository recordPosterVersionRepository;
+    private final RecordDiaryVersionRepository recordDiaryVersionRepository;
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
     private final EventVisitRepository eventVisitRepository;
@@ -90,6 +98,8 @@ public class FestivalRecordService {
             RecordSongRepository recordSongRepository,
             RecordFoodRepository recordFoodRepository,
             RecordShareRepository recordShareRepository,
+            RecordPosterVersionRepository recordPosterVersionRepository,
+            RecordDiaryVersionRepository recordDiaryVersionRepository,
             MemberRepository memberRepository,
             EventRepository eventRepository,
             EventVisitRepository eventVisitRepository,
@@ -104,6 +114,8 @@ public class FestivalRecordService {
         this.recordSongRepository = recordSongRepository;
         this.recordFoodRepository = recordFoodRepository;
         this.recordShareRepository = recordShareRepository;
+        this.recordPosterVersionRepository = recordPosterVersionRepository;
+        this.recordDiaryVersionRepository = recordDiaryVersionRepository;
         this.memberRepository = memberRepository;
         this.eventRepository = eventRepository;
         this.eventVisitRepository = eventVisitRepository;
@@ -189,11 +201,15 @@ public class FestivalRecordService {
         recordImageRepository.findAllByRecord_RecordIdOrderByDisplayOrderAscImageIdAsc(record.getRecordId())
                 .forEach(image -> deletePhysicalFileIfExists(image.getImageUrl()));
         deletePhysicalFileIfExists(record.getPosterImageUrl());
+        recordPosterVersionRepository.findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId())
+                .forEach(version -> deletePhysicalFileIfExists(version.getImageUrl()));
 
         recordImageRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordSongRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordFoodRepository.deleteAllByRecord_RecordId(record.getRecordId());
         recordShareRepository.deleteAllByRecord_RecordId(record.getRecordId());
+        recordPosterVersionRepository.deleteAllByRecord_RecordId(record.getRecordId());
+        recordDiaryVersionRepository.deleteAllByRecord_RecordId(record.getRecordId());
         festivalRecordRepository.delete(record);
     }
 
@@ -281,11 +297,23 @@ public class FestivalRecordService {
         String prompt = buildPosterPrompt(record, styleRequest);
         GeminiPosterClient.GeneratedImage generated = geminiPosterClient.generatePoster(prompt, referenceImages, mimeTypes);
 
-        deletePhysicalFileIfExists(record.getPosterImageUrl());
         String publicUrl = storePosterFile(generated, recordId);
+        recordPosterVersionRepository.save(RecordPosterVersion.of(record, publicUrl, styleRequest));
         record.changePosterImage(publicUrl);
         quota.increment();
 
+        return toResponse(record);
+    }
+
+    /**
+     * 이전에 생성했던 포스터 버전 중 하나를 다시 현재 포스터로 선택한다. 무료 횟수는 소모하지 않는다.
+     */
+    @Transactional
+    public FestivalRecordResponse selectPosterVersion(Long memberId, Long recordId, Long versionId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        RecordPosterVersion version = recordPosterVersionRepository.findByVersionIdAndRecord_RecordId(versionId, record.getRecordId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "포스터 버전을 찾을 수 없습니다."));
+        record.changePosterImage(version.getImageUrl());
         return toResponse(record);
     }
 
@@ -355,11 +383,45 @@ public class FestivalRecordService {
         List<RecordFood> foods = recordFoodRepository.findAllByRecord_RecordId(record.getRecordId());
 
         String prompt = buildAiDiaryPrompt(record, songs, foods);
-        String diary = geminiTextClient.generateText(prompt);
+        String raw = geminiTextClient.generateText(prompt);
+        DiaryText diaryText = parseDiaryText(raw);
 
-        record.changeAiDiary(diary);
+        recordDiaryVersionRepository.save(RecordDiaryVersion.of(record, diaryText.content(), diaryText.summary()));
+        record.changeAiDiary(diaryText.content(), diaryText.summary());
         quota.incrementDiary();
         return toResponse(record);
+    }
+
+    /**
+     * 이전에 생성했던 AI 일기 버전 중 하나를 다시 현재 일기로 선택한다. 무료 횟수는 소모하지 않는다.
+     */
+    @Transactional
+    public FestivalRecordResponse selectDiaryVersion(Long memberId, Long recordId, Long versionId) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+        RecordDiaryVersion version = recordDiaryVersionRepository.findByVersionIdAndRecord_RecordId(versionId, record.getRecordId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "일기 버전을 찾을 수 없습니다."));
+        record.changeAiDiary(version.getContent(), version.getSummary());
+        return toResponse(record);
+    }
+
+    private record DiaryText(String content, String summary) {
+    }
+
+    /**
+     * Gemini 응답을 "[요약]...[본문]..." 형식으로 파싱한다. 마커가 없으면(모델이 지시를 안 따른 경우)
+     * 전체를 본문으로 두고 요약은 비워둔다.
+     */
+    private DiaryText parseDiaryText(String raw) {
+        String summaryMarker = "[요약]";
+        String bodyMarker = "[본문]";
+        int summaryIdx = raw.indexOf(summaryMarker);
+        int bodyIdx = raw.indexOf(bodyMarker);
+        if (summaryIdx >= 0 && bodyIdx > summaryIdx) {
+            String summary = raw.substring(summaryIdx + summaryMarker.length(), bodyIdx).trim();
+            String content = raw.substring(bodyIdx + bodyMarker.length()).trim();
+            return new DiaryText(content, summary.isBlank() ? null : summary);
+        }
+        return new DiaryText(raw.trim(), null);
     }
 
     private String buildAiDiaryPrompt(FestivalRecord record, List<RecordSong> songs, List<RecordFood> foods) {
@@ -368,7 +430,9 @@ public class FestivalRecordService {
         prompt.append("아래는 사용자가 공연/페스티벌을 다녀온 뒤 남긴 기록이야. ")
                 .append("이 정보들만 가지고 그 날 하루 있었던 일을 되돌아보는 1인칭 일기를 자연스러운 한국어로 써줘. ")
                 .append("주어지지 않은 사실은 지어내지 말고, 있는 정보들을 자연스럽게 이어서 서술해줘. ")
-                .append("문단 구분이 있는 400~600자 분량의 글로 작성해줘. 일기 본문만 출력하고 제목이나 다른 설명은 붙이지 마.\n\n");
+                .append("다음 형식을 정확히 지켜서 출력해줘. 다른 설명은 붙이지 마.\n")
+                .append("[요약]\n(이 날을 한 문장, 40자 이내로 요약)\n")
+                .append("[본문]\n(문단 구분이 있는 400~600자 분량의 일기 본문)\n\n");
 
         prompt.append("공연명: ").append(event.getName()).append("\n");
         String dateRange = formatEventDateRange(event);
@@ -507,6 +571,7 @@ public class FestivalRecordService {
                 record.getTitle(),
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
+                record.getAiSummary(),
                 record.getCreatedAt()
         );
     }
@@ -540,6 +605,15 @@ public class FestivalRecordService {
         int aiUsedCount = quota.map(FestivalRecordAiQuota::getUsedCount).orElse(0);
         int aiDiaryUsedCount = quota.map(FestivalRecordAiQuota::getDiaryUsedCount).orElse(0);
 
+        List<PosterVersionResponse> posterVersions = recordPosterVersionRepository
+                .findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId()).stream()
+                .map(v -> new PosterVersionResponse(v.getVersionId(), v.getImageUrl(), v.getStyleRequest(), v.getCreatedAt()))
+                .toList();
+        List<DiaryVersionResponse> diaryVersions = recordDiaryVersionRepository
+                .findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId()).stream()
+                .map(v -> new DiaryVersionResponse(v.getVersionId(), v.getContent(), v.getSummary(), v.getCreatedAt()))
+                .toList();
+
         return new FestivalRecordResponse(
                 record.getRecordId(),
                 event.getEventId(),
@@ -548,7 +622,9 @@ public class FestivalRecordService {
                 record.getTitle(),
                 record.getContent(),
                 record.getAiDiary(),
+                record.getAiSummary(),
                 aiDiaryUsedCount,
+                FREE_DIARY_REGEN_LIMIT,
                 toRatingInt(record.getRating()),
                 record.getOneLineReview(),
                 record.getMemo(),
@@ -557,9 +633,12 @@ public class FestivalRecordService {
                 record.getPosterImageUrl(),
                 record.isShared(),
                 aiUsedCount,
+                FREE_POSTER_REGEN_LIMIT,
                 images,
                 songs,
                 foods,
+                posterVersions,
+                diaryVersions,
                 record.getCreatedAt(),
                 record.getUpdatedAt()
         );

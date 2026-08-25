@@ -10,6 +10,7 @@ public record FestivalRecordSummaryResponse(
         String title,
         Integer rating,
         String oneLineReview,
+        String aiSummary,
         LocalDateTime createdAt
 ) {
 }

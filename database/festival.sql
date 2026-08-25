@@ -633,6 +633,48 @@ CREATE TABLE festival_record_ai_quota (
 
 
 -- ============================================================
+-- 22-2. RECORD POSTER VERSION
+-- 생성할 때마다 덮어쓰지 않고 버전을 남겨서, 나중에 갤러리에서 골라 쓸 수 있게 한다.
+-- festival_record.poster_image_url은 이 중 현재 선택된 버전을 가리킨다.
+-- ============================================================
+
+CREATE TABLE record_poster_version (
+    version_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    record_id BIGINT NOT NULL,
+
+    image_url VARCHAR(500) NOT NULL,
+    style_request VARCHAR(200),
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (record_id)
+        REFERENCES festival_record(record_id)
+);
+
+
+-- ============================================================
+-- 22-3. RECORD DIARY VERSION
+-- AI 일기도 포스터와 동일하게 생성할 때마다 버전을 남긴다.
+-- festival_record.ai_diary/ai_summary는 이 중 현재 선택된 버전을 가리킨다.
+-- ============================================================
+
+CREATE TABLE record_diary_version (
+    version_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    record_id BIGINT NOT NULL,
+
+    content TEXT NOT NULL,
+    summary VARCHAR(1000),
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (record_id)
+        REFERENCES festival_record(record_id)
+);
+
+
+-- ============================================================
 -- 23. RECORD IMAGE
 -- ============================================================
 

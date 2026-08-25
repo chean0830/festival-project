@@ -6,18 +6,19 @@ const SHARE_PLATFORMS = [
   { key: 'FACEBOOK', label: '페이스북' },
 ]
 
-const FREE_REGEN_LIMIT = 3
-
-export default function PosterView({ record, onShare, onRegenerate, styleRequest, onStyleRequestChange }) {
-  // 서버(festival_record.ai_regenerated_count)에 저장된 값으로 초기화한다.
+export default function PosterView({ record, onShare, onRegenerate, onSelectVersion, styleRequest, onStyleRequestChange }) {
+  // 서버(festival_record_ai_quota.used_count)에 저장된 값으로 초기화한다.
   // state로만 두면 페이지를 나갔다 들어왔을 때 초기화돼서 무료 횟수 제한이 무의미해진다.
   const [regenCount, setRegenCount] = useState(record.aiRegeneratedCount ?? 0)
+  const [freeLimit] = useState(record.aiPosterFreeLimit ?? 3)
   const [posterImageUrl, setPosterImageUrl] = useState(record.posterImageUrl ?? null)
+  const [versions, setVersions] = useState(record.posterVersions ?? [])
   const [isRegenerating, setIsRegenerating] = useState(false)
+  const [isSwitchingVersion, setIsSwitchingVersion] = useState(false)
   const [regenError, setRegenError] = useState(null)
   const [shareMessage, setShareMessage] = useState(null)
 
-  const regenLimitReached = regenCount >= FREE_REGEN_LIMIT
+  const regenLimitReached = regenCount >= freeLimit
 
   async function handleRegenerate() {
     if (isRegenerating || regenLimitReached) {
@@ -29,10 +30,28 @@ export default function PosterView({ record, onShare, onRegenerate, styleRequest
       const updated = await onRegenerate()
       setPosterImageUrl(updated.posterImageUrl)
       setRegenCount(updated.aiRegeneratedCount)
+      setVersions(updated.posterVersions ?? [])
     } catch (err) {
       setRegenError(err.message)
     } finally {
       setIsRegenerating(false)
+    }
+  }
+
+  async function handleSelectVersion(versionId) {
+    if (isSwitchingVersion || versionId === null) {
+      return
+    }
+    setIsSwitchingVersion(true)
+    setRegenError(null)
+    try {
+      const updated = await onSelectVersion(versionId)
+      setPosterImageUrl(updated.posterImageUrl)
+      setVersions(updated.posterVersions ?? [])
+    } catch (err) {
+      setRegenError(err.message)
+    } finally {
+      setIsSwitchingVersion(false)
     }
   }
 
@@ -50,6 +69,26 @@ export default function PosterView({ record, onShare, onRegenerate, styleRequest
           <div className="fr-poster-photo-empty">아직 만들어진 포스터가 없어요</div>
         )}
       </div>
+
+      {versions.length > 1 && (
+        <div className="fr-version-gallery">
+          {versions.map((version) => (
+            <button
+              key={version.versionId}
+              type="button"
+              className={`fr-version-thumb${version.imageUrl === posterImageUrl ? ' fr-version-thumb--active' : ''}`}
+              onClick={() => handleSelectVersion(version.versionId)}
+              disabled={isSwitchingVersion}
+            >
+              <img src={version.imageUrl} alt="이전에 만든 포스터" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p className="fr-ai-usage-count">
+        무료 생성 {regenCount}/{freeLimit}회 사용
+      </p>
 
       {!regenLimitReached && (
         <div className="record-form-field">
@@ -89,7 +128,7 @@ export default function PosterView({ record, onShare, onRegenerate, styleRequest
       </div>
 
       {regenLimitReached && (
-        <p className="fr-poster-regen-limit">무료 생성 {FREE_REGEN_LIMIT}회를 모두 사용했어요.</p>
+        <p className="fr-poster-regen-limit">무료 생성 {freeLimit}회를 모두 사용했어요.</p>
       )}
 
       {regenError && <p className="record-error-text">{regenError}</p>}

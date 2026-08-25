@@ -100,9 +100,27 @@ public class FestivalRecordController {
         return festivalRecordService.generatePoster(memberId, recordId, styleRequest);
     }
 
+    @PostMapping("/{recordId}/poster/versions/{versionId}/select")
+    public FestivalRecordResponse selectPosterVersion(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @PathVariable Long versionId
+    ) {
+        return festivalRecordService.selectPosterVersion(memberId, recordId, versionId);
+    }
+
     @PostMapping("/{recordId}/ai-diary/generate")
     public FestivalRecordResponse generateAiDiary(@PathVariable Long memberId, @PathVariable Long recordId) {
         return festivalRecordService.generateAiDiary(memberId, recordId);
+    }
+
+    @PostMapping("/{recordId}/ai-diary/versions/{versionId}/select")
+    public FestivalRecordResponse selectDiaryVersion(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @PathVariable Long versionId
+    ) {
+        return festivalRecordService.selectDiaryVersion(memberId, recordId, versionId);
     }
 
     @PostMapping("/{recordId}/share")
