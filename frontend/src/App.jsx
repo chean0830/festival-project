@@ -31,6 +31,7 @@ import SignupPage from './pages/SignupPage'
 import AccountRecoveryPage from './pages/AccountRecoveryPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfilePage from './features/profile/ProfilePage'
+import AccountSettingsPage from './features/profile/AccountSettingsPage'
 import BadgePage from './features/profile/BadgePage'
 import NotificationPage from './features/notification/NotificationPage'
 import FestivalRecordListPage from './features/festivalrecord/FestivalRecordListPage'
@@ -93,6 +94,7 @@ function App() {
         <Route path="/password/reset/confirm" element={<ResetPasswordPage />} />
 
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/settings" element={<AccountSettingsPage />} />
         <Route path="/profile/badges" element={<BadgePage />} />
         <Route path="/notifications" element={<NotificationPage />} />
 

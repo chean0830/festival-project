@@ -59,6 +59,43 @@
   gap: 8px;
 }
 
+.profile-header-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.profile-settings-entry {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-top: 3px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--p-text);
+  background: transparent;
+  cursor: pointer;
+  transition: color .18s ease, opacity .18s ease;
+}
+
+.profile-settings-entry:hover {
+  color: var(--p-text);
+  background: transparent;
+  opacity: .62;
+}
+
+.profile-settings-entry svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .profile-badge-entry {
   flex-shrink: 0;
   font-size: 13px;
