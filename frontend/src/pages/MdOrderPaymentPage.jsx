@@ -1,29 +1,28 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
 import RequireLogin from "../features/profile/components/RequireLogin";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import { createMdOrder } from "../api/mdShopApi";
 import { formatPrice } from "../utils/formatPrice";
+import { PAYMENT_METHOD_LABELS, requestTossPayment } from "../utils/tossPayment";
 import "./MdOrderPage.css";
-
-const PAYMENT_METHODS = ["카드 결제", "계좌 이체", "간편 결제"];
 
 /**
  * MD 사전예약 - 결제 페이지.
- * 실제 결제(PG) 연동은 아직 없어서 결제 수단 선택은 비활성화 상태로만 보여준다.
- * 다만 "예약 완료하기"는 실제로 주문(사전예약)을 생성한다 — 결제는 나중에,
- * 예약 자체는 지금 확정한다는 개념으로 status는 PAYMENT_WAIT으로 저장된다.
+ * "예약 완료하기"를 누르면 먼저 주문(사전예약, status=PAYMENT_WAIT)을 생성하고,
+ * 곧바로 Toss Payments 결제창으로 넘어간다. 결제가 끝나면 Toss가 브라우저를
+ * /payment/result로 돌려보내고, 거기서 서버에 결제 승인을 요청해 PAID로 확정한다.
  * 이전 페이지(배송지 입력)에서 라우터 state로 넘어온 주문 정보가 없으면
  * 새로고침 등으로 직접 들어온 것으로 보고 안내 후 되돌아가게 한다.
  */
 function MdOrderPaymentPage() {
   const { productId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
   const currentMember = useCurrentMember();
   const order = location.state;
 
+  const [createdOrder, setCreatedOrder] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -54,21 +53,30 @@ function MdOrderPaymentPage() {
 
   const { product, quantity, totalPrice, recipientName, address, phone } = order;
 
-  async function handleConfirm() {
+  async function handlePay(methodLabel) {
     setSubmitting(true);
     setError(null);
     try {
-      const created = await createMdOrder(currentMember.memberId, {
-        productId: product.productId,
-        quantity,
-        recipientName,
-        address,
-        phone,
+      const target =
+        createdOrder ??
+        (await createMdOrder(currentMember.memberId, {
+          productId: product.productId,
+          quantity,
+          recipientName,
+          address,
+          phone,
+        }));
+      setCreatedOrder(target);
+
+      await requestTossPayment({
+        methodLabel,
+        domainPrefix: "MD",
+        domainId: target.orderId,
+        amount: target.totalPrice,
+        orderName: target.productName,
+        customerName: target.shippingName,
       });
-      navigate(`/shop/preorder/${productId}/complete`, {
-        state: { order: created },
-        replace: true,
-      });
+      // 성공 시 브라우저가 Toss 결제창으로 이동하므로 이후 코드는 실행되지 않는다.
     } catch (err) {
       setError(err.message);
       setSubmitting(false);
@@ -111,8 +119,14 @@ function MdOrderPaymentPage() {
         <div className="md-order-page__field">
           <label>결제 수단</label>
           <div className="md-order-page__payment-methods">
-            {PAYMENT_METHODS.map((method) => (
-              <button key={method} type="button" className="md-order-page__payment-method" disabled>
+            {PAYMENT_METHOD_LABELS.map((method) => (
+              <button
+                key={method}
+                type="button"
+                className="md-order-page__payment-method md-order-page__payment-method--active"
+                disabled={submitting}
+                onClick={() => handlePay(method)}
+              >
                 {method}
               </button>
             ))}
@@ -120,7 +134,7 @@ function MdOrderPaymentPage() {
         </div>
 
         <div className="md-order-page__preparing">
-          🚧 실제 결제 기능은 아직 준비 중입니다. 지금은 결제 없이 사전예약만 확정돼요.
+          Toss Payments 결제창으로 이동해요. 테스트 결제라 실제로 돈이 빠져나가지 않아요.
         </div>
 
         {error && <p className="md-order-page__error">{error}</p>}
@@ -134,9 +148,6 @@ function MdOrderPaymentPage() {
           <Link to={`/shop/preorder/${productId}/order`} className="md-order-page__btn-ghost">
             이전으로
           </Link>
-          <button type="button" className="md-order-page__btn-primary" disabled={submitting} onClick={handleConfirm}>
-            {submitting ? "예약 처리 중..." : "예약 완료하기"}
-          </button>
         </div>
       </div>
     </Layout>

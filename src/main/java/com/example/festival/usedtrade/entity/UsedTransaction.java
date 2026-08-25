@@ -41,7 +41,7 @@ public class UsedTransaction {
     @Column(name = "price", nullable = false, precision = 10, scale = 0)
     private BigDecimal price;
 
-    // REQUEST, APPROVED, COMPLETED, CANCELED
+    // REQUEST, APPROVED, PAID, COMPLETED, CANCELED
     @Column(name = "status", nullable = false, length = 20)
     private String status;
 

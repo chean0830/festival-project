@@ -576,7 +576,9 @@ CREATE TABLE festival_record (
     ai_diary TEXT,
     ai_summary VARCHAR(1000),
 
-    mood VARCHAR(30),
+    mood VARCHAR(100),
+
+    poster_image_url VARCHAR(500),
 
     rating TINYINT
         COMMENT '1 ~ 5',
@@ -589,11 +591,38 @@ CREATE TABLE festival_record (
 
     is_shared BOOLEAN NOT NULL DEFAULT FALSE,
 
-    ai_regenerated_count INT NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id),
+
+    FOREIGN KEY (event_id)
+        REFERENCES event(event_id)
+);
+
+
+-- ============================================================
+-- 22-1. FESTIVAL RECORD AI QUOTA
+-- AI 포스터 무료 생성 횟수를 (회원, 공연) 단위로 관리 - 기록을 지우고
+-- 같은 공연으로 새 기록을 만들어도 무료 횟수가 초기화되지 않게 하기 위함
+-- ============================================================
+
+CREATE TABLE festival_record_ai_quota (
+    quota_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    member_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+
+    used_count INT NOT NULL DEFAULT 0,
+    diary_used_count INT NOT NULL DEFAULT 0,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE (member_id, event_id),
 
     FOREIGN KEY (member_id)
         REFERENCES member(member_id),
@@ -877,6 +906,9 @@ CREATE TABLE payment (
 
     order_id BIGINT NOT NULL,
 
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호 (order_id와 별개)',
+
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
     payment_method VARCHAR(30) NOT NULL,
@@ -976,7 +1008,7 @@ CREATE TABLE used_transaction (
     price DECIMAL(10,0) NOT NULL,
 
     status VARCHAR(20) NOT NULL
-        COMMENT 'REQUEST, APPROVED, COMPLETED, CANCELED',
+        COMMENT 'REQUEST, APPROVED, PAID, COMPLETED, CANCELED',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -987,6 +1019,37 @@ CREATE TABLE used_transaction (
 
     FOREIGN KEY (buyer_id)
         REFERENCES member(member_id)
+);
+
+
+-- ============================================================
+-- 36-1. USED TRANSACTION PAYMENT
+-- 중고거래 결제 (Toss Payments)
+-- ============================================================
+
+CREATE TABLE used_transaction_payment (
+    payment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    transaction_id BIGINT NOT NULL,
+
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호',
+
+    payment_key VARCHAR(100) NOT NULL UNIQUE,
+
+    payment_method VARCHAR(30) NOT NULL,
+
+    amount DECIMAL(10,0) NOT NULL,
+
+    status VARCHAR(20) NOT NULL
+        COMMENT 'SUCCESS, FAIL, CANCELED',
+
+    paid_at DATETIME,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (transaction_id)
+        REFERENCES used_transaction(transaction_id)
 );
 
 

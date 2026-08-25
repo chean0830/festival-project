@@ -30,6 +30,9 @@ public record FestivalRecordRequest(
         @Size(max = 300)
         String hashtag,
 
+        @Size(max = 100)
+        String mood,
+
         @Valid
         List<SongInput> songs,
 

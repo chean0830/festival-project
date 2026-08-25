@@ -11,7 +11,16 @@ const TYPE_LABEL = {
   NOTICE: '공지',
   FESTIVAL_RECORD: '페스티벌 기록',
   RECORD_REMINDER: '기록 남기기',
+  MD_ORDER: 'MD 사전예약',
+  MD_PAID: 'MD 사전예약',
+  MD_CANCELED: 'MD 사전예약',
+  MD_PAYMENT_REMINDER: 'MD 사전예약',
+  MD_NEW_PRODUCT: 'MD 사전예약',
 }
+
+// MD 사전예약 알림은 eventId가 있어도 공연 상세가 아니라 MD 쪽으로 보낸다.
+const MD_ORDER_STATUS_TYPES = new Set(['MD_ORDER', 'MD_PAID', 'MD_CANCELED', 'MD_PAYMENT_REMINDER'])
+const MD_NEW_PRODUCT_TYPE = 'MD_NEW_PRODUCT'
 
 export default function NotificationList({ notifications, onRead }) {
   const navigate = useNavigate()
@@ -23,6 +32,15 @@ export default function NotificationList({ notifications, onRead }) {
   function handleClick(notification) {
     if (!notification.read) {
       onRead(notification.notificationId)
+    }
+
+    if (MD_ORDER_STATUS_TYPES.has(notification.type)) {
+      navigate('/profile', { state: { scrollTo: 'mdOrders' } })
+      return
+    }
+    if (notification.type === MD_NEW_PRODUCT_TYPE) {
+      navigate('/shop/preorder')
+      return
     }
     if (notification.eventId) {
       navigate(`/program/event/${notification.eventId}`)

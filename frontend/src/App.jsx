@@ -9,13 +9,14 @@ import ArtistDetailPage from './pages/ArtistDetailPage'
 import MdPreorderPage from './pages/MdPreorderPage'
 import MdOrderShippingPage from './pages/MdOrderShippingPage'
 import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
-import MdOrderCompletePage from './pages/MdOrderCompletePage'
 import MdOrderPayPage from './pages/MdOrderPayPage'
 import UsedTradePage from './pages/UsedTradePage'
 import UsedListingDetailPage from './pages/UsedListingDetailPage'
 import UsedListingCreatePage from './pages/UsedListingCreatePage'
 import UsedListingEditPage from './pages/UsedListingEditPage'
 import UsedSellerListingsPage from './pages/UsedSellerListingsPage'
+import UsedTransactionPaymentPage from './pages/UsedTransactionPaymentPage'
+import PaymentResultPage from './pages/PaymentResultPage'
 import CommunityLayout from './components/community/CommunityLayout'
 import CommunityPage from './pages/CommunityPage'
 import CommunityPostWritePage from './pages/CommunityPostWritePage'
@@ -64,11 +65,12 @@ function App() {
         <Route path="/shop/used/sellers/:sellerId" element={<UsedSellerListingsPage />} />
         <Route path="/shop/used/:listingId/edit" element={<UsedListingEditPage />} />
         <Route path="/shop/used/:listingId" element={<UsedListingDetailPage />} />
+        <Route path="/shop/used/transactions/:transactionId/payment" element={<UsedTransactionPaymentPage />} />
         <Route path="/shop/preorder" element={<MdPreorderPage />} />
         <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
-        <Route path="/shop/preorder/:productId/complete" element={<MdOrderCompletePage />} />
         <Route path="/shop/preorder/order/:orderId/pay" element={<MdOrderPayPage />} />
+        <Route path="/payment/result" element={<PaymentResultPage />} />
         <Route path="/community" element={<CommunityLayout />}>
           <Route index element={<CommunityPage />} />
           <Route path="new" element={<CommunityPostWritePage />} />

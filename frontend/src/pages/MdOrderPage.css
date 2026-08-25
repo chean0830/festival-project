@@ -295,6 +295,22 @@
   opacity: 0.6;
 }
 
+.md-order-page__payment-method--active {
+  color: var(--color-text);
+  cursor: pointer;
+  opacity: 1;
+}
+
+.md-order-page__payment-method--active:hover:not(:disabled) {
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
+}
+
+.md-order-page__payment-method--active:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 .md-order-page__preparing {
   background: #fff7ed;
   border: 1px solid #fed7aa;
