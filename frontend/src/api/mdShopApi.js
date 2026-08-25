@@ -40,8 +40,9 @@ async function postAction(path) {
   }).then(handleResponse)
 }
 
-export function fetchPreorderProducts() {
-  return getJson('/api/md/products')
+export function fetchPreorderProducts(eventId) {
+  const query = eventId == null ? '' : `?eventId=${encodeURIComponent(eventId)}`
+  return getJson(`/api/md/products${query}`)
 }
 
 export function fetchProduct(productId) {

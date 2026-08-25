@@ -1,6 +1,7 @@
 package com.example.festival.auth.security;
 
 import com.example.festival.member.entity.Member;
+import com.example.festival.member.entity.MemberRole;
 import com.example.festival.member.entity.MemberStatus;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ public class MemberPrincipal implements UserDetails {
     private final String nickname;
     private final String profileImage;
     private final MemberStatus status;
+    private final MemberRole role;
     private final List<GrantedAuthority> authorities;
 
     private MemberPrincipal(Member member) {
@@ -25,6 +27,7 @@ public class MemberPrincipal implements UserDetails {
         this.nickname = member.getNickname();
         this.profileImage = member.getProfileImage();
         this.status = member.getStatus();
+        this.role = member.getRole();
         this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
     }
 
@@ -46,6 +49,10 @@ public class MemberPrincipal implements UserDetails {
 
     public String getProfileImage() {
         return profileImage;
+    }
+
+    public MemberRole getRole() {
+        return role;
     }
 
     @Override

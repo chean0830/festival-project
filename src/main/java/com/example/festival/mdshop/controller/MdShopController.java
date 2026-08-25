@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -32,8 +33,10 @@ public class MdShopController {
     }
 
     @GetMapping("/api/md/products")
-    public List<MdProductResponse> getPreorderProducts() {
-        return mdShopService.getPreorderProducts();
+    public List<MdProductResponse> getPreorderProducts(
+            @RequestParam(required = false) Long eventId
+    ) {
+        return mdShopService.getPreorderProducts(eventId);
     }
 
     @GetMapping("/api/md/products/{productId}")

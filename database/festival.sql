@@ -76,7 +76,7 @@ CREATE TABLE social_account (
 
 
 -- ============================================================
--- 2-1. PASSWORD RESET TOKEN
+-- 2-2. PASSWORD RESET TOKEN
 -- 비밀번호 재설정용 1회성 토큰
 -- ============================================================
 
@@ -1177,11 +1177,16 @@ CREATE TABLE live_stream (
 
     event_id BIGINT NOT NULL,
 
+    host_member_id BIGINT NOT NULL,
+
     title VARCHAR(200) NOT NULL,
 
     description VARCHAR(1000),
 
     thumbnail_url VARCHAR(500),
+
+    source_type VARCHAR(20) NOT NULL DEFAULT 'BROWSER'
+        COMMENT 'BROWSER',
 
     stream_url VARCHAR(500),
 
@@ -1201,7 +1206,10 @@ CREATE TABLE live_stream (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (event_id)
-        REFERENCES event(event_id)
+        REFERENCES event(event_id),
+
+    FOREIGN KEY (host_member_id)
+        REFERENCES member(member_id)
 );
 
 
