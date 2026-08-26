@@ -41,6 +41,10 @@ async function postJson(path, body) {
   }).then(handleResponse)
 }
 
+export function fetchMyTradeChatRooms(memberId) {
+  return getJson(`/api/members/${memberId}/trade-chat/rooms`)
+}
+
 export function getOrCreateTradeChatRoom(memberId, transactionId) {
   return postJson(`/api/members/${memberId}/trade-chat/transactions/${transactionId}/room`)
 }

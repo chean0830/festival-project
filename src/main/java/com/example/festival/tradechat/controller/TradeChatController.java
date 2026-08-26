@@ -3,6 +3,7 @@ package com.example.festival.tradechat.controller;
 import com.example.festival.tradechat.dto.TradeChatImageUploadResponse;
 import com.example.festival.tradechat.dto.TradeChatMessageDto;
 import com.example.festival.tradechat.dto.TradeChatRoomDto;
+import com.example.festival.tradechat.dto.TradeChatRoomListItemDto;
 import com.example.festival.tradechat.service.TradeChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ import java.util.Map;
 public class TradeChatController {
 
     private final TradeChatService tradeChatService;
+
+    @GetMapping("/rooms")
+    public List<TradeChatRoomListItemDto> listMyRooms(@PathVariable Long memberId) {
+        return tradeChatService.listMyRooms(memberId);
+    }
 
     @PostMapping("/transactions/{transactionId}/room")
     public TradeChatRoomDto getOrCreateRoom(@PathVariable Long memberId, @PathVariable Long transactionId) {

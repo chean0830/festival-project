@@ -23,7 +23,9 @@ public class TradeChatModerationService {
             "⚠️ 주의하세요\n앱 외부 결제나 선입금을 요구하는 메시지입니다.\n안전한 거래를 위해 신중하게 거래해주세요.";
 
     private static final Pattern SUSPICIOUS_PATTERN = Pattern.compile(
-            "계좌|무통장|선입금|입금해|카톡|라인\\s*페이|직거래\\s*계좌|번호로\\s*입금|외부\\s*결제|폰뱅킹|계좌번호|링크\\s*결제|링크로\\s*결제"
+            "계좌|무통장|선입금|입금해|송금|이체해|계좌이체|카톡|라인\\s*페이|직거래\\s*계좌|번호로\\s*입금|"
+                    + "외부\\s*결제|폰뱅킹|계좌번호|링크\\s*결제|링크로\\s*결제|"
+                    + "(국민|신한|우리|하나|농협|기업|카카오뱅크|케이뱅크|토스뱅크|새마을금고|우체국)\\s*은행"
     );
 
     private final AiProxyClient aiProxyClient;

@@ -5,7 +5,7 @@ import SockJS from 'sockjs-client'
 import Layout from '../components/common/Layout/Layout'
 import RequireLogin from '../features/profile/components/RequireLogin'
 import useCurrentMember from '../features/profile/hooks/useCurrentMember'
-import { STATUS_LABEL as LISTING_STATUS_LABEL } from '../components/usedtrade/usedTradeCategories'
+import { STATUS_LABEL as LISTING_STATUS_LABEL, TX_STATUS_LABEL } from '../components/usedtrade/usedTradeCategories'
 import {
   getOrCreateTradeChatRoom,
   fetchTradeChatMessages,
@@ -18,14 +18,6 @@ import {
   reportTradeChatUser,
 } from '../api/tradeChatApi'
 import './TradeChatRoomPage.css'
-
-const TX_STATUS_LABEL = {
-  REQUEST: '구매 요청됨',
-  APPROVED: '판매자 승인 완료',
-  PAID: '결제 완료',
-  COMPLETED: '거래 완료되었습니다',
-  CANCELED: '거래가 취소되었습니다',
-}
 
 function formatTime(dateStr) {
   if (!dateStr) return ''

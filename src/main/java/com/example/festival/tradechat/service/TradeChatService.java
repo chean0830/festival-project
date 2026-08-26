@@ -3,11 +3,13 @@ package com.example.festival.tradechat.service;
 import com.example.festival.chat.redis.ChatRedisPublisher;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
+import com.example.festival.notification.service.NotificationService;
 import com.example.festival.tradechat.dto.TradeChatImageUploadResponse;
 import com.example.festival.tradechat.dto.TradeChatMessageDto;
 import com.example.festival.tradechat.dto.TradeChatPresenceEvent;
 import com.example.festival.tradechat.dto.TradeChatReadEvent;
 import com.example.festival.tradechat.dto.TradeChatRoomDto;
+import com.example.festival.tradechat.dto.TradeChatRoomListItemDto;
 import com.example.festival.tradechat.dto.TradeChatWarningEvent;
 import com.example.festival.tradechat.entity.TradeChatMessage;
 import com.example.festival.tradechat.entity.TradeChatRoom;
@@ -31,6 +33,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,6 +54,8 @@ public class TradeChatService {
             List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final String MESSAGE_TYPE_TEXT = "TEXT";
     private static final String MESSAGE_TYPE_IMAGE = "IMAGE";
+    private static final String NOTIFICATION_TYPE_NEW_MESSAGE = "TRADE_CHAT_MESSAGE";
+    private static final int NOTIFICATION_PREVIEW_MAX_LENGTH = 80;
 
     private final TradeChatRoomRepository tradeChatRoomRepository;
     private final TradeChatMessageRepository tradeChatMessageRepository;
@@ -59,6 +64,7 @@ public class TradeChatService {
     private final ChatRedisPublisher chatRedisPublisher;
     private final TradeChatPresenceRegistry presenceRegistry;
     private final TradeChatModerationService moderationService;
+    private final NotificationService notificationService;
 
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
@@ -127,6 +133,7 @@ public class TradeChatService {
 
         TradeChatMessageDto dto = toMessageDto(message);
         chatRedisPublisher.publish("/topic/trade-chat-rooms/" + roomId, dto);
+        notifyRecipientIfAway(room, sender, type, trimmed);
 
         if (MESSAGE_TYPE_TEXT.equals(type) && moderationService.isSuspicious(trimmed)) {
             chatRedisPublisher.publish("/topic/trade-chat-rooms/" + roomId + "/warning",
@@ -205,6 +212,97 @@ public class TradeChatService {
         return result;
     }
 
+    /**
+     * "나의 채팅" 목록 — 구매자/판매자로 참여 중인 거래를 전부 모아서 채팅방(없으면 생성)과
+     * 마지막 메시지 미리보기, 안읽은 수, 상대 온라인 여부를 붙여 최근 활동순으로 반환한다.
+     */
+    @Transactional
+    public List<TradeChatRoomListItemDto> listMyRooms(Long memberId) {
+        List<UsedTransaction> transactions = new ArrayList<>();
+        transactions.addAll(usedTransactionRepository.findAllByBuyerIdWithListing(memberId));
+        transactions.addAll(usedTransactionRepository.findAllBySellerIdWithListing(memberId));
+
+        List<TradeChatRoomListItemDto> items = new ArrayList<>();
+        for (UsedTransaction transaction : transactions) {
+            TradeChatRoom room = tradeChatRoomRepository.findByTransactionIdWithDetails(transaction.getTransactionId())
+                    .orElseGet(() -> tradeChatRoomRepository.save(new TradeChatRoom(transaction)));
+            items.add(toListItemDto(room, memberId));
+        }
+
+        items.sort(Comparator.comparing(
+                TradeChatRoomListItemDto::lastMessageAt,
+                Comparator.nullsLast(Comparator.reverseOrder())
+        ));
+        return items;
+    }
+
+    private TradeChatRoomListItemDto toListItemDto(TradeChatRoom room, Long requesterId) {
+        UsedTransaction transaction = room.getTransaction();
+        UsedListing listing = transaction.getListing();
+        Member counterpart = resolveCounterpart(transaction, requesterId);
+
+        TradeChatMessage lastMessage = tradeChatMessageRepository
+                .findRecentByRoomId(room.getRoomId(), PageRequest.of(0, 1))
+                .stream().findFirst().orElse(null);
+        long unreadCount = tradeChatMessageRepository
+                .countByRoom_RoomIdAndSender_IdNotAndReadFalse(room.getRoomId(), requesterId);
+
+        boolean online = presenceRegistry.isOnline(room.getRoomId(), counterpart.getId());
+        LocalDateTime lastSeenAt = online
+                ? null
+                : tradeChatMessageRepository.findLastMessageTimeBySender(room.getRoomId(), counterpart.getId());
+
+        return new TradeChatRoomListItemDto(
+                room.getRoomId(),
+                transaction.getTransactionId(),
+                counterpart.getId(),
+                counterpart.getNickname(),
+                counterpart.getProfileImage(),
+                listing.getTitle(),
+                firstImageUrl(listing),
+                listing.getStatus(),
+                transaction.getStatus(),
+                lastMessage != null ? lastMessage.getMessage() : null,
+                lastMessage != null ? lastMessage.getMessageType() : null,
+                lastMessage != null ? lastMessage.getCreatedAt() : null,
+                unreadCount,
+                online,
+                lastSeenAt
+        );
+    }
+
+    /**
+     * 수신자가 지금 이 채팅방을 보고 있지 않을 때만 알림을 보낸다(보고 있으면 실시간으로 이미 보이니 중복 알림 방지).
+     */
+    private void notifyRecipientIfAway(TradeChatRoom room, Member sender, String messageType, String messageText) {
+        Member recipient = resolveCounterpart(room.getTransaction(), sender.getId());
+        if (presenceRegistry.isOnline(room.getRoomId(), recipient.getId())) {
+            return;
+        }
+
+        String listingTitle = room.getTransaction().getListing().getTitle();
+        String preview = MESSAGE_TYPE_IMAGE.equals(messageType)
+                ? sender.getNickname() + "님이 사진을 보냈어요"
+                : sender.getNickname() + "님: " + truncate(messageText, NOTIFICATION_PREVIEW_MAX_LENGTH);
+
+        notificationService.notifyMember(recipient.getId(), null, NOTIFICATION_TYPE_NEW_MESSAGE, listingTitle + " 채팅", preview);
+    }
+
+    private String truncate(String text, int maxLength) {
+        return text.length() <= maxLength ? text : text.substring(0, maxLength) + "…";
+    }
+
+    private Member resolveCounterpart(UsedTransaction transaction, Long requesterId) {
+        boolean requesterIsBuyer = transaction.getBuyer().getId().equals(requesterId);
+        return requesterIsBuyer ? transaction.getListing().getSeller() : transaction.getBuyer();
+    }
+
+    private String firstImageUrl(UsedListing listing) {
+        return listing.getImageUrl() == null || listing.getImageUrl().isBlank()
+                ? null
+                : listing.getImageUrl().split(",")[0];
+    }
+
     private TradeChatRoom getRoomOrThrow(Long roomId) {
         return tradeChatRoomRepository.findByIdWithDetails(roomId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."));
@@ -221,17 +319,12 @@ public class TradeChatService {
     private TradeChatRoomDto toRoomDto(TradeChatRoom room, Long requesterId) {
         UsedTransaction transaction = room.getTransaction();
         UsedListing listing = transaction.getListing();
-        boolean requesterIsBuyer = transaction.getBuyer().getId().equals(requesterId);
-        Member counterpart = requesterIsBuyer ? listing.getSeller() : transaction.getBuyer();
+        Member counterpart = resolveCounterpart(transaction, requesterId);
 
         boolean online = presenceRegistry.isOnline(room.getRoomId(), counterpart.getId());
         LocalDateTime lastSeenAt = online
                 ? null
                 : tradeChatMessageRepository.findLastMessageTimeBySender(room.getRoomId(), counterpart.getId());
-
-        String firstImageUrl = listing.getImageUrl() == null || listing.getImageUrl().isBlank()
-                ? null
-                : listing.getImageUrl().split(",")[0];
 
         return new TradeChatRoomDto(
                 room.getRoomId(),
@@ -239,7 +332,7 @@ public class TradeChatService {
                 transaction.getStatus(),
                 listing.getListingId(),
                 listing.getTitle(),
-                firstImageUrl,
+                firstImageUrl(listing),
                 listing.getStatus(),
                 counterpart.getId(),
                 counterpart.getNickname(),
