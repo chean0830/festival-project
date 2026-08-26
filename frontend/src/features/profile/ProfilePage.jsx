@@ -414,6 +414,7 @@ export default function ProfilePage() {
             <UsedTransactionHistoryList
               transactions={usedPurchaseRequests}
               role="buyer"
+              memberId={memberId}
               onCancel={handleCancelUsedTransaction}
             />
           </div>
@@ -423,6 +424,7 @@ export default function ProfilePage() {
             <UsedTransactionHistoryList
               transactions={usedReceivedRequests}
               role="seller"
+              memberId={memberId}
               onApprove={handleApproveUsedTransaction}
               onComplete={handleCompleteUsedTransaction}
               onCancel={handleCancelUsedTransaction}

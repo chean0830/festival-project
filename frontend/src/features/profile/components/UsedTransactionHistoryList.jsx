@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { formatPrice } from '../../../utils/formatPrice'
+import { fetchTradeChatUnreadCounts } from '../../../api/tradeChatApi'
 
 const STATUS_LABEL = {
   REQUEST: '요청됨',
@@ -13,8 +15,23 @@ const STATUS_LABEL = {
  * role="buyer": 내가 보낸 구매 요청 목록. role="seller": 내가 받은 구매 요청 목록.
  * 구매 흐름: REQUEST -> APPROVED(판매자 승인) -> PAID(구매자 결제) -> COMPLETED(판매자 거래완료 처리).
  */
-export default function UsedTransactionHistoryList({ transactions, role, onApprove, onComplete, onCancel }) {
+export default function UsedTransactionHistoryList({ transactions, role, memberId, onApprove, onComplete, onCancel }) {
   const navigate = useNavigate()
+  const [unreadCounts, setUnreadCounts] = useState({})
+
+  useEffect(() => {
+    if (!memberId) return
+    let cancelled = false
+    fetchTradeChatUnreadCounts(memberId)
+      .then((counts) => {
+        if (!cancelled) setUnreadCounts(counts ?? {})
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [memberId, transactions])
+
   if (!transactions || transactions.length === 0) {
     return (
       <p className="profile-empty-text">
@@ -83,6 +100,14 @@ export default function UsedTransactionHistoryList({ transactions, role, onAppro
                 취소
               </button>
             )}
+
+            <button
+              type="button"
+              className="profile-md-order-status profile-md-order-status--clickable"
+              onClick={() => navigate(`/shop/used/chat/${tx.transactionId}`)}
+            >
+              채팅하기{unreadCounts[tx.transactionId] > 0 ? ` (${unreadCounts[tx.transactionId]})` : ''}
+            </button>
           </div>
         </li>
       ))}
