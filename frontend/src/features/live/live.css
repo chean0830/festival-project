@@ -402,29 +402,49 @@
   justify-content: space-between;
   gap: 14px;
   color: white;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .live-player__status-group,
 .live-player__action-group,
+.live-player__playback-controls,
 .live-player__viewer-controls,
 .live-player__volume-control {
   display: flex;
   align-items: center;
 }
 
-.live-player__status-group { gap: 14px; }
-.live-player__action-group { gap: 8px; pointer-events: auto; }
-.live-player__viewer-controls { gap: 7px; pointer-events: auto; }
+.live-player__status-group { gap: 11px; }
+.live-player__action-group { gap: 6px; pointer-events: auto; }
+.live-player__playback-controls { gap: 5px; pointer-events: auto; }
+.live-player__viewer-controls { gap: 5px; pointer-events: auto; }
 .live-player__volume-control { gap: 3px; }
+
+.live-player__quality {
+  display: inline-flex;
+  align-items: center;
+}
+
+.live-player__quality select {
+  height: 34px;
+  padding: 0 27px 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(15, 16, 19, .72);
+  color: white;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
 
 .live-player__donation {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 13px;
+  gap: 5px;
+  min-height: 34px;
+  padding: 0 12px;
   border: 1px solid #ff6e72;
   border-radius: 999px;
   background: rgba(15, 16, 19, .72);
@@ -442,8 +462,8 @@
 }
 
 .live-player__donation svg {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   fill: none;
   stroke: #ff777b;
   stroke-linecap: round;
@@ -715,12 +735,12 @@
 
 .live-player__control {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   place-items: center;
   border: 0;
-  border-radius: 9px;
+  border-radius: 8px;
   background: rgba(15, 16, 19, .62);
   color: white;
   cursor: pointer;
@@ -735,8 +755,8 @@
 .live-player__control:active { transform: scale(.94); }
 
 .live-player__control svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -745,7 +765,7 @@
 }
 
 .live-player__volume-control input[type='range'] {
-  width: 74px;
+  width: 70px;
   accent-color: white;
   cursor: pointer;
 }
@@ -825,6 +845,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-size: 13px;
 }
 
 .live-player__live-label i {
@@ -932,6 +953,21 @@
   font-size: clamp(18px, 3vw, 28px);
 }
 
+.live-player__stopped-message {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+.live-player__stopped-message span {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: .86;
+}
+
 .live-watch__info { padding: 22px 2px; }
 .live-watch__info > span { color: var(--color-primary-dark); font-size: 13px; font-weight: 800; }
 .live-watch__info h1 { margin: 7px 0 12px; font-size: clamp(23px, 3vw, 32px); }
@@ -982,7 +1018,40 @@
 }
 
 .live-broadcast-controls__actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
   flex: 0 0 auto;
+}
+
+.live-broadcast-quality {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.live-broadcast-quality span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.live-broadcast-quality select {
+  min-width: 170px;
+  height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.live-broadcast-quality select:disabled {
+  opacity: .6;
+  cursor: not-allowed;
 }
 
 .live-guide--horizontal {

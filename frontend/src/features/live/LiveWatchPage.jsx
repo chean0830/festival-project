@@ -14,6 +14,11 @@ import BrowserLivePlayer from './BrowserLivePlayer'
 import './live.css'
 
 const STATUS_LABEL = { SCHEDULED: '방송 대기', LIVE: 'LIVE', ENDED: '방송 종료' }
+const BROADCAST_QUALITY_LABEL = {
+  SD: '360p · 데이터 절약',
+  HD: '720p · 권장',
+  FHD: '1080p · 고화질',
+}
 const TEMP_AD = {
   eyebrow: 'FESTLOG 광고',
   title: '광고 내용 준비 중입니다',
@@ -272,6 +277,8 @@ export default function LiveWatchPage() {
   const [sendingChat, setSendingChat] = useState(false)
   const [changingChatSetting, setChangingChatSetting] = useState(false)
   const [viewerPlaying, setViewerPlaying] = useState(true)
+  const [viewerQuality, setViewerQuality] = useState('AUTO')
+  const [broadcastQuality, setBroadcastQuality] = useState('HD')
   const [viewerMuted, setViewerMuted] = useState(false)
   const [viewerVolume, setViewerVolume] = useState(1)
   const [viewerPip, setViewerPip] = useState(false)
@@ -286,6 +293,7 @@ export default function LiveWatchPage() {
     fetchLiveStream(streamId)
       .then((result) => {
         setStream(result)
+        setViewerPlaying(true)
         setAdVisible(true)
         setMdPanelOpen(false)
         setMdProducts(null)
@@ -313,26 +321,23 @@ export default function LiveWatchPage() {
     Array.from(playerRef.current?.querySelectorAll('video, audio') ?? [])
   ), [])
 
-  async function handleViewerPlayPause() {
-    const media = getViewerMedia()
-    if (media.length === 0) {
-      setError('재생할 방송 영상을 준비하는 중입니다.')
-      return
-    }
-
+  function handleViewerPlayPause() {
     if (viewerPlaying) {
-      media.forEach((element) => element.pause())
+      if (document.pictureInPictureElement && document.exitPictureInPicture) {
+        document.exitPictureInPicture().catch(() => {})
+      }
+      setViewerPip(false)
       setViewerPlaying(false)
+      setMdPanelOpen(false)
+      setViewerCount(0)
+      setViewerParticipants([])
+      setChatController(null)
+      setError('')
       return
     }
 
-    const results = await Promise.allSettled(media.map((element) => element.play()))
-    if (results.some((result) => result.status === 'fulfilled')) {
-      setViewerPlaying(true)
-      setError('')
-    } else {
-      setError('방송 영상을 다시 재생하지 못했습니다.')
-    }
+    setViewerPlaying(true)
+    setError('')
   }
 
   function applyViewerVolume(volume, muted) {
@@ -550,11 +555,13 @@ export default function LiveWatchPage() {
         >
           <section>
             <div className="live-player" ref={playerRef}>
-              {stream.status !== 'ENDED' ? (
+              {stream.status !== 'ENDED' && (stream.owner || viewerPlaying) ? (
                 <BrowserLivePlayer
                   streamId={stream.streamId}
                   owner={stream.owner}
                   status={stream.status}
+                  broadcastQuality={broadcastQuality}
+                  viewerQuality={viewerQuality}
                   chatEnabled={stream.chatEnabled}
                   onReadyChange={setBrowserReady}
                   onError={setError}
@@ -565,12 +572,19 @@ export default function LiveWatchPage() {
                   onViewerCountChange={setViewerCount}
                   onViewerParticipantsChange={setViewerParticipants}
                 />
-              ) : (
+              ) : stream.status === 'ENDED' ? (
                 <div className="live-player__waiting" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.7)), url(${stream.thumbnailUrl})` }}>
                   <strong>방송이 종료되었습니다.</strong>
                 </div>
+              ) : (
+                <div className="live-player__waiting" style={{ backgroundImage: `linear-gradient(rgba(0,0,0,.42), rgba(0,0,0,.68)), url(${stream.thumbnailUrl || '/favicon.svg'})` }}>
+                  <div className="live-player__stopped-message">
+                    <strong>시청을 정지했습니다.</strong>
+                    <span>재생 버튼을 누르면 방송에 다시 참여합니다.</span>
+                  </div>
+                </div>
               )}
-              {!stream.owner && stream.status === 'LIVE' && adVisible && (
+              {!stream.owner && stream.status === 'LIVE' && viewerPlaying && adVisible && (
                 <div className="live-player__ad" role="complementary" aria-label="광고">
                   <button
                     type="button"
@@ -639,16 +653,57 @@ export default function LiveWatchPage() {
                 </div>
                 <div className="live-player__hover-bottom">
                   <div className="live-player__status-group">
+                    {!stream.owner && stream.status !== 'ENDED' && (
+                      <div className="live-player__playback-controls">
+                        <button
+                          type="button"
+                          className="live-player__control"
+                          onClick={handleViewerPlayPause}
+                          aria-label={viewerPlaying ? '시청 정지' : '방송 다시 참여'}
+                          title={viewerPlaying ? '시청 정지' : '방송 다시 참여'}
+                        >
+                          {viewerPlaying ? (
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1" /></svg>
+                          ) : (
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z" /></svg>
+                          )}
+                        </button>
+
+                        <div className="live-player__volume-control">
+                          <button
+                            type="button"
+                            className="live-player__control"
+                            onClick={handleViewerMuteToggle}
+                            aria-label={viewerMuted ? '음소거 해제' : '음소거'}
+                            title={viewerMuted ? '음소거 해제' : '음소거'}
+                          >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M5 9v6h4l5 4V5L9 9H5Z" />
+                              {viewerMuted ? <path d="m18 9 4 4m0-4-4 4" /> : <path d="M17 9.5a4 4 0 0 1 0 5M19.5 7a7 7 0 0 1 0 10" />}
+                            </svg>
+                          </button>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={viewerMuted ? 0 : viewerVolume}
+                            onChange={handleViewerVolumeChange}
+                            aria-label="볼륨 조절"
+                          />
+                        </div>
+                      </div>
+                    )}
                     <span className="live-player__live-label"><i /> {STATUS_LABEL[stream.status]}</span>
+                  </div>
+
+                  <div className="live-player__action-group">
                     <span className="live-player__viewer-label">
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.5 3.5a3.7 3.7 0 0 1 2.5 3.5v1m-4-8a2.6 2.6 0 0 0 0-5" />
                       </svg>
                       {viewerCount}
                     </span>
-                  </div>
-
-                  <div className="live-player__action-group">
                     {!stream.owner && stream.status === 'LIVE' && (
                       <button
                         type="button"
@@ -666,43 +721,19 @@ export default function LiveWatchPage() {
 
                     {!stream.owner && stream.status !== 'ENDED' && (
                       <div className="live-player__viewer-controls">
-                      <button
-                        type="button"
-                        className="live-player__control"
-                        onClick={handleViewerPlayPause}
-                        aria-label={viewerPlaying ? '일시정지' : '재생'}
-                        title={viewerPlaying ? '일시정지' : '재생'}
-                      >
-                        {viewerPlaying ? (
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M17 5v14" /></svg>
-                        ) : (
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z" /></svg>
-                        )}
-                      </button>
-
-                      <div className="live-player__volume-control">
-                        <button
-                          type="button"
-                          className="live-player__control"
-                          onClick={handleViewerMuteToggle}
-                          aria-label={viewerMuted ? '음소거 해제' : '음소거'}
-                          title={viewerMuted ? '음소거 해제' : '음소거'}
+                      <label className="live-player__quality" title="시청 화질 선택">
+                        <span className="sr-only">시청 화질</span>
+                        <select
+                          value={viewerQuality}
+                          onChange={(event) => setViewerQuality(event.target.value)}
+                          aria-label="시청 화질 선택"
                         >
-                          <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M5 9v6h4l5 4V5L9 9H5Z" />
-                            {viewerMuted ? <path d="m18 9 4 4m0-4-4 4" /> : <path d="M17 9.5a4 4 0 0 1 0 5M19.5 7a7 7 0 0 1 0 10" />}
-                          </svg>
-                        </button>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.05"
-                          value={viewerMuted ? 0 : viewerVolume}
-                          onChange={handleViewerVolumeChange}
-                          aria-label="볼륨 조절"
-                        />
-                      </div>
+                          <option value="AUTO">자동</option>
+                          <option value="LOW">저화질</option>
+                          <option value="MEDIUM">일반</option>
+                          <option value="HIGH">고화질</option>
+                        </select>
+                      </label>
 
                       <button
                         type="button"
@@ -739,6 +770,21 @@ export default function LiveWatchPage() {
                   </div>
                   <div className="live-broadcast-controls__actions">
                     {stream.status === 'SCHEDULED' && (
+                      <label className="live-broadcast-quality">
+                        <span>송출 화질</span>
+                        <select
+                          value={broadcastQuality}
+                          onChange={(event) => setBroadcastQuality(event.target.value)}
+                          disabled={browserReady}
+                          aria-label="방송 송출 화질 선택"
+                        >
+                          {Object.entries(BROADCAST_QUALITY_LABEL).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    {stream.status === 'SCHEDULED' && (
                       <button
                         className="live-button live-button--primary"
                         onClick={handleStart}
@@ -759,8 +805,8 @@ export default function LiveWatchPage() {
                   </div>
                 </div>
                 <ol className="live-guide live-guide--horizontal">
-                  <li>카메라·마이크를 허용합니다.</li>
-                  <li>미리보기를 확인합니다.</li>
+                  <li>송출 화질을 선택합니다.</li>
+                  <li>카메라·마이크를 허용하고 미리보기를 확인합니다.</li>
                   <li>방송 시작 또는 종료 버튼을 누릅니다.</li>
                 </ol>
               </div>
