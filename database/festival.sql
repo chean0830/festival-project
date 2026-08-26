@@ -1103,12 +1103,21 @@ CREATE TABLE used_transaction_payment (
 CREATE TABLE trade_chat_room (
     room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    transaction_id BIGINT NOT NULL,
+    transaction_id BIGINT NOT NULL UNIQUE,
+
+    blocked BOOLEAN NOT NULL DEFAULT FALSE
+        COMMENT '둘 중 한쪽이 차단하면 true, 양방향 송수신 금지',
+
+    blocked_by BIGINT
+        COMMENT '차단을 건 회원',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (transaction_id)
-        REFERENCES used_transaction(transaction_id)
+        REFERENCES used_transaction(transaction_id),
+
+    FOREIGN KEY (blocked_by)
+        REFERENCES member(member_id)
 );
 
 
@@ -1122,6 +1131,9 @@ CREATE TABLE trade_chat_message (
     room_id BIGINT NOT NULL,
 
     sender_id BIGINT NOT NULL,
+
+    message_type VARCHAR(20) NOT NULL DEFAULT 'TEXT'
+        COMMENT 'TEXT, IMAGE',
 
     message VARCHAR(1000) NOT NULL,
 

@@ -27,6 +27,15 @@ export const STATUS_LABEL = {
   CANCELED: "거래취소",
 };
 
+// 구매요청(UsedTransaction) 상태 라벨 — 위 STATUS_LABEL(매물 상태)과는 다른 값 집합.
+export const TX_STATUS_LABEL = {
+  REQUEST: "구매 요청됨",
+  APPROVED: "판매자 승인 완료",
+  PAID: "결제 완료",
+  COMPLETED: "거래 완료되었습니다",
+  CANCELED: "거래가 취소되었습니다",
+};
+
 export const SORT_OPTIONS = ["NEWEST", "PRICE_ASC", "PRICE_DESC", "POPULAR"];
 
 export const SORT_LABEL = {

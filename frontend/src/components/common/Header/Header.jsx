@@ -170,6 +170,9 @@ function Header({ hideSubnav = false }) {
                 <a href="/profile" className="header__profile-btn">
                   내 프로필
                 </a>
+                <a href="/my-chats" className="header__profile-btn">
+                  나의 채팅
+                </a>
                 <button type="button" className="header__logout-btn" onClick={handleLogout}>
                   로그아웃
                 </button>
@@ -248,6 +251,13 @@ function Header({ hideSubnav = false }) {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     내 프로필
+                  </a>
+                  <a
+                    href="/my-chats"
+                    className="header__drawer-profile-text"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    나의 채팅
                   </a>
                   <button
                     type="button"

@@ -16,6 +16,8 @@ import UsedListingCreatePage from './pages/UsedListingCreatePage'
 import UsedListingEditPage from './pages/UsedListingEditPage'
 import UsedSellerListingsPage from './pages/UsedSellerListingsPage'
 import UsedTransactionPaymentPage from './pages/UsedTransactionPaymentPage'
+import TradeChatRoomPage from './pages/TradeChatRoomPage'
+import TradeChatRoomListPage from './pages/TradeChatRoomListPage'
 import PaymentResultPage from './pages/PaymentResultPage'
 import CommunityLayout from './components/community/CommunityLayout'
 import CommunityPage from './pages/CommunityPage'
@@ -71,6 +73,8 @@ function App() {
         <Route path="/shop/used/:listingId/edit" element={<UsedListingEditPage />} />
         <Route path="/shop/used/:listingId" element={<UsedListingDetailPage />} />
         <Route path="/shop/used/transactions/:transactionId/payment" element={<UsedTransactionPaymentPage />} />
+        <Route path="/shop/used/chat/:transactionId" element={<TradeChatRoomPage />} />
+        <Route path="/my-chats" element={<TradeChatRoomListPage />} />
         <Route path="/shop/preorder" element={<MdPreorderPage />} />
         <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
