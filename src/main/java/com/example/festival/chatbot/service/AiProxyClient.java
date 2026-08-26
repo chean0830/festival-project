@@ -3,12 +3,15 @@ package com.example.festival.chatbot.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -20,12 +23,25 @@ import java.util.Map;
 @Component
 public class AiProxyClient {
 
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
+
     private final RestClient restClient;
     private final boolean configured;
 
     public AiProxyClient(@Value("${app.ai-proxy.base-url:http://localhost:8081}") String baseUrl) {
         this.configured = baseUrl != null && !baseUrl.isBlank();
-        this.restClient = RestClient.create(baseUrl);
+
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+
+        this.restClient = RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
+                .build();
     }
 
     public boolean isConfigured() {

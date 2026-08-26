@@ -5,6 +5,7 @@ import com.example.festival.chatbot.dto.ChatMessageRequest;
 import com.example.festival.chatbot.dto.ChatMessageResponse;
 import com.example.festival.chatbot.service.ChatbotService;
 
+import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ public class ChatbotController {
     @PostMapping("/messages")
     public ChatMessageResponse sendMessage(
             @AuthenticationPrincipal MemberPrincipal principal,
-            @RequestBody ChatMessageRequest request
+            @Valid @RequestBody ChatMessageRequest request
     ) {
         return chatbotService.handleMessage(principal.getMemberId(), request.message());
     }

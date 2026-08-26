@@ -63,14 +63,15 @@ public class ChatbotRecommendationService {
         this.chatbotEventQueryRepository = chatbotEventQueryRepository;
     }
 
+    private static final int CHAT_RECOMMENDATION_LIMIT = 10;
+
     public String buildPersonalRecommendationFacts(Long memberId) {
         Map<String, Long> genreCounts = aggregateGenrePreference(memberId);
         if (genreCounts.isEmpty()) {
             return "이 회원은 방문/관심 등록 이력이 없어 선호 장르를 파악할 수 없습니다. "
                     + "데이터가 부족하다는 점을 사실대로 안내하세요.";
         }
-        List<Event> candidates = upcomingEventsByGenres(genreCounts.keySet());
-        candidates = candidates.stream().filter(this::isActuallyUpcoming).toList();
+        List<Event> candidates = findTopPersonalizedCandidates(memberId, CHAT_RECOMMENDATION_LIMIT);
 
         StringBuilder sb = new StringBuilder();
         sb.append("이 회원의 선호 장르(방문/관심 이력 기반, 빈도순): ")
@@ -78,6 +79,22 @@ public class ChatbotRecommendationService {
         sb.append("선호 장르에 해당하는 예정된 공연:\n");
         appendEventList(sb, candidates);
         return sb.toString();
+    }
+
+    /**
+     * 선호 장르에 해당하는 예정 공연 중 가장 임박한 순으로 상위 limit개.
+     * 챗봇 응답(buildPersonalRecommendationFacts)과 개인화 알림(PersonalizedRecommendationNotifier)이
+     * 같은 매칭 로직을 공유하기 위한 공개 진입점.
+     */
+    public List<Event> findTopPersonalizedCandidates(Long memberId, int limit) {
+        Map<String, Long> genreCounts = aggregateGenrePreference(memberId);
+        if (genreCounts.isEmpty()) {
+            return List.of();
+        }
+        return upcomingEventsByGenres(genreCounts.keySet()).stream()
+                .filter(this::isActuallyUpcoming)
+                .limit(limit)
+                .toList();
     }
 
     public String buildByDayFacts(Long memberId, DayOfWeek dayOfWeek) {
