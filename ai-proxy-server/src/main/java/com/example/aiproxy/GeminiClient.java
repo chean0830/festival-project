@@ -3,12 +3,15 @@ package com.example.aiproxy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +25,8 @@ import java.util.Map;
 public class GeminiClient {
 
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration READ_TIMEOUT = Duration.ofSeconds(20);
 
     private final RestClient restClient;
     private final String apiKey;
@@ -33,7 +38,17 @@ public class GeminiClient {
     ) {
         this.apiKey = apiKey;
         this.model = model;
-        this.restClient = RestClient.create(BASE_URL);
+
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build();
+        JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        requestFactory.setReadTimeout(READ_TIMEOUT);
+
+        this.restClient = RestClient.builder()
+                .baseUrl(BASE_URL)
+                .requestFactory(requestFactory)
+                .build();
     }
 
     public boolean isConfigured() {
