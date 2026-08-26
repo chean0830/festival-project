@@ -1704,6 +1704,71 @@
   cursor: not-allowed;
 }
 
+.live-donation-warning {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(8, 12, 10, .5);
+  backdrop-filter: blur(4px);
+}
+
+.live-donation-warning__dialog {
+  width: min(390px, 100%);
+  padding: 30px 28px 26px;
+  border: 1px solid rgba(31, 157, 85, .2);
+  border-radius: 20px;
+  background: white;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+}
+
+.live-donation-warning__icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(31, 157, 85, .12);
+  color: var(--color-primary-dark);
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.live-donation-warning__dialog h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+.live-donation-warning__dialog p {
+  margin: 12px 0 22px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.live-donation-warning__dialog button {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.live-donation-warning__dialog button:hover {
+  background: var(--color-primary-dark);
+}
+
 .obs-setup-card {
   margin-bottom: 18px;
   padding: 16px;

@@ -67,7 +67,7 @@ function LiveDonationModal({
         <h2 id="live-donation-title">방송 후원하기</h2>
         <p><strong>{streamTitle}</strong> 방송자에게 응원의 마음을 전해보세요.</p>
 
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} noValidate>
           <fieldset>
             <legend>후원 금액</legend>
             <div className="live-donation-modal__amounts">
@@ -87,9 +87,6 @@ function LiveDonationModal({
               <span>
                 <input
                   type="number"
-                  min="1000"
-                  max="1000000"
-                  step="1000"
                   value={amount}
                   onChange={(event) => onAmountChange(event.target.value)}
                   aria-label="후원 금액 직접 입력"
@@ -142,6 +139,28 @@ function LiveDonationModal({
             {submitting ? '결제 준비 중...' : '후원 결제하기'}
           </button>
         </form>
+      </section>
+    </div>
+  )
+}
+
+function LiveDonationWarningModal({ message, onClose }) {
+  if (!message) return null
+
+  return (
+    <div className="live-donation-warning" role="presentation" onMouseDown={onClose}>
+      <section
+        className="live-donation-warning__dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="live-donation-warning-title"
+        aria-describedby="live-donation-warning-message"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="live-donation-warning__icon" aria-hidden="true">!</div>
+        <h2 id="live-donation-warning-title">후원 금액을 확인해 주세요</h2>
+        <p id="live-donation-warning-message">{message}</p>
+        <button type="button" onClick={onClose} autoFocus>확인</button>
       </section>
     </div>
   )
@@ -424,6 +443,7 @@ export default function LiveWatchPage() {
   const [donationPaymentMethod, setDonationPaymentMethod] = useState(PAYMENT_METHOD_LABELS[0])
   const [donationSubmitting, setDonationSubmitting] = useState(false)
   const [donationError, setDonationError] = useState('')
+  const [donationWarning, setDonationWarning] = useState('')
 
   useEffect(() => {
     fetchLiveStream(streamId)
@@ -599,14 +619,23 @@ export default function LiveWatchPage() {
     setDonationMessage('')
     setDonationPaymentMethod(PAYMENT_METHOD_LABELS[0])
     setDonationError('')
+    setDonationWarning('')
     setDonationOpen(true)
   }
 
   async function handleDonationSubmit(event) {
     event.preventDefault()
     const amount = Number(donationAmount)
-    if (!Number.isInteger(amount) || amount < 1000 || amount > 1000000) {
-      setDonationError('후원 금액은 1,000원부터 1,000,000원까지 입력해 주세요.')
+    if (!Number.isInteger(amount)) {
+      setDonationWarning('후원 금액을 원 단위의 숫자로 입력해 주세요.')
+      return
+    }
+    if (amount < 1000) {
+      setDonationWarning('최소 후원 금액은 1,000원입니다.')
+      return
+    }
+    if (amount > 1000000) {
+      setDonationWarning('최대 후원 금액은 1,000,000원입니다.')
       return
     }
 
@@ -1045,6 +1074,10 @@ export default function LiveWatchPage() {
             if (!donationSubmitting) setDonationOpen(false)
           }}
           onSubmit={handleDonationSubmit}
+        />
+        <LiveDonationWarningModal
+          message={donationWarning}
+          onClose={() => setDonationWarning('')}
         />
       </div>
     </Layout>
