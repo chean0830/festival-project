@@ -1,5 +1,6 @@
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
+import ChatbotWidget from "../../../features/chatbot/components/ChatbotWidget";
 import "./Layout.css";
 
 /**
@@ -23,6 +24,7 @@ function Layout({ children, hideSubnav = false, hideFooter = false }) {
       <Header hideSubnav={hideSubnav} />
       <main className="layout__content">{children}</main>
       {!hideFooter && <Footer />}
+      <ChatbotWidget />
     </div>
   );
 }
