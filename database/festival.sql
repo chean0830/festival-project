@@ -1337,6 +1337,8 @@ CREATE TABLE donation (
 
     amount DECIMAL(10,0) NOT NULL,
 
+    message VARCHAR(200),
+
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
         COMMENT 'PENDING, SUCCESS, FAIL',
 
@@ -1346,7 +1348,10 @@ CREATE TABLE donation (
         REFERENCES live_stream(stream_id),
 
     FOREIGN KEY (donor_id)
-        REFERENCES member(member_id)
+        REFERENCES member(member_id),
+
+    INDEX idx_donation_stream_created (stream_id, created_at),
+    INDEX idx_donation_donor (donor_id)
 );
 
 
@@ -1358,7 +1363,10 @@ CREATE TABLE donation (
 CREATE TABLE donation_payment (
     donation_payment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    donation_id BIGINT NOT NULL,
+    donation_id BIGINT NOT NULL UNIQUE,
+
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE
+        COMMENT 'Toss Payments에 넘긴 문자열 주문번호',
 
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
