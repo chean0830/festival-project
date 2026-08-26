@@ -9,15 +9,62 @@ import {
   useParticipants,
   useTracks,
 } from '@livekit/components-react'
-import { ConnectionState, DisconnectReason, Track } from 'livekit-client'
+import {
+  ConnectionState,
+  DisconnectReason,
+  Track,
+  VideoPresets,
+  VideoQuality,
+} from 'livekit-client'
 import '@livekit/components-styles'
 import { fetchLiveKitConnection } from './api/liveApi'
 
-function LiveVideoSurface({ owner, onReadyChange }) {
+const BROADCAST_QUALITY_OPTIONS = {
+  SD: {
+    capture: { resolution: VideoPresets.h360.resolution, frameRate: 20 },
+    publish: {
+      simulcast: true,
+      videoEncoding: VideoPresets.h360.encoding,
+      videoSimulcastLayers: [VideoPresets.h180],
+    },
+  },
+  HD: {
+    capture: { resolution: VideoPresets.h720.resolution, frameRate: 30 },
+    publish: {
+      simulcast: true,
+      videoEncoding: VideoPresets.h720.encoding,
+      videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
+    },
+  },
+  FHD: {
+    capture: { resolution: VideoPresets.h1080.resolution, frameRate: 30 },
+    publish: {
+      simulcast: true,
+      videoEncoding: VideoPresets.h1080.encoding,
+      videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h720],
+    },
+  },
+}
+
+const VIEWER_QUALITY_OPTIONS = {
+  AUTO: VideoQuality.HIGH,
+  LOW: VideoQuality.LOW,
+  MEDIUM: VideoQuality.MEDIUM,
+  HIGH: VideoQuality.HIGH,
+}
+
+function LiveVideoSurface({ owner, viewerQuality, onReadyChange }) {
   const cameraTracks = useTracks([Track.Source.Camera])
   const cameraTrack = cameraTracks.find(({ participant }) => (
     owner ? participant.isLocal : !participant.isLocal
   ))
+
+  useEffect(() => {
+    if (owner || !cameraTrack?.publication) return
+    cameraTrack.publication.setVideoQuality(
+      VIEWER_QUALITY_OPTIONS[viewerQuality] ?? VideoQuality.HIGH
+    )
+  }, [cameraTrack, owner, viewerQuality])
 
   return (
     <div className="browser-live-player__surface">
@@ -57,7 +104,7 @@ function PublisherReadyState({ onReadyChange }) {
   )
 }
 
-function LocalLivePreview({ owner, onReadyChange, onError }) {
+function LocalLivePreview({ owner, broadcastQuality, onReadyChange, onError }) {
   const videoRef = useRef(null)
   const [preparing, setPreparing] = useState(owner)
 
@@ -69,12 +116,9 @@ function LocalLivePreview({ owner, onReadyChange, onError }) {
 
     let mediaStream
     let cancelled = false
+    const preset = BROADCAST_QUALITY_OPTIONS[broadcastQuality] ?? BROADCAST_QUALITY_OPTIONS.HD
     navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 24, max: 30 },
-      },
+      video: preset.capture,
       audio: true,
     }).then((stream) => {
       if (cancelled) {
@@ -96,7 +140,7 @@ function LocalLivePreview({ owner, onReadyChange, onError }) {
       mediaStream?.getTracks().forEach((track) => track.stop())
       onReadyChange?.(false)
     }
-  }, [onError, onReadyChange, owner])
+  }, [broadcastQuality, onError, onReadyChange, owner])
 
   if (!owner) {
     return (
@@ -242,6 +286,8 @@ export default function BrowserLivePlayer({
   streamId,
   owner,
   status,
+  broadcastQuality = 'HD',
+  viewerQuality = 'AUTO',
   chatEnabled,
   onReadyChange,
   onError,
@@ -350,19 +396,29 @@ export default function BrowserLivePlayer({
     return (
       <LocalLivePreview
         owner={owner}
+        broadcastQuality={broadcastQuality}
         onReadyChange={onReadyChange}
         onError={onError}
       />
     )
   }
 
+  const broadcastPreset = BROADCAST_QUALITY_OPTIONS[broadcastQuality] ?? BROADCAST_QUALITY_OPTIONS.HD
+
   return (
     <LiveKitRoom
       token={connection.token}
       serverUrl={connection.serverUrl}
       connect
-      video={owner}
+      video={owner ? broadcastPreset.capture : false}
       audio={owner}
+      options={owner ? {
+        adaptiveStream: true,
+        dynacast: true,
+        publishDefaults: broadcastPreset.publish,
+      } : {
+        adaptiveStream: true,
+      }}
       data-lk-theme="default"
       className="browser-live-player"
       onConnected={handleRoomConnected}
@@ -370,7 +426,11 @@ export default function BrowserLivePlayer({
       onError={handleRoomError}
       onMediaDeviceFailure={handleMediaDeviceFailure}
     >
-      <LiveVideoSurface owner={owner} onReadyChange={onReadyChange} />
+      <LiveVideoSurface
+        owner={owner}
+        viewerQuality={viewerQuality}
+        onReadyChange={onReadyChange}
+      />
       <LiveRoomBridge
         owner={owner}
         chatEnabled={chatEnabled}
