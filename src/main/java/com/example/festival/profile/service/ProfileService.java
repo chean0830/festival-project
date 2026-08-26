@@ -208,6 +208,33 @@ public class ProfileService {
     }
 
     /**
+     * event.status가 실제 날짜와 어긋나 있으면(예: seed 데이터가 갱신되지 않아 종료일이 지났는데도
+     * UPCOMING으로 남아있는 경우) 오늘 날짜 기준으로 UPCOMING/ONGOING/ENDED를 다시 계산해서 맞춘다.
+     * CANCELED는 담당자가 수동으로 넣은 상태라 건드리지 않는다.
+     * EventStatusUpdateScheduler가 주기적으로 호출한다.
+     */
+    @Transactional
+    public void refreshEventStatusesByDate() {
+        LocalDate today = LocalDate.now();
+        for (Event event : eventRepository.findAll()) {
+            if ("CANCELED".equals(event.getStatus())) {
+                continue;
+            }
+            String expectedStatus;
+            if (today.isBefore(event.getStartDate())) {
+                expectedStatus = "UPCOMING";
+            } else if (!today.isAfter(event.getEndDate())) {
+                expectedStatus = "ONGOING";
+            } else {
+                expectedStatus = "ENDED";
+            }
+            if (!expectedStatus.equals(event.getStatus())) {
+                event.setStatus(expectedStatus);
+            }
+        }
+    }
+
+    /**
      * "예정된 공연"(PLANNED)의 시작일이 임박(D-3 이내)한 회원들에게 마감 임박 알림을 보낸다.
      * (memberId, eventId, type) 기준으로 이미 보낸 적 있으면 다시 보내지 않는다.
      * UpcomingEventReminderScheduler가 주기적으로 호출한다.

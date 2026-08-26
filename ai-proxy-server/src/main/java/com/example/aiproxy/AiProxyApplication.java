@@ -1,0 +1,12 @@
+package com.example.aiproxy;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class AiProxyApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(AiProxyApplication.class, args);
+    }
+}
