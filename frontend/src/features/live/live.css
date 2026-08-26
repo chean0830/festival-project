@@ -1135,6 +1135,18 @@
   font-weight: 700;
 }
 
+.live-chat__message.is-donation {
+  padding: 11px 12px;
+  border: 1px solid #ffb4b8;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #fff4f5, #fffaf2);
+}
+
+.live-chat__message.is-donation p {
+  color: #6f373b;
+  font-weight: 700;
+}
+
 .live-chat__message > div {
   display: flex;
   align-items: center;
@@ -1166,6 +1178,18 @@
   font-size: 8px;
   font-weight: 900;
   line-height: 1.4;
+}
+
+.live-chat__donation-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ff5f68;
+  color: white;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1.5;
 }
 
 .live-chat__host-badge svg {
@@ -1378,6 +1402,239 @@
   cursor: not-allowed;
 }
 
+.live-donation-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  overflow-y: auto;
+  padding: 28px 16px;
+  place-items: center;
+  background: rgba(8, 12, 10, .58);
+  backdrop-filter: blur(5px);
+}
+
+.live-donation-modal__dialog {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(31, 157, 85, .2);
+  border-radius: 22px;
+  background: white;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .25);
+}
+
+.live-donation-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.live-donation-modal__eyebrow {
+  color: var(--color-primary-dark);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.live-donation-modal__dialog h2 {
+  margin: 7px 42px 8px 0;
+  font-size: 25px;
+}
+
+.live-donation-modal__dialog > p {
+  margin: 0 0 24px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.live-donation-modal fieldset {
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+}
+
+.live-donation-modal legend,
+.live-donation-modal__message {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.live-donation-modal__amounts,
+.live-donation-modal__methods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.live-donation-modal__methods {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.live-donation-modal__amounts button,
+.live-donation-modal__methods button {
+  min-height: 42px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: white;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.live-donation-modal__amounts button:hover,
+.live-donation-modal__methods button:hover,
+.live-donation-modal__amounts button.is-selected,
+.live-donation-modal__methods button.is-selected {
+  border-color: var(--color-primary);
+  background: rgba(31, 157, 85, .09);
+  color: var(--color-primary-dark);
+}
+
+.live-donation-modal__custom-amount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.live-donation-modal__custom-amount > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text);
+}
+
+.live-donation-modal__custom-amount input {
+  width: 140px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: right;
+  outline: 0;
+}
+
+.live-donation-modal fieldset > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.live-donation-modal__message {
+  position: relative;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.live-donation-modal__message > small {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.live-donation-modal__message textarea {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 13px 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: none;
+  outline: 0;
+}
+
+.live-donation-modal__message textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.live-donation-modal__message > span {
+  position: absolute;
+  right: 11px;
+  bottom: 9px;
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.live-donation-modal__total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+}
+
+.live-donation-modal__total strong {
+  color: var(--color-primary-dark);
+  font-size: 21px;
+}
+
+.live-donation-modal__error {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #fff0f1;
+  color: var(--color-error);
+  font-size: 11px;
+}
+
+.live-donation-modal__submit {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.live-donation-modal__submit:hover {
+  background: var(--color-primary-dark);
+}
+
+.live-donation-modal__submit:disabled,
+.live-donation-modal__close:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
 .obs-setup-card {
   margin-bottom: 18px;
   padding: 16px;
@@ -1433,6 +1690,12 @@
   .live-watch__layout { grid-template-columns: 1fr; }
   .live-side-panel { width: auto; }
   .live-chat__messages { max-height: 320px; }
+}
+
+@media (max-width: 560px) {
+  .live-donation-modal__dialog { padding: 24px 18px; }
+  .live-donation-modal__amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .live-donation-modal__methods { grid-template-columns: 1fr; }
 }
 
 @media (hover: none) {

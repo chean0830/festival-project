@@ -1325,6 +1325,8 @@ CREATE TABLE donation (
 
     amount DECIMAL(10,0) NOT NULL,
 
+    message VARCHAR(200),
+
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING'
         COMMENT 'PENDING, SUCCESS, FAIL',
 
@@ -1346,7 +1348,9 @@ CREATE TABLE donation (
 CREATE TABLE donation_payment (
     donation_payment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    donation_id BIGINT NOT NULL,
+    donation_id BIGINT NOT NULL UNIQUE,
+
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE,
 
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
