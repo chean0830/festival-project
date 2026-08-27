@@ -36,6 +36,7 @@ public class TossPaymentClient {
     }
 
     public TossConfirmResponse confirm(String paymentKey, String orderId, BigDecimal amount) {
+        ensureConfigured();
         try {
             return restClient.post()
                     .uri("/payments/confirm")
@@ -56,6 +57,7 @@ public class TossPaymentClient {
     }
 
     public void cancel(String paymentKey, String cancelReason) {
+        ensureConfigured();
         try {
             restClient.post()
                     .uri("/payments/{paymentKey}/cancel", paymentKey)
@@ -74,6 +76,15 @@ public class TossPaymentClient {
     private String basicAuthHeader() {
         String credentials = Base64.getEncoder().encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
         return "Basic " + credentials;
+    }
+
+    private void ensureConfigured() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "결제 서버 설정이 완료되지 않았습니다."
+            );
+        }
     }
 
     private String extractMessage(RestClientResponseException e) {

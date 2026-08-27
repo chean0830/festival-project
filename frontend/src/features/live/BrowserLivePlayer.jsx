@@ -193,6 +193,20 @@ function LiveRoomBridge({
         onStreamEnded?.()
         return
       }
+      if (data.type === 'DONATION') {
+        onChatMessage?.({
+          id: data.id,
+          text: data.message || '방송을 응원합니다!',
+          amount: data.amount,
+          donation: true,
+          sentAt: data.sentAt,
+          senderIdentity: message.from?.identity ?? 'unknown',
+          senderName: data.donorName ?? message.from?.name ?? '시청자',
+          host: false,
+          mine: false,
+        })
+        return
+      }
       if (data.type !== 'CHAT' || !chatEnabled) return
 
       onChatMessage?.({
@@ -275,7 +289,33 @@ function LiveRoomBridge({
       )
     }
 
-    onChatControllerChange?.({ sendChat, notifyStreamEnded, isSending })
+    async function sendDonation(donation) {
+      if (owner) return
+      const donationMessage = {
+        type: 'DONATION',
+        id: `donation-${donation.donationId}`,
+        donationId: donation.donationId,
+        amount: donation.amount,
+        message: donation.message,
+        donorName: donation.donorNickname,
+        sentAt: new Date().toISOString(),
+      }
+      await send(
+        new TextEncoder().encode(JSON.stringify(donationMessage)),
+        { reliable: true }
+      )
+      onChatMessage?.({
+        ...donationMessage,
+        text: donation.message || '방송을 응원합니다!',
+        donation: true,
+        senderIdentity: localParticipant.identity,
+        senderName: donation.donorNickname ?? localParticipant.name ?? '시청자',
+        host: false,
+        mine: true,
+      })
+    }
+
+    onChatControllerChange?.({ sendChat, sendDonation, notifyStreamEnded, isSending })
     return () => onChatControllerChange?.(null)
   }, [chatEnabled, connected, isSending, localParticipant, onChatControllerChange, onChatMessage, owner, send])
 
