@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import { fetchPreorderProducts } from '../../api/mdShopApi'
+import useCurrentMember from '../profile/hooks/useCurrentMember'
 import { formatPrice } from '../../utils/formatPrice'
 import { todayIso } from '../../utils/todayIso'
+import { PAYMENT_METHOD_LABELS, requestTossPayment } from '../../utils/tossPayment'
 import {
   changeLiveChatEnabled,
   endLiveStream,
   fetchLiveStream,
   startLiveStream,
 } from './api/liveApi'
+import { createLiveDonation } from './api/donationApi'
 import BrowserLivePlayer from './BrowserLivePlayer'
 import './live.css'
 
@@ -23,6 +26,144 @@ const TEMP_AD = {
   eyebrow: 'FESTLOG 광고',
   title: '광고 내용 준비 중입니다',
   url: '',
+}
+const DONATION_AMOUNTS = [1000, 3000, 5000, 10000]
+
+function LiveDonationModal({
+  open,
+  streamTitle,
+  amount,
+  message,
+  paymentMethod,
+  submitting,
+  error,
+  onAmountChange,
+  onMessageChange,
+  onPaymentMethodChange,
+  onClose,
+  onSubmit,
+}) {
+  if (!open) return null
+
+  return (
+    <div className="live-donation-modal" role="presentation" onMouseDown={onClose}>
+      <section
+        className="live-donation-modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="live-donation-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="live-donation-modal__close"
+          onClick={onClose}
+          disabled={submitting}
+          aria-label="후원창 닫기"
+        >
+          ×
+        </button>
+        <span className="live-donation-modal__eyebrow">LIVE SUPPORT</span>
+        <h2 id="live-donation-title">방송 후원하기</h2>
+        <p><strong>{streamTitle}</strong> 방송자에게 응원의 마음을 전해보세요.</p>
+
+        <form onSubmit={onSubmit} noValidate>
+          <fieldset>
+            <legend>후원 금액</legend>
+            <div className="live-donation-modal__amounts">
+              {DONATION_AMOUNTS.map((preset) => (
+                <button
+                  type="button"
+                  key={preset}
+                  className={Number(amount) === preset ? 'is-selected' : ''}
+                  onClick={() => onAmountChange(String(preset))}
+                >
+                  {formatPrice(preset)}
+                </button>
+              ))}
+            </div>
+            <label className="live-donation-modal__custom-amount">
+              <span>직접 입력</span>
+              <span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(event) => onAmountChange(event.target.value)}
+                  aria-label="후원 금액 직접 입력"
+                  required
+                />
+                원
+              </span>
+            </label>
+            <small>1,000원부터 1,000,000원까지 후원할 수 있습니다.</small>
+          </fieldset>
+
+          <label className="live-donation-modal__message">
+            응원 메시지 <small>선택</small>
+            <textarea
+              value={message}
+              onChange={(event) => onMessageChange(event.target.value)}
+              maxLength="200"
+              rows="3"
+              placeholder="방송자에게 응원 메시지를 남겨보세요"
+            />
+            <span>{message.length}/200</span>
+          </label>
+
+          <fieldset>
+            <legend>결제 수단</legend>
+            <div className="live-donation-modal__methods">
+              {PAYMENT_METHOD_LABELS.map((method) => (
+                <button
+                  type="button"
+                  key={method}
+                  className={paymentMethod === method ? 'is-selected' : ''}
+                  onClick={() => onPaymentMethodChange(method)}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="live-donation-modal__total">
+            <span>최종 후원 금액</span>
+            <strong>{formatPrice(Number(amount) || 0)}</strong>
+          </div>
+          {error && <p className="live-donation-modal__error">{error}</p>}
+          <button
+            type="submit"
+            className="live-donation-modal__submit"
+            disabled={submitting}
+          >
+            {submitting ? '결제 준비 중...' : '후원 결제하기'}
+          </button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function LiveDonationWarningModal({ message, onClose }) {
+  if (!message) return null
+
+  return (
+    <div className="live-donation-warning" role="presentation" onMouseDown={onClose}>
+      <section
+        className="live-donation-warning__dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="live-donation-warning-title"
+        aria-describedby="live-donation-warning-message"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="live-donation-warning__icon" aria-hidden="true">!</div>
+        <h2 id="live-donation-warning-title">후원 금액을 확인해 주세요</h2>
+        <p id="live-donation-warning-message">{message}</p>
+        <button type="button" onClick={onClose} autoFocus>확인</button>
+      </section>
+    </div>
+  )
 }
 
 function formatMdDeadline(preorderDeadline) {
@@ -214,11 +355,16 @@ function LiveChatPanel({
                 )}
                 {messages.map((message) => (
                   <div
-                    className={`live-chat__message ${message.mine ? 'is-mine' : ''} ${message.host ? 'is-host' : ''}`}
+                    className={`live-chat__message ${message.mine ? 'is-mine' : ''} ${message.host ? 'is-host' : ''} ${message.donation ? 'is-donation' : ''}`}
                     key={message.id}
                   >
                     <div>
                       <strong>{message.senderName}</strong>
+                      {message.donation && (
+                        <span className="live-chat__donation-badge">
+                          ♥ {formatPrice(message.amount)} 후원
+                        </span>
+                      )}
                       {message.host && (
                         <span className="live-chat__host-badge">
                           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -260,9 +406,12 @@ function LiveChatPanel({
 
 export default function LiveWatchPage() {
   const { streamId } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
+  const currentMember = useCurrentMember()
   const fullscreenRef = useRef(null)
   const playerRef = useRef(null)
+  const donationAnnouncedRef = useRef(null)
   const [stream, setStream] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -288,6 +437,13 @@ export default function LiveWatchPage() {
   const [mdProducts, setMdProducts] = useState(null)
   const [mdLoading, setMdLoading] = useState(false)
   const [mdError, setMdError] = useState('')
+  const [donationOpen, setDonationOpen] = useState(false)
+  const [donationAmount, setDonationAmount] = useState('5000')
+  const [donationMessage, setDonationMessage] = useState('')
+  const [donationPaymentMethod, setDonationPaymentMethod] = useState(PAYMENT_METHOD_LABELS[0])
+  const [donationSubmitting, setDonationSubmitting] = useState(false)
+  const [donationError, setDonationError] = useState('')
+  const [donationWarning, setDonationWarning] = useState('')
 
   useEffect(() => {
     fetchLiveStream(streamId)
@@ -316,6 +472,20 @@ export default function LiveWatchPage() {
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
     }
   }, [])
+
+  useEffect(() => {
+    const completedDonation = location.state?.completedDonation
+    if (!completedDonation || !chatController?.sendDonation) return
+    if (donationAnnouncedRef.current === completedDonation.donationId) return
+
+    donationAnnouncedRef.current = completedDonation.donationId
+    chatController.sendDonation(completedDonation)
+      .then(() => {
+        setChatOpen(true)
+        navigate(location.pathname, { replace: true, state: null })
+      })
+      .catch((sendError) => setError(sendError.message))
+  }, [chatController, location.pathname, location.state, navigate])
 
   const getViewerMedia = useCallback(() => (
     Array.from(playerRef.current?.querySelectorAll('video, audio') ?? [])
@@ -441,7 +611,53 @@ export default function LiveWatchPage() {
   }
 
   function handleDonation() {
-    window.alert('후원 기능을 준비 중입니다.')
+    if (!currentMember) {
+      window.alert('로그인 후 후원할 수 있습니다.')
+      return
+    }
+    setDonationAmount('5000')
+    setDonationMessage('')
+    setDonationPaymentMethod(PAYMENT_METHOD_LABELS[0])
+    setDonationError('')
+    setDonationWarning('')
+    setDonationOpen(true)
+  }
+
+  async function handleDonationSubmit(event) {
+    event.preventDefault()
+    const amount = Number(donationAmount)
+    if (!Number.isInteger(amount)) {
+      setDonationWarning('후원 금액을 원 단위의 숫자로 입력해 주세요.')
+      return
+    }
+    if (amount < 1000) {
+      setDonationWarning('최소 후원 금액은 1,000원입니다.')
+      return
+    }
+    if (amount > 1000000) {
+      setDonationWarning('최대 후원 금액은 1,000,000원입니다.')
+      return
+    }
+
+    setDonationSubmitting(true)
+    setDonationError('')
+    try {
+      const donation = await createLiveDonation(stream.streamId, {
+        amount,
+        message: donationMessage.trim() || null,
+      })
+      await requestTossPayment({
+        methodLabel: donationPaymentMethod,
+        domainPrefix: 'DONATION',
+        domainId: donation.donationId,
+        amount,
+        orderName: `${stream.title} 라이브 후원`,
+        customerName: currentMember.nickname,
+      })
+    } catch (submitError) {
+      setDonationError(submitError.message)
+      setDonationSubmitting(false)
+    }
   }
 
   function handleTemporaryAd() {
@@ -843,6 +1059,26 @@ export default function LiveWatchPage() {
           )}
         </div>
         {error && <p className="live-message live-message--error">{error}</p>}
+        <LiveDonationModal
+          open={donationOpen}
+          streamTitle={stream.title}
+          amount={donationAmount}
+          message={donationMessage}
+          paymentMethod={donationPaymentMethod}
+          submitting={donationSubmitting}
+          error={donationError}
+          onAmountChange={setDonationAmount}
+          onMessageChange={setDonationMessage}
+          onPaymentMethodChange={setDonationPaymentMethod}
+          onClose={() => {
+            if (!donationSubmitting) setDonationOpen(false)
+          }}
+          onSubmit={handleDonationSubmit}
+        />
+        <LiveDonationWarningModal
+          message={donationWarning}
+          onClose={() => setDonationWarning('')}
+        />
       </div>
     </Layout>
   )
