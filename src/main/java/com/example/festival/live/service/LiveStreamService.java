@@ -2,6 +2,7 @@ package com.example.festival.live.service;
 
 import com.example.festival.event.entity.Event;
 import com.example.festival.event.repository.EventRepository;
+import com.example.festival.live.admission.service.LiveAdmissionAccessService;
 import com.example.festival.live.dto.LiveEventOptionResponse;
 import com.example.festival.live.dto.LiveStreamCreateRequest;
 import com.example.festival.live.dto.LiveStreamResponse;
@@ -12,6 +13,8 @@ import com.example.festival.live.repository.LiveStreamRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.entity.MemberRole;
 import com.example.festival.member.repository.MemberRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Sort;
@@ -27,15 +30,18 @@ public class LiveStreamService {
     private final LiveStreamRepository liveStreamRepository;
     private final EventRepository eventRepository;
     private final MemberRepository memberRepository;
+    private final LiveAdmissionAccessService admissionAccessService;
 
     public LiveStreamService(
             LiveStreamRepository liveStreamRepository,
             EventRepository eventRepository,
-            MemberRepository memberRepository
+            MemberRepository memberRepository,
+            LiveAdmissionAccessService admissionAccessService
     ) {
         this.liveStreamRepository = liveStreamRepository;
         this.eventRepository = eventRepository;
         this.memberRepository = memberRepository;
+        this.admissionAccessService = admissionAccessService;
     }
 
     public List<LiveStreamResponse> getLiveStreams() {
@@ -85,7 +91,8 @@ public class LiveStreamService {
                 normalize(request.description()),
                 thumbnailUrl,
                 LiveSourceType.BROWSER,
-                null
+                null,
+                validateEntranceFee(request.entranceFee())
         );
         return toResponse(liveStreamRepository.save(stream), memberId);
     }
@@ -180,6 +187,8 @@ public class LiveStreamService {
                 host == null ? null : host.getId(),
                 host == null ? "알 수 없는 주최자" : host.getNickname(),
                 host == null ? null : host.getProfileImage(),
+                stream.getEntranceFee(),
+                admissionAccessService.isAdmissionRequired(stream, requesterId),
                 isManagedBy(stream, requesterId),
                 stream.isChatEnabled(),
                 stream.getCreatedAt()
@@ -191,5 +200,25 @@ public class LiveStreamService {
             return null;
         }
         return value.trim();
+    }
+
+    private BigDecimal validateEntranceFee(BigDecimal entranceFee) {
+        final BigDecimal minimumPaidFee = BigDecimal.valueOf(1_000);
+        final BigDecimal maximumPaidFee = BigDecimal.valueOf(100_000);
+        BigDecimal normalized;
+        try {
+            normalized = entranceFee.setScale(0, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "입장료는 원 단위 정수로 입력해 주세요.");
+        }
+
+        if (normalized.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+        if (normalized.compareTo(minimumPaidFee) < 0 || normalized.compareTo(maximumPaidFee) > 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "유료 방송 입장료는 1,000원부터 100,000원까지 설정할 수 있습니다."
+            );
+        }
+        return normalized;
     }
 }

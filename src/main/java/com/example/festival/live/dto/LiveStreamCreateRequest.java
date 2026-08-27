@@ -3,6 +3,7 @@ package com.example.festival.live.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 
 public record LiveStreamCreateRequest(
         @NotNull(message = "공연을 선택해 주세요.")
@@ -16,6 +17,9 @@ public record LiveStreamCreateRequest(
         String description,
 
         @Size(max = 500, message = "썸네일 주소가 너무 깁니다.")
-        String thumbnailUrl
+        String thumbnailUrl,
+
+        @NotNull(message = "입장료 설정을 확인해 주세요.")
+        BigDecimal entranceFee
 ) {
 }

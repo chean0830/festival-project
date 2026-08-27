@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import { fetchLiveStreams } from './api/liveApi'
+import { formatPrice } from '../../utils/formatPrice'
 import './live.css'
 
 const STATUS_LABEL = {
@@ -18,6 +19,9 @@ function LiveCard({ stream }) {
         <img src={stream.thumbnailUrl} alt="" className="live-card__thumbnail" />
         <span className={`live-status live-status--${stream.status.toLowerCase()}`}>
           {STATUS_LABEL[stream.status]}
+        </span>
+        <span className={`live-card__price ${Number(stream.entranceFee) > 0 ? 'is-paid' : ''}`}>
+          {Number(stream.entranceFee) > 0 ? formatPrice(stream.entranceFee) : '무료'}
         </span>
       </div>
       <div className="live-card__body">

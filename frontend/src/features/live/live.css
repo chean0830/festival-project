@@ -131,6 +131,24 @@
   left: 12px;
 }
 
+.live-card__price {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .9);
+  color: var(--color-primary-dark);
+  font-size: 11px;
+  font-weight: 900;
+  backdrop-filter: blur(8px);
+}
+
+.live-card__price.is-paid {
+  background: rgba(20, 20, 24, .82);
+  color: white;
+}
+
 .live-status--live { background: #ed3347; }
 .live-status--scheduled { background: #ef8b21; }
 .live-status--ended { background: #676975; }
@@ -216,7 +234,7 @@
 
 .live-mode-fieldset {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -228,36 +246,111 @@
   font-weight: 800;
 }
 
+.live-mode-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .live-mode-option {
-  flex-direction: row !important;
-  align-items: flex-start;
+  position: relative;
+  min-height: 122px;
   gap: 12px !important;
-  padding: 14px;
+  padding: 18px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: 16px;
+  background: white;
   cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.live-mode-option:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-border));
+  transform: translateY(-1px);
 }
 
 .live-mode-option:has(input:checked) {
-  border-color: var(--color-primary);
-  background: var(--color-surface);
+  border: 2px solid var(--color-primary);
+  padding: 17px;
+  background: color-mix(in srgb, var(--color-primary) 7%, white);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
 .live-mode-option input {
-  width: auto;
-  margin-top: 3px;
-  accent-color: var(--color-primary);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.live-mode-option span {
+.live-mode-option:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 2px;
+}
+
+.live-mode-option__topline {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.live-mode-option__title {
+  display: inline-flex;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.live-mode-option__title > svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.live-mode-option__check {
+  display: grid !important;
+  width: 23px;
+  height: 23px;
+  flex: 0 0 23px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: white;
+  color: transparent;
+}
+
+.live-mode-option__check svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.live-mode-option:has(input:checked) .live-mode-option__check {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
 }
 
 .live-mode-option small {
   color: var(--color-text-muted);
   font-weight: 400;
+  line-height: 1.55;
 }
 
 .live-form label {
@@ -300,6 +393,30 @@
 .live-form small { color: var(--color-text-muted); font-weight: 400; }
 .live-form__actions { display: flex; justify-content: flex-end; gap: 10px; }
 
+.live-price-input {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: white;
+}
+
+.live-price-input:focus-within { border-color: var(--color-primary); }
+.live-price-input:has(input[aria-invalid='true']) { border-color: var(--color-error); }
+
+.live-price-input input {
+  border: 0;
+  text-align: right;
+}
+
+.live-price-input span {
+  padding-right: 14px;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .live-watch__topline {
   display: flex;
   align-items: center;
@@ -327,6 +444,135 @@
   border-radius: 16px;
   background: #0c0d0d;
   box-shadow: var(--shadow-card);
+}
+
+.live-admission-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  overflow-y: auto;
+  padding: 22px;
+  place-items: center;
+  background-position: center;
+  background-size: cover;
+  color: white;
+}
+
+.live-admission-gate__card {
+  width: min(430px, 100%);
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 20px;
+  background: rgba(10, 15, 12, .86);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .34);
+  backdrop-filter: blur(14px);
+}
+
+.live-admission-gate__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 10px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(126, 226, 161, .14);
+  color: #7ee2a1;
+}
+
+.live-admission-gate__icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.live-admission-gate__eyebrow {
+  color: #7ee2a1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.live-admission-gate h2 {
+  margin: 5px 0 7px;
+  font-size: 24px;
+}
+
+.live-admission-gate__card > p {
+  margin: 0 auto;
+  color: rgba(255, 255, 255, .7);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.live-admission-gate__price {
+  display: block;
+  margin: 13px 0 15px;
+  color: white;
+  font-size: 28px;
+}
+
+.live-admission-gate__methods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.live-admission-gate__methods button {
+  min-height: 38px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, .17);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .06);
+  color: rgba(255, 255, 255, .82);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.live-admission-gate__methods button.is-selected {
+  border-color: #7ee2a1;
+  background: rgba(126, 226, 161, .15);
+  color: #a6f2bf;
+}
+
+.live-admission-gate__submit {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--color-primary);
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.live-admission-gate__submit:hover { background: var(--color-primary-dark); }
+.live-admission-gate__submit:disabled { opacity: .58; cursor: not-allowed; }
+
+.live-admission-gate__error {
+  margin: 0 0 9px !important;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(230, 61, 78, .18);
+  color: #ff9aa5 !important;
+  font-size: 11px !important;
+}
+
+.live-admission-gate__card > small {
+  display: block;
+  margin-top: 9px;
+  color: rgba(255, 255, 255, .55);
+  font-size: 10px;
 }
 
 .live-player__hover-ui {
@@ -972,6 +1218,17 @@
 .live-watch__info > span { color: var(--color-primary-dark); font-size: 13px; font-weight: 800; }
 .live-watch__info h1 { margin: 7px 0 12px; font-size: clamp(23px, 3vw, 32px); }
 .live-watch__host { color: var(--color-text-muted); font-size: 14px; }
+.live-watch__admission {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(31, 157, 85, .1);
+  color: var(--color-primary-dark);
+  font-size: 12px;
+  font-weight: 900;
+}
+.live-watch__admission.is-paid { background: #202520; color: white; }
 .live-watch__info p { padding-top: 18px; border-top: 1px solid var(--color-border); line-height: 1.7; white-space: pre-wrap; }
 
 .live-side-panel {
@@ -1827,6 +2084,13 @@
 }
 
 @media (max-width: 560px) {
+  .live-admission-gate { padding: 10px; }
+  .live-admission-gate__card { padding: 18px 14px; }
+  .live-admission-gate__icon { display: none; }
+  .live-admission-gate h2 { font-size: 19px; }
+  .live-admission-gate__price { margin: 8px 0 10px; font-size: 23px; }
+  .live-admission-gate__methods { grid-template-columns: 1fr; gap: 5px; }
+  .live-admission-gate__methods button { min-height: 32px; }
   .live-donation-modal__dialog { padding: 24px 18px; }
   .live-donation-modal__amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .live-donation-modal__methods { grid-template-columns: 1fr; }
@@ -1844,6 +2108,7 @@
   .live-grid { grid-template-columns: 1fr; }
   .live-section__heading { align-items: flex-start; flex-direction: column; }
   .live-form { padding: 20px; }
+  .live-mode-card-grid { grid-template-columns: 1fr; }
   .live-form__actions { flex-direction: column-reverse; }
   .live-form__actions .live-button { width: 100%; }
   .live-broadcast-controls__heading { align-items: stretch; flex-direction: column; }

@@ -83,7 +83,8 @@ public class LiveStream {
             String description,
             String thumbnailUrl,
             LiveSourceType sourceType,
-            String streamUrl
+            String streamUrl,
+            BigDecimal entranceFee
     ) {
         this.event = event;
         this.host = host;
@@ -92,7 +93,7 @@ public class LiveStream {
         this.thumbnailUrl = thumbnailUrl;
         this.sourceType = sourceType;
         this.streamUrl = streamUrl;
-        this.entranceFee = BigDecimal.ZERO;
+        this.entranceFee = entranceFee;
         this.adEnabled = false;
         this.chatEnabled = true;
         this.status = LiveStreamStatus.SCHEDULED;
@@ -105,9 +106,10 @@ public class LiveStream {
             String description,
             String thumbnailUrl,
             LiveSourceType sourceType,
-            String streamUrl
+            String streamUrl,
+            BigDecimal entranceFee
     ) {
-        return new LiveStream(event, host, title, description, thumbnailUrl, sourceType, streamUrl);
+        return new LiveStream(event, host, title, description, thumbnailUrl, sourceType, streamUrl, entranceFee);
     }
 
     public void start(LocalDateTime now) {
@@ -167,6 +169,14 @@ public class LiveStream {
 
     public LocalDateTime getEndAt() {
         return endAt;
+    }
+
+    public BigDecimal getEntranceFee() {
+        return entranceFee;
+    }
+
+    public boolean isPaid() {
+        return entranceFee != null && entranceFee.compareTo(BigDecimal.ZERO) > 0;
     }
 
     public LiveStreamStatus getStatus() {

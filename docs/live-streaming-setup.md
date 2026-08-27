@@ -10,6 +10,8 @@ LiveKit API Secret은 Spring Boot 백엔드에서만 사용하고 React에는 �
 ```text
 database/migrations/V4__live_stream_host.sql
 database/migrations/V202608211000__sc_browser_live_source.sql
+database/migrations/V202608261100__live_donation.sql
+database/migrations/V202608271000__live_paid_entry.sql
 ```
 
 `database/festival.sql`로 DB를 새로 만드는 경우에는 위 파일을 다시 실행하지 않습니다.
@@ -70,3 +72,23 @@ LiveKit Cloud로 한 번 전송되고, 시청자는 LiveKit Cloud에서 영상�
 1. FESTLOG에서 `방송 종료`를 누릅니다.
 2. 방송은 라이브 목록에서 즉시 제외됩니다.
 3. 방송 페이지가 닫히면서 LiveKit Cloud 영상 연결도 종료됩니다.
+
+## 5. 유료 방송 입장 테스트
+
+유료 방송 결제는 후원 기능과 같은 Toss Payments 테스트 키를 사용합니다.
+
+```dotenv
+# 프로젝트 루트 .env
+TOSS_SECRET_KEY=test_sk_...
+
+# frontend/.env
+VITE_TOSS_CLIENT_KEY=test_ck_...
+```
+
+1. 관리자 계정으로 방송을 만들 때 `유료 방송`과 입장료를 선택합니다.
+2. 방송을 시작합니다.
+3. 시크릿 창에서 다른 회원 계정으로 로그인해 방송에 들어갑니다.
+4. 입장권을 테스트 결제하고 방송으로 돌아갑니다.
+5. 같은 회원으로 다시 입장했을 때 추가 결제 없이 영상이 연결되는지 확인합니다.
+
+유료 방송은 프론트 화면뿐 아니라 LiveKit 토큰 발급 API에서도 결제 완료 여부를 확인합니다.

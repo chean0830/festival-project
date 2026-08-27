@@ -1,6 +1,7 @@
 package com.example.festival.live.service;
 
 import com.example.festival.live.dto.LiveKitConnectionResponse;
+import com.example.festival.live.admission.service.LiveAdmissionAccessService;
 import com.example.festival.live.entity.LiveSourceType;
 import com.example.festival.live.entity.LiveStream;
 import com.example.festival.live.entity.LiveStreamStatus;
@@ -29,6 +30,7 @@ public class LiveKitTokenService {
 
     private final LiveStreamRepository liveStreamRepository;
     private final MemberRepository memberRepository;
+    private final LiveAdmissionAccessService admissionAccessService;
     private final String provider;
     private final String serverUrl;
     private final String apiKey;
@@ -37,6 +39,7 @@ public class LiveKitTokenService {
     public LiveKitTokenService(
             LiveStreamRepository liveStreamRepository,
             MemberRepository memberRepository,
+            LiveAdmissionAccessService admissionAccessService,
             @Value("${app.live.provider:LOCAL}") String provider,
             @Value("${app.livekit.url:}") String serverUrl,
             @Value("${app.livekit.api-key:}") String apiKey,
@@ -44,6 +47,7 @@ public class LiveKitTokenService {
     ) {
         this.liveStreamRepository = liveStreamRepository;
         this.memberRepository = memberRepository;
+        this.admissionAccessService = admissionAccessService;
         this.provider = "LOCAL".equalsIgnoreCase(provider) ? "LOCAL" : "LIVEKIT";
         this.serverUrl = serverUrl;
         this.apiKey = apiKey;
@@ -67,6 +71,10 @@ public class LiveKitTokenService {
             }
         } else if (stream.getStatus() != LiveStreamStatus.LIVE) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "현재 시청할 수 없는 방송입니다.");
+        }
+
+        if (!publisher) {
+            admissionAccessService.requireAdmission(stream, requesterId);
         }
 
         String roomName = "festlog-live-" + streamId;

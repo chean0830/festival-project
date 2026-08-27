@@ -9,7 +9,7 @@ const METHOD_BY_LABEL = {
 export const PAYMENT_METHOD_LABELS = Object.keys(METHOD_BY_LABEL);
 
 /**
- * domainPrefix("MD" | "USED" | "DONATION") + domainId(주문/거래/후원 PK)를 Toss 주문번호에 인코딩해서
+ * domainPrefix("MD" | "USED" | "DONATION" | "LIVE") + domainId(주문/거래/후원/방송 PK)를 Toss 주문번호에 인코딩해서
  * 결제 완료 후 successUrl(PaymentResultPage)에서 어떤 도메인의 무엇을 확정해야 하는지 복원할 수 있게 한다.
  */
 function buildTossOrderId(domainPrefix, domainId) {
@@ -38,7 +38,7 @@ export async function requestTossPayment({ methodLabel, domainPrefix, domainId, 
 }
 
 /**
- * Toss 주문번호("MD_123_..." / "USED_45_...")에서 도메인과 내부 PK를 복원한다.
+ * Toss 주문번호("MD_123_..." / "USED_45_..." / "LIVE_7_...")에서 도메인과 내부 PK를 복원한다.
  */
 export function parseTossOrderId(tossOrderId) {
   const [domainPrefix, domainId] = (tossOrderId ?? "").split("_");
