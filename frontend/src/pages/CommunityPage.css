@@ -1,12 +1,12 @@
 .community-page {
-  --cp-primary: #1e9e52;
-  --cp-primary-light: #35c073;
-  --cp-primary-dark: #0f5c30;
-  --cp-surface: #f5faf2;
-  --cp-secondary: #ff8a3d;
-  --cp-ink: #12291b;
-  --cp-ink-soft: #5a7166;
-  --cp-line: #e4ece2;
+  --cp-primary: var(--color-primary);
+  --cp-primary-light: var(--color-success);
+  --cp-primary-dark: var(--color-primary-dark);
+  --cp-surface: var(--color-surface);
+  --cp-secondary: var(--color-secondary);
+  --cp-ink: var(--color-text);
+  --cp-ink-soft: var(--color-text-muted);
+  --cp-line: var(--color-border);
 
   font-family: "Pretendard Variable", "Pretendard", var(--font-body);
   max-width: var(--content-max-width);
@@ -53,7 +53,7 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--cp-line);
   color: var(--cp-ink);
   font-size: var(--font-size-md);
@@ -73,9 +73,9 @@
   flex-shrink: 0;
 }
 .community-page__chip--active {
-  background: var(--cp-ink);
-  border-color: var(--cp-ink);
-  color: #fff;
+  background: var(--cp-primary);
+  border-color: var(--cp-primary);
+  color: var(--color-text-on-primary);
 }
 
 /* ── 검색 + 정렬 + 글쓰기 ── */
@@ -100,7 +100,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
+  background: var(--color-input);
   border: 1px solid var(--cp-line);
   border-radius: 12px;
   padding: 10px 16px;
@@ -121,7 +121,7 @@
   color: var(--cp-ink);
 }
 .community-page__search input::placeholder {
-  color: #a8b3ac;
+  color: var(--cp-ink-soft);
 }
 .community-page__search-btn {
   background: var(--cp-surface);
@@ -136,7 +136,7 @@
   transition: background 0.12s ease;
 }
 .community-page__search-btn:hover {
-  background: #e9f4e5;
+  background: var(--color-primary-light);
 }
 
 .community-page__sort-write {
@@ -181,7 +181,7 @@
 .community-page__skeleton-card {
   height: 108px;
   border-radius: 16px;
-  background: linear-gradient(90deg, var(--cp-surface) 25%, #eef4ec 37%, var(--cp-surface) 63%);
+  background: linear-gradient(90deg, var(--cp-surface) 25%, var(--color-input) 37%, var(--cp-surface) 63%);
   background-size: 400% 100%;
   animation: community-page-shimmer 1.4s ease infinite;
 }

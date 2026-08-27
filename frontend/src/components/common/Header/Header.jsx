@@ -42,6 +42,9 @@ function Header({ hideSubnav = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => document.documentElement.dataset.theme === "dark",
+  );
   const searchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +60,37 @@ function Header({ hideSubnav = false }) {
   const loginHref = location.pathname.startsWith("/live")
     ? "/login?returnTo=%2Flive"
     : "/login";
+
+  function handleThemeToggle() {
+    setIsDarkMode((current) => !current);
+  }
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
+    localStorage.setItem("festlog-dark-mode", isDarkMode ? "on" : "off");
+  }, [isDarkMode]);
+
+  const themeToggle = (
+    <button
+      type="button"
+      className="header__theme-toggle"
+      aria-label={`다크모드 ${isDarkMode ? "끄기" : "켜기"}`}
+      aria-pressed={isDarkMode}
+      onClick={handleThemeToggle}
+    >
+      {isDarkMode ? (
+        <svg className="header__theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 15.2A8.6 8.6 0 0 1 8.8 4a8.6 8.6 0 1 0 11.2 11.2Z" />
+        </svg>
+      ) : (
+        <svg className="header__theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+        </svg>
+      )}
+      <span>{isDarkMode ? "다크 모드" : "라이트 모드"}</span>
+    </button>
+  );
 
   // 검색창 바깥을 클릭하면 드롭다운을 닫는다.
   useEffect(() => {
@@ -168,6 +202,7 @@ function Header({ hideSubnav = false }) {
             {isLoggedIn ? (
               <div className="header__account">
                 <NotificationBell />
+                {themeToggle}
                 <a href="/profile" className="header__profile-btn">
                   내 프로필
                 </a>
@@ -176,22 +211,25 @@ function Header({ hideSubnav = false }) {
                 </button>
               </div>
             ) : (
-              <a href={loginHref} className="header__login-btn">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Login
-              </a>
+              <div className="header__account">
+                {themeToggle}
+                <a href={loginHref} className="header__login-btn">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 21a8 8 0 0 0-16 0" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Login
+                </a>
+              </div>
             )}
           </div>
         </div>
@@ -266,6 +304,10 @@ function Header({ hideSubnav = false }) {
                   </a>
                 </>
               )}
+            </div>
+
+            <div className="header__drawer-theme">
+              {themeToggle}
             </div>
 
             <nav className="header__drawer-nav">

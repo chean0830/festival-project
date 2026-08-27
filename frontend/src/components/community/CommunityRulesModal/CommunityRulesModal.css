@@ -356,6 +356,56 @@
   box-shadow: 0 12px 24px rgba(13, 77, 41, 0.4);
 }
 
+:root[data-theme='dark'] .community-rules-modal__backdrop {
+  --rules-primary: var(--color-primary);
+  --rules-primary-light: var(--color-success);
+  --rules-primary-dark: #17653a;
+  --rules-surface: #202c24;
+  --rules-secondary: var(--color-secondary);
+  --rules-gold: #d8b65d;
+  --rules-ink: var(--color-text);
+  --rules-ink-soft: var(--color-text-muted);
+  --rules-line: var(--color-border);
+  --rules-danger-bg: #35251e;
+  --rules-danger-line: #754c36;
+  --rules-page-bg: #0a0e0b;
+  background: rgba(2, 5, 3, 0.78);
+}
+
+:root[data-theme='dark'] .community-rules-modal__ticket {
+  background: var(--color-elevated);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .26), 0 22px 60px rgba(0, 0, 0, .48);
+}
+
+:root[data-theme='dark'] .community-rules-modal__ticket::before {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .015) 0, transparent 1px, transparent 2px),
+    radial-gradient(circle at 15% 30%, rgba(255, 255, 255, .025), transparent 6%),
+    radial-gradient(circle at 70% 65%, rgba(255, 255, 255, .02), transparent 5%);
+}
+
+:root[data-theme='dark'] .community-rules-modal__perf::before {
+  background: linear-gradient(
+    180deg,
+    var(--rules-primary-dark) 0%,
+    var(--rules-primary-dark) 50%,
+    var(--color-elevated) 50%,
+    var(--color-elevated) 100%
+  );
+}
+
+:root[data-theme='dark'] .community-rules-modal__stub-list li {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .04) inset;
+}
+
+:root[data-theme='dark'] .community-rules-modal__watermark {
+  opacity: .07;
+}
+
+:root[data-theme='dark'] .community-rules-modal__confirm-btn {
+  color: var(--color-text-on-primary);
+}
+
 @media (max-width: 480px) {
   .community-rules-modal__head,
   .community-rules-modal__body,
