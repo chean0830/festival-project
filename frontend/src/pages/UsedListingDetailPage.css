@@ -200,6 +200,27 @@
   line-height: 1;
 }
 
+.used-listing-detail__chat-button {
+  flex: 1;
+  border: 1px solid var(--color-primary);
+  background: #fff;
+  color: var(--color-primary-dark);
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.used-listing-detail__chat-button:hover:not(:disabled) {
+  background: var(--color-primary-light);
+}
+
+.used-listing-detail__chat-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .used-listing-detail__buy-button {
   flex: 1;
   border: 1px solid var(--color-primary);

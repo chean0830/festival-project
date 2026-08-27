@@ -37,4 +37,10 @@ public class NotificationController {
         notificationService.markAsRead(memberId, notificationId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<Void> markAllAsRead(@PathVariable Long memberId) {
+        notificationService.markAllAsRead(memberId);
+        return ResponseEntity.noContent().build();
+    }
 }

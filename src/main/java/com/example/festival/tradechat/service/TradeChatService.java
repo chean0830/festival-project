@@ -17,6 +17,7 @@ import com.example.festival.tradechat.repository.TradeChatMessageRepository;
 import com.example.festival.tradechat.repository.TradeChatRoomRepository;
 import com.example.festival.usedtrade.entity.UsedListing;
 import com.example.festival.usedtrade.entity.UsedTransaction;
+import com.example.festival.usedtrade.repository.UsedListingRepository;
 import com.example.festival.usedtrade.repository.UsedTransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 중고거래(usedtrade) 구매요청 1건당 1개인 1:1 실시간 채팅.
+ * 중고거래(usedtrade) 매물 + 구매자 한 쌍당 1:1 실시간 채팅. 구매요청(UsedTransaction) 없이도 매물 상세에서 바로 시작할 수 있다.
  * WebSocket 브로드캐스트는 오픈챗이 쓰는 {@link ChatRedisPublisher}를 그대로 재사용한다(범용 destination 기반).
  */
 @Service
@@ -59,6 +60,7 @@ public class TradeChatService {
 
     private final TradeChatRoomRepository tradeChatRoomRepository;
     private final TradeChatMessageRepository tradeChatMessageRepository;
+    private final UsedListingRepository usedListingRepository;
     private final UsedTransactionRepository usedTransactionRepository;
     private final MemberRepository memberRepository;
     private final ChatRedisPublisher chatRedisPublisher;
@@ -69,22 +71,56 @@ public class TradeChatService {
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
 
+    /**
+     * 매물 상세의 "채팅하기" 버튼 — 구매 요청 없이 바로 판매자와의 채팅방을 만들거나 연다.
+     */
+    @Transactional
+    public TradeChatRoomDto getOrCreateRoomByListing(Long listingId, Long buyerId) {
+        UsedListing listing = usedListingRepository.findById(listingId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "매물을 찾을 수 없습니다."));
+
+        if (listing.getSeller().getId().equals(buyerId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "본인 매물에는 채팅을 시작할 수 없어요.");
+        }
+
+        TradeChatRoom room = tradeChatRoomRepository.findByListingIdAndBuyerIdWithDetails(listingId, buyerId)
+                .orElseGet(() -> {
+                    Member buyer = memberRepository.findById(buyerId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
+                    return tradeChatRoomRepository.save(new TradeChatRoom(listing, buyer));
+                });
+
+        return toRoomDto(room, buyerId);
+    }
+
+    /**
+     * 구매요청 목록 화면 등 transactionId를 들고 있는 기존 화면용. 매물+구매자 방을 찾거나 만들고, 이 거래를 방에 연결한다.
+     */
     @Transactional
     public TradeChatRoomDto getOrCreateRoom(Long transactionId, Long requesterId) {
         UsedTransaction transaction = usedTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."));
 
-        requireParticipant(transaction, requesterId);
+        boolean isBuyer = transaction.getBuyer().getId().equals(requesterId);
+        boolean isSeller = transaction.getListing().getSeller().getId().equals(requesterId);
+        if (!isBuyer && !isSeller) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 거래의 채팅방에 접근할 수 없어요.");
+        }
 
-        TradeChatRoom room = tradeChatRoomRepository.findByTransactionIdWithDetails(transactionId)
-                .orElseGet(() -> tradeChatRoomRepository.save(new TradeChatRoom(transaction)));
+        TradeChatRoom room = tradeChatRoomRepository
+                .findByListingIdAndBuyerIdWithDetails(transaction.getListing().getListingId(), transaction.getBuyer().getId())
+                .orElseGet(() -> tradeChatRoomRepository.save(new TradeChatRoom(transaction.getListing(), transaction.getBuyer())));
+
+        if (room.getTransaction() == null) {
+            room.linkTransaction(transaction);
+        }
 
         return toRoomDto(room, requesterId);
     }
 
     public TradeChatRoomDto getRoom(Long roomId, Long requesterId) {
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), requesterId);
+        requireParticipant(room, requesterId);
         return toRoomDto(room, requesterId);
     }
 
@@ -94,7 +130,7 @@ public class TradeChatService {
     @Transactional
     public List<TradeChatMessageDto> getHistory(Long roomId, Long requesterId) {
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), requesterId);
+        requireParticipant(room, requesterId);
 
         List<TradeChatMessage> unread =
                 tradeChatMessageRepository.findByRoom_RoomIdAndSender_IdNotAndReadFalse(roomId, requesterId);
@@ -119,7 +155,7 @@ public class TradeChatService {
         }
 
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), senderId);
+        requireParticipant(room, senderId);
         if (room.isBlocked()) {
             return;
         }
@@ -143,7 +179,7 @@ public class TradeChatService {
 
     public void enterRoom(Long roomId, Long memberId) {
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), memberId);
+        requireParticipant(room, memberId);
         if (presenceRegistry.enter(roomId, memberId)) {
             chatRedisPublisher.publish("/topic/trade-chat-rooms/" + roomId + "/presence",
                     new TradeChatPresenceEvent(roomId, memberId, true));
@@ -160,7 +196,7 @@ public class TradeChatService {
     @Transactional
     public void block(Long roomId, Long actingMemberId) {
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), actingMemberId);
+        requireParticipant(room, actingMemberId);
         Member actingMember = memberRepository.findById(actingMemberId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."));
         room.block(actingMember);
@@ -169,7 +205,7 @@ public class TradeChatService {
     @Transactional
     public void unblock(Long roomId, Long actingMemberId) {
         TradeChatRoom room = getRoomOrThrow(roomId);
-        requireParticipant(room.getTransaction(), actingMemberId);
+        requireParticipant(room, actingMemberId);
         if (room.getBlockedBy() == null || !room.getBlockedBy().getId().equals(actingMemberId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "차단을 건 본인만 해제할 수 있어요.");
         }
@@ -203,6 +239,7 @@ public class TradeChatService {
 
     /**
      * 마이페이지 구매요청 목록 화면에서 방별 안읽은 수를 한 번에 보여주기 위한 조회.
+     * 방은 이제 (매물, 구매자) 기준이라, 같은 방에 걸린 구매요청이 여러 건이면 전부 같은 안읽은 수를 받는다.
      */
     public Map<Long, Long> getUnreadCounts(Long memberId) {
         Map<Long, Long> result = new LinkedHashMap<>();
@@ -213,19 +250,12 @@ public class TradeChatService {
     }
 
     /**
-     * "나의 채팅" 목록 — 구매자/판매자로 참여 중인 거래를 전부 모아서 채팅방(없으면 생성)과
+     * "나의 채팅" 목록 — 구매자/판매자로 참여 중인 채팅방을 전부 모아서
      * 마지막 메시지 미리보기, 안읽은 수, 상대 온라인 여부를 붙여 최근 활동순으로 반환한다.
      */
-    @Transactional
     public List<TradeChatRoomListItemDto> listMyRooms(Long memberId) {
-        List<UsedTransaction> transactions = new ArrayList<>();
-        transactions.addAll(usedTransactionRepository.findAllByBuyerIdWithListing(memberId));
-        transactions.addAll(usedTransactionRepository.findAllBySellerIdWithListing(memberId));
-
         List<TradeChatRoomListItemDto> items = new ArrayList<>();
-        for (UsedTransaction transaction : transactions) {
-            TradeChatRoom room = tradeChatRoomRepository.findByTransactionIdWithDetails(transaction.getTransactionId())
-                    .orElseGet(() -> tradeChatRoomRepository.save(new TradeChatRoom(transaction)));
+        for (TradeChatRoom room : tradeChatRoomRepository.findAllByMemberWithDetails(memberId)) {
             items.add(toListItemDto(room, memberId));
         }
 
@@ -237,9 +267,8 @@ public class TradeChatService {
     }
 
     private TradeChatRoomListItemDto toListItemDto(TradeChatRoom room, Long requesterId) {
-        UsedTransaction transaction = room.getTransaction();
-        UsedListing listing = transaction.getListing();
-        Member counterpart = resolveCounterpart(transaction, requesterId);
+        UsedListing listing = room.getListing();
+        Member counterpart = resolveCounterpart(room, requesterId);
 
         TradeChatMessage lastMessage = tradeChatMessageRepository
                 .findRecentByRoomId(room.getRoomId(), PageRequest.of(0, 1))
@@ -252,16 +281,18 @@ public class TradeChatService {
                 ? null
                 : tradeChatMessageRepository.findLastMessageTimeBySender(room.getRoomId(), counterpart.getId());
 
+        UsedTransaction transaction = room.getTransaction();
+
         return new TradeChatRoomListItemDto(
                 room.getRoomId(),
-                transaction.getTransactionId(),
+                transaction != null ? transaction.getTransactionId() : null,
                 counterpart.getId(),
                 counterpart.getNickname(),
                 counterpart.getProfileImage(),
                 listing.getTitle(),
                 firstImageUrl(listing),
                 listing.getStatus(),
-                transaction.getStatus(),
+                transaction != null ? transaction.getStatus() : null,
                 lastMessage != null ? lastMessage.getMessage() : null,
                 lastMessage != null ? lastMessage.getMessageType() : null,
                 lastMessage != null ? lastMessage.getCreatedAt() : null,
@@ -275,12 +306,12 @@ public class TradeChatService {
      * 수신자가 지금 이 채팅방을 보고 있지 않을 때만 알림을 보낸다(보고 있으면 실시간으로 이미 보이니 중복 알림 방지).
      */
     private void notifyRecipientIfAway(TradeChatRoom room, Member sender, String messageType, String messageText) {
-        Member recipient = resolveCounterpart(room.getTransaction(), sender.getId());
+        Member recipient = resolveCounterpart(room, sender.getId());
         if (presenceRegistry.isOnline(room.getRoomId(), recipient.getId())) {
             return;
         }
 
-        String listingTitle = room.getTransaction().getListing().getTitle();
+        String listingTitle = room.getListing().getTitle();
         String preview = MESSAGE_TYPE_IMAGE.equals(messageType)
                 ? sender.getNickname() + "님이 사진을 보냈어요"
                 : sender.getNickname() + "님: " + truncate(messageText, NOTIFICATION_PREVIEW_MAX_LENGTH);
@@ -292,9 +323,9 @@ public class TradeChatService {
         return text.length() <= maxLength ? text : text.substring(0, maxLength) + "…";
     }
 
-    private Member resolveCounterpart(UsedTransaction transaction, Long requesterId) {
-        boolean requesterIsBuyer = transaction.getBuyer().getId().equals(requesterId);
-        return requesterIsBuyer ? transaction.getListing().getSeller() : transaction.getBuyer();
+    private Member resolveCounterpart(TradeChatRoom room, Long requesterId) {
+        boolean requesterIsBuyer = room.getBuyer().getId().equals(requesterId);
+        return requesterIsBuyer ? room.getListing().getSeller() : room.getBuyer();
     }
 
     private String firstImageUrl(UsedListing listing) {
@@ -308,18 +339,18 @@ public class TradeChatService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."));
     }
 
-    private void requireParticipant(UsedTransaction transaction, Long memberId) {
-        boolean isBuyer = transaction.getBuyer().getId().equals(memberId);
-        boolean isSeller = transaction.getListing().getSeller().getId().equals(memberId);
+    private void requireParticipant(TradeChatRoom room, Long memberId) {
+        boolean isBuyer = room.getBuyer().getId().equals(memberId);
+        boolean isSeller = room.getListing().getSeller().getId().equals(memberId);
         if (!isBuyer && !isSeller) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 거래의 채팅방에 접근할 수 없어요.");
         }
     }
 
     private TradeChatRoomDto toRoomDto(TradeChatRoom room, Long requesterId) {
+        UsedListing listing = room.getListing();
+        Member counterpart = resolveCounterpart(room, requesterId);
         UsedTransaction transaction = room.getTransaction();
-        UsedListing listing = transaction.getListing();
-        Member counterpart = resolveCounterpart(transaction, requesterId);
 
         boolean online = presenceRegistry.isOnline(room.getRoomId(), counterpart.getId());
         LocalDateTime lastSeenAt = online
@@ -328,8 +359,8 @@ public class TradeChatService {
 
         return new TradeChatRoomDto(
                 room.getRoomId(),
-                transaction.getTransactionId(),
-                transaction.getStatus(),
+                transaction != null ? transaction.getTransactionId() : null,
+                transaction != null ? transaction.getStatus() : null,
                 listing.getListingId(),
                 listing.getTitle(),
                 firstImageUrl(listing),

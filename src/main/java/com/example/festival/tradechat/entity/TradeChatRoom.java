@@ -1,6 +1,7 @@
 package com.example.festival.tradechat.entity;
 
 import com.example.festival.member.entity.Member;
+import com.example.festival.usedtrade.entity.UsedListing;
 import com.example.festival.usedtrade.entity.UsedTransaction;
 
 import jakarta.persistence.Column;
@@ -18,7 +19,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * trade_chat_room 매핑. 중고거래 구매요청(UsedTransaction) 하나당 채팅방 하나(1:1, buyer-seller).
+ * trade_chat_room 매핑. 매물(listing) + 구매자(buyer) 한 쌍당 채팅방 하나(1:1) — 상대는 매물의 판매자.
+ * 구매요청(UsedTransaction)은 선택 항목이다: 채팅 중 실제 구매 요청이 생기면 그 방에 연결된다.
  */
 @Entity
 @Table(name = "trade_chat_room")
@@ -32,7 +34,15 @@ public class TradeChatRoom {
     private Long roomId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_id", nullable = false, unique = true)
+    @JoinColumn(name = "listing_id", nullable = false)
+    private UsedListing listing;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "buyer_id", nullable = false)
+    private Member buyer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id")
     private UsedTransaction transaction;
 
     @Column(name = "blocked", nullable = false)
@@ -45,7 +55,12 @@ public class TradeChatRoom {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public TradeChatRoom(UsedTransaction transaction) {
+    public TradeChatRoom(UsedListing listing, Member buyer) {
+        this.listing = listing;
+        this.buyer = buyer;
+    }
+
+    public void linkTransaction(UsedTransaction transaction) {
         this.transaction = transaction;
     }
 

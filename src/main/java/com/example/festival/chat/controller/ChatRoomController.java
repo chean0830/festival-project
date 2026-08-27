@@ -2,6 +2,7 @@ package com.example.festival.chat.controller;
 
 import com.example.festival.chat.dto.ChatMessageDto;
 import com.example.festival.chat.dto.ChatRoomDto;
+import com.example.festival.chat.dto.OpenChatRoomListItemDto;
 import com.example.festival.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +26,11 @@ public class ChatRoomController {
     @GetMapping("/api/chat-rooms/by-event/{eventId}")
     public ChatRoomDto getRoomByEvent(@PathVariable Long eventId, @RequestParam(required = false) Long memberId) {
         return chatService.getOrCreateRoomForEvent(eventId, memberId);
+    }
+
+    @GetMapping("/api/members/{memberId}/chat-rooms")
+    public List<OpenChatRoomListItemDto> listMyRooms(@PathVariable Long memberId) {
+        return chatService.listMyRooms(memberId);
     }
 
     @GetMapping("/api/chat-rooms/{roomId}/messages")

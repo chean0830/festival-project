@@ -2,6 +2,7 @@ package com.example.festival.chat.service;
 
 import com.example.festival.chat.dto.ChatMessageDto;
 import com.example.festival.chat.dto.ChatRoomDto;
+import com.example.festival.chat.dto.OpenChatRoomListItemDto;
 import com.example.festival.chat.dto.PresenceEvent;
 import com.example.festival.chat.entity.OpenChatMember;
 import com.example.festival.chat.entity.OpenChatMessage;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -58,6 +60,35 @@ public class ChatService {
         long participantCount = chatMemberRepository.countByRoom_RoomIdAndLeftAtIsNull(room.getRoomId());
 
         return new ChatRoomDto(room.getRoomId(), event.getEventId(), event.getName(), room.getName(), blocked, participantCount);
+    }
+
+    /**
+     * "나의 채팅" 오픈채팅 탭 — 이 회원이 현재 참여 중인(나가지 않은) 오픈채팅방을 최근 메시지순으로 반환한다.
+     */
+    public List<OpenChatRoomListItemDto> listMyRooms(Long memberId) {
+        List<OpenChatRoomListItemDto> items = new ArrayList<>();
+        for (OpenChatMember membership : chatMemberRepository.findActiveByMemberIdWithDetails(memberId)) {
+            OpenChatRoom room = membership.getRoom();
+            OpenChatMessage lastMessage = chatMessageRepository
+                    .findRecentByRoomId(room.getRoomId(), PageRequest.of(0, 1))
+                    .stream().findFirst().orElse(null);
+            long participantCount = chatMemberRepository.countByRoom_RoomIdAndLeftAtIsNull(room.getRoomId());
+
+            items.add(new OpenChatRoomListItemDto(
+                    room.getRoomId(),
+                    room.getEvent().getEventId(),
+                    room.getEvent().getName(),
+                    lastMessage != null ? lastMessage.getMessage() : null,
+                    lastMessage != null ? lastMessage.getCreatedAt() : null,
+                    participantCount
+            ));
+        }
+
+        items.sort(Comparator.comparing(
+                OpenChatRoomListItemDto::lastMessageAt,
+                Comparator.nullsLast(Comparator.reverseOrder())
+        ));
+        return items;
     }
 
     /**

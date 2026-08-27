@@ -11,6 +11,7 @@ import {
   requestUsedPurchase,
   unlikeUsedListing,
 } from "../api/usedTradeApi";
+import { getOrCreateTradeChatRoomByListing } from "../api/tradeChatApi";
 import { reportContent } from "../api/communityApi";
 import { CATEGORY_LABEL, STATUS_LABEL, parseTags } from "../components/usedtrade/usedTradeCategories";
 import { formatPrice } from "../utils/formatPrice";
@@ -32,6 +33,7 @@ function UsedListingDetailPage() {
   const [actionError, setActionError] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -78,6 +80,19 @@ function UsedListingDetailPage() {
       setLikeStatus(next);
     } catch (err) {
       setActionError(err.message);
+    }
+  }
+
+  async function handleStartChat() {
+    setStartingChat(true);
+    setActionError(null);
+    try {
+      const room = await getOrCreateTradeChatRoomByListing(memberId, listingId);
+      navigate(`/shop/used/chat/room/${room.roomId}`);
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setStartingChat(false);
     }
   }
 
@@ -259,6 +274,14 @@ function UsedListingDetailPage() {
                     />
                   </svg>
                   <span className="used-listing-detail__heart-count">{likeStatus?.likeCount ?? listing.likeCount}</span>
+                </button>
+                <button
+                  type="button"
+                  className="used-listing-detail__chat-button"
+                  disabled={startingChat}
+                  onClick={handleStartChat}
+                >
+                  채팅하기
                 </button>
                 <button
                   type="button"

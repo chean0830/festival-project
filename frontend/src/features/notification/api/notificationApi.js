@@ -54,3 +54,9 @@ export async function markNotificationAsRead(memberId, notificationId) {
   window.dispatchEvent(new Event('notifications:read'))
   return result
 }
+
+export async function markAllNotificationsAsRead(memberId) {
+  const result = await patchJson(`/api/members/${memberId}/notifications/read-all`)
+  window.dispatchEvent(new Event('notifications:read'))
+  return result
+}

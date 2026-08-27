@@ -51,6 +51,17 @@ export async function getChatMessages(roomId) {
   return response.json();
 }
 
+export async function fetchMyOpenChatRooms(memberId) {
+  const response = await fetch(`/api/members/${memberId}/chat-rooms`, { credentials: "include" });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.message ?? "채팅방 목록을 불러오지 못했습니다.");
+  }
+
+  return response.json();
+}
+
 export async function getLatestChatMessage(roomId) {
   const response = await fetch(`/api/chat-rooms/${roomId}/messages/latest`, { credentials: "include" });
   if (!response.ok) return null;
