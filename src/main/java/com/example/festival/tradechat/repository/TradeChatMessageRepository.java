@@ -27,11 +27,16 @@ public interface TradeChatMessageRepository extends JpaRepository<TradeChatMessa
     @Query("SELECT MAX(m.createdAt) FROM TradeChatMessage m WHERE m.room.roomId = :roomId AND m.sender.id = :memberId")
     LocalDateTime findLastMessageTimeBySender(@Param("roomId") Long roomId, @Param("memberId") Long memberId);
 
-    @Query("SELECT r.transaction.transactionId AS transactionId, COUNT(m) AS count "
+    /**
+     * 채팅방은 이제 (매물, 구매자) 기준이라 방 하나에 구매요청이 여러 건 걸릴 수 있다.
+     * 그래서 "방의 transaction"이 아니라 매물+구매자가 일치하는 모든 구매요청에 방의 안읽은 수를 매핑한다.
+     */
+    @Query("SELECT t.transactionId AS transactionId, COUNT(m) AS count "
             + "FROM TradeChatMessage m JOIN m.room r "
+            + "JOIN UsedTransaction t ON t.listing.listingId = r.listing.listingId AND t.buyer.id = r.buyer.id "
             + "WHERE m.read = false AND m.sender.id <> :memberId "
-            + "AND (r.transaction.buyer.id = :memberId OR r.transaction.listing.seller.id = :memberId) "
-            + "GROUP BY r.transaction.transactionId")
+            + "AND (r.buyer.id = :memberId OR r.listing.seller.id = :memberId) "
+            + "GROUP BY t.transactionId")
     List<UnreadCountRow> countUnreadByMember(@Param("memberId") Long memberId);
 
     interface UnreadCountRow {

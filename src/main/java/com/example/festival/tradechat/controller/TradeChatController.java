@@ -41,6 +41,11 @@ public class TradeChatController {
         return tradeChatService.getOrCreateRoom(transactionId, memberId);
     }
 
+    @PostMapping("/listings/{listingId}/room")
+    public TradeChatRoomDto getOrCreateRoomByListing(@PathVariable Long memberId, @PathVariable Long listingId) {
+        return tradeChatService.getOrCreateRoomByListing(listingId, memberId);
+    }
+
     @GetMapping("/rooms/{roomId}")
     public TradeChatRoomDto getRoom(@PathVariable Long memberId, @PathVariable Long roomId) {
         return tradeChatService.getRoom(roomId, memberId);

@@ -49,6 +49,10 @@ export function getOrCreateTradeChatRoom(memberId, transactionId) {
   return postJson(`/api/members/${memberId}/trade-chat/transactions/${transactionId}/room`)
 }
 
+export function getOrCreateTradeChatRoomByListing(memberId, listingId) {
+  return postJson(`/api/members/${memberId}/trade-chat/listings/${listingId}/room`)
+}
+
 export function fetchTradeChatRoom(memberId, roomId) {
   return getJson(`/api/members/${memberId}/trade-chat/rooms/${roomId}`)
 }

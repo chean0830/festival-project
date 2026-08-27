@@ -32,6 +32,7 @@ const drawerMenuItems = [
   { label: "MD 중고거래", href: "/shop" },
   { label: "MD 사전예약", href: "/shop/preorder" },
   { label: "라이브", href: "/live" },
+  { label: "나의 채팅", href: "/my-chats" },
   { label: "페스티벌 기록", href: "/festival-log" },
   { label: "내 주변 쉼표", href: "/nearby-food" },
   { label: "내 방문 지도", href: "/visits/map" },
@@ -170,9 +171,6 @@ function Header({ hideSubnav = false }) {
                 <a href="/profile" className="header__profile-btn">
                   내 프로필
                 </a>
-                <a href="/my-chats" className="header__profile-btn">
-                  나의 채팅
-                </a>
                 <button type="button" className="header__logout-btn" onClick={handleLogout}>
                   로그아웃
                 </button>
@@ -251,13 +249,6 @@ function Header({ hideSubnav = false }) {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     내 프로필
-                  </a>
-                  <a
-                    href="/my-chats"
-                    className="header__drawer-profile-text"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    나의 채팅
                   </a>
                   <button
                     type="button"

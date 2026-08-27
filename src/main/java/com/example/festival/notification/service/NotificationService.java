@@ -80,6 +80,15 @@ public class NotificationService {
     }
 
     @Transactional
+    public void markAllAsRead(Long memberId) {
+        Member member = getMemberOrThrow(memberId);
+        notificationRepository.markAllPersonalAsRead(memberId);
+        for (Notification broadcast : notificationRepository.findUnreadBroadcastsForMember(memberId)) {
+            notificationReadRepository.save(new NotificationRead(broadcast, member));
+        }
+    }
+
+    @Transactional
     public void notifyMember(Long memberId, Long eventId, String type, String title, String content) {
         Member member = getMemberOrThrow(memberId);
         Event event = eventId == null ? null : eventRepository.findById(eventId).orElse(null);

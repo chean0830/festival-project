@@ -7,7 +7,34 @@
 .notification-content h1 {
   font-size: 22px;
   font-weight: 700;
+}
+
+.notification-content__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 20px;
+}
+
+.notification-read-all-btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.notification-read-all-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.notification-read-all-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .notification-empty-text,

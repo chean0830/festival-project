@@ -1103,7 +1103,14 @@ CREATE TABLE used_transaction_payment (
 CREATE TABLE trade_chat_room (
     room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    transaction_id BIGINT NOT NULL UNIQUE,
+    listing_id BIGINT NOT NULL
+        COMMENT '채팅 대상 매물',
+
+    buyer_id BIGINT NOT NULL
+        COMMENT '채팅을 시작한 구매자(상대는 매물의 판매자)',
+
+    transaction_id BIGINT
+        COMMENT '채팅 중 구매 요청이 생기면 연결(선택)',
 
     blocked BOOLEAN NOT NULL DEFAULT FALSE
         COMMENT '둘 중 한쪽이 차단하면 true, 양방향 송수신 금지',
@@ -1112,6 +1119,14 @@ CREATE TABLE trade_chat_room (
         COMMENT '차단을 건 회원',
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE KEY uk_trade_chat_room_listing_buyer (listing_id, buyer_id),
+
+    FOREIGN KEY (listing_id)
+        REFERENCES used_listing(listing_id),
+
+    FOREIGN KEY (buyer_id)
+        REFERENCES member(member_id),
 
     FOREIGN KEY (transaction_id)
         REFERENCES used_transaction(transaction_id),

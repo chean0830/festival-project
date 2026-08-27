@@ -8,6 +8,7 @@ import useCurrentMember from '../features/profile/hooks/useCurrentMember'
 import { STATUS_LABEL as LISTING_STATUS_LABEL, TX_STATUS_LABEL } from '../components/usedtrade/usedTradeCategories'
 import {
   getOrCreateTradeChatRoom,
+  fetchTradeChatRoom,
   fetchTradeChatMessages,
   enterTradeChatRoom,
   exitTradeChatRoom,
@@ -41,7 +42,7 @@ function formatLastSeen(dateStr) {
 }
 
 export default function TradeChatRoomPage() {
-  const { transactionId } = useParams()
+  const { transactionId, roomId: roomIdParam } = useParams()
   const navigate = useNavigate()
   const currentMember = useCurrentMember()
   const memberId = currentMember?.memberId
@@ -64,7 +65,9 @@ export default function TradeChatRoomPage() {
 
     async function load() {
       try {
-        const roomData = await getOrCreateTradeChatRoom(memberId, transactionId)
+        const roomData = transactionId
+          ? await getOrCreateTradeChatRoom(memberId, transactionId)
+          : await fetchTradeChatRoom(memberId, roomIdParam)
         if (cancelled) return
         setRoom(roomData)
 
@@ -124,7 +127,7 @@ export default function TradeChatRoomPage() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberId, transactionId])
+  }, [memberId, transactionId, roomIdParam])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -245,8 +248,9 @@ export default function TradeChatRoomPage() {
                 <div className="trade-chat-page__status-text">
                   <span className="trade-chat-page__status-title">{room.listingTitle}</span>
                   <span className="trade-chat-page__status-badge">
-                    {LISTING_STATUS_LABEL[room.listingStatus] ?? room.listingStatus} ·{' '}
-                    {TX_STATUS_LABEL[room.transactionStatus] ?? room.transactionStatus}
+                    {LISTING_STATUS_LABEL[room.listingStatus] ?? room.listingStatus}
+                    {room.transactionStatus &&
+                      ` · ${TX_STATUS_LABEL[room.transactionStatus] ?? room.transactionStatus}`}
                   </span>
                 </div>
               </div>
