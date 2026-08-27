@@ -2,6 +2,7 @@ package com.example.festival.live.dto;
 
 import com.example.festival.live.entity.LiveSourceType;
 import com.example.festival.live.entity.LiveStreamStatus;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record LiveStreamResponse(
@@ -18,6 +19,8 @@ public record LiveStreamResponse(
         Long hostMemberId,
         String hostNickname,
         String hostProfileImage,
+        BigDecimal entranceFee,
+        boolean admissionRequired,
         boolean owner,
         boolean chatEnabled,
         LocalDateTime createdAt

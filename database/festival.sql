@@ -1302,6 +1302,8 @@ CREATE TABLE live_payment (
 
     member_id BIGINT NOT NULL,
 
+    toss_order_id VARCHAR(64) NOT NULL UNIQUE,
+
     payment_key VARCHAR(100) NOT NULL UNIQUE,
 
     payment_method VARCHAR(30) NOT NULL,
@@ -1319,7 +1321,10 @@ CREATE TABLE live_payment (
         REFERENCES live_stream(stream_id),
 
     FOREIGN KEY (member_id)
-        REFERENCES member(member_id)
+        REFERENCES member(member_id),
+
+    CONSTRAINT uk_live_payment_stream_member
+        UNIQUE (stream_id, member_id)
 );
 
 

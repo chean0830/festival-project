@@ -6,13 +6,14 @@ import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import { confirmMdOrderPayment } from "../api/mdShopApi";
 import { confirmUsedTransactionPayment } from "../api/usedTradeApi";
 import { confirmLiveDonation } from "../features/live/api/donationApi";
+import { confirmLiveAdmission } from "../features/live/api/admissionApi";
 import { formatPrice } from "../utils/formatPrice";
 import { parseTossOrderId } from "../utils/tossPayment";
 import "./MdOrderPage.css";
 
 /**
  * Toss Payments 결제창(successUrl/failUrl)이 공통으로 돌아오는 페이지.
- * orderId(Toss 주문번호)의 "MD_" / "USED_" / "DONATION_" 접두사로 어떤 도메인의 결제인지 구분해서
+ * orderId(Toss 주문번호)의 "MD_" / "USED_" / "DONATION_" / "LIVE_" 접두사로 어떤 도메인의 결제인지 구분해서
  * 해당 도메인의 결제 승인 API를 호출한다.
  */
 function PaymentResultPage() {
@@ -31,7 +32,7 @@ function PaymentResultPage() {
   const paymentKey = params.get("paymentKey");
   const amount = Number(params.get("amount"));
   const { domainPrefix, domainId } = parseTossOrderId(tossOrderId);
-  const supportedDomains = ["MD", "USED", "DONATION"];
+  const supportedDomains = ["MD", "USED", "DONATION", "LIVE"];
   const isMalformed = !isDirectFail && (
     !supportedDomains.includes(domainPrefix) || !domainId || !paymentKey || !Number.isFinite(amount)
   );
@@ -45,8 +46,10 @@ function PaymentResultPage() {
       confirm = confirmMdOrderPayment(memberId, domainId, { paymentKey, orderId: tossOrderId, amount });
     } else if (domainPrefix === "USED") {
       confirm = confirmUsedTransactionPayment(memberId, domainId, { paymentKey, orderId: tossOrderId, amount });
-    } else {
+    } else if (domainPrefix === "DONATION") {
       confirm = confirmLiveDonation(domainId, { paymentKey, orderId: tossOrderId, amount });
+    } else {
+      confirm = confirmLiveAdmission(domainId, { paymentKey, orderId: tossOrderId, amount });
     }
 
     confirm
@@ -94,13 +97,23 @@ function PaymentResultPage() {
             <button type="button" className="md-order-page__complete-btn" onClick={() => navigate("/")}>
               홈
             </button>
-            <button
-              type="button"
-              className="md-order-page__complete-btn md-order-page__complete-btn--primary"
-              onClick={() => navigate("/profile")}
-            >
-              프로필로 돌아가기
-            </button>
+            {domainPrefix === "LIVE" && domainId ? (
+              <button
+                type="button"
+                className="md-order-page__complete-btn md-order-page__complete-btn--primary"
+                onClick={() => navigate(`/live/${domainId}`, { replace: true })}
+              >
+                방송으로 돌아가기
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="md-order-page__complete-btn md-order-page__complete-btn--primary"
+                onClick={() => navigate("/profile")}
+              >
+                프로필로 돌아가기
+              </button>
+            )}
           </div>
         </div>
       </Layout>
@@ -117,6 +130,7 @@ function PaymentResultPage() {
 
   const isMd = data.domainPrefix === "MD";
   const isDonation = data.domainPrefix === "DONATION";
+  const isLiveAdmission = data.domainPrefix === "LIVE";
   const { result } = data;
 
   return (
@@ -169,6 +183,21 @@ function PaymentResultPage() {
               </div>
             )}
           </div>
+        ) : isLiveAdmission ? (
+          <div className="md-order-page__recap">
+            <div className="md-order-page__recap-row">
+              <span>방송</span>
+              <span>{result.streamTitle}</span>
+            </div>
+            <div className="md-order-page__recap-row">
+              <span>입장료</span>
+              <strong>{formatPrice(result.amount)}</strong>
+            </div>
+            <div className="md-order-page__recap-row">
+              <span>결제 수단</span>
+              <span>{result.paymentMethod}</span>
+            </div>
+          </div>
         ) : (
           <div className="md-order-page__summary">
             <div className="md-order-page__summary-thumb">
@@ -195,6 +224,14 @@ function PaymentResultPage() {
               })}
             >
               방송으로 돌아가기
+            </button>
+          ) : isLiveAdmission ? (
+            <button
+              type="button"
+              className="md-order-page__complete-btn md-order-page__complete-btn--primary"
+              onClick={() => navigate(`/live/${result.streamId}`, { replace: true })}
+            >
+              방송 입장하기
             </button>
           ) : (
             <button

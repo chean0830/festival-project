@@ -166,6 +166,70 @@ function LiveDonationWarningModal({ message, onClose }) {
   )
 }
 
+function LiveAdmissionGate({
+  stream,
+  member,
+  paymentMethod,
+  submitting,
+  error,
+  onPaymentMethodChange,
+  onLogin,
+  onPay,
+}) {
+  return (
+    <div
+      className="live-admission-gate"
+      style={{ backgroundImage: `linear-gradient(rgba(5,10,7,.72), rgba(5,10,7,.88)), url(${stream.thumbnailUrl || '/favicon.svg'})` }}
+    >
+      <section className="live-admission-gate__card" aria-labelledby="live-admission-title">
+        <div className="live-admission-gate__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+        </div>
+        <span className="live-admission-gate__eyebrow">PAID LIVE</span>
+        <h2 id="live-admission-title">유료 라이브입니다</h2>
+        <p>입장권을 한 번 결제하면 방송이 끝날 때까지 다시 결제하지 않고 재입장할 수 있습니다.</p>
+        <strong className="live-admission-gate__price">{formatPrice(stream.entranceFee)}</strong>
+
+        {member ? (
+          <>
+            <div className="live-admission-gate__methods" aria-label="결제 수단">
+              {PAYMENT_METHOD_LABELS.map((method) => (
+                <button
+                  type="button"
+                  key={method}
+                  className={paymentMethod === method ? 'is-selected' : ''}
+                  onClick={() => onPaymentMethodChange(method)}
+                  disabled={submitting}
+                >
+                  {method}
+                </button>
+              ))}
+            </div>
+            {error && <p className="live-admission-gate__error">{error}</p>}
+            <button
+              type="button"
+              className="live-admission-gate__submit"
+              onClick={onPay}
+              disabled={submitting}
+            >
+              {submitting ? '결제창 준비 중...' : `${formatPrice(stream.entranceFee)} 결제하고 입장하기`}
+            </button>
+          </>
+        ) : member === null ? (
+          <button type="button" className="live-admission-gate__submit" onClick={onLogin}>
+            로그인하고 입장권 결제하기
+          </button>
+        ) : (
+          <button type="button" className="live-admission-gate__submit" disabled>
+            로그인 정보 확인 중...
+          </button>
+        )}
+        <small>표시된 입장료가 최종 결제 금액입니다.</small>
+      </section>
+    </div>
+  )
+}
+
 function formatMdDeadline(preorderDeadline) {
   if (!preorderDeadline) return ''
   const deadlineDate = preorderDeadline.slice(0, 10)
@@ -444,6 +508,9 @@ export default function LiveWatchPage() {
   const [donationSubmitting, setDonationSubmitting] = useState(false)
   const [donationError, setDonationError] = useState('')
   const [donationWarning, setDonationWarning] = useState('')
+  const [admissionPaymentMethod, setAdmissionPaymentMethod] = useState(PAYMENT_METHOD_LABELS[0])
+  const [admissionSubmitting, setAdmissionSubmitting] = useState(false)
+  const [admissionError, setAdmissionError] = useState('')
 
   useEffect(() => {
     fetchLiveStream(streamId)
@@ -454,6 +521,8 @@ export default function LiveWatchPage() {
         setMdPanelOpen(false)
         setMdProducts(null)
         setMdError('')
+        setAdmissionSubmitting(false)
+        setAdmissionError('')
       })
       .catch((loadError) => setError(loadError.message))
       .finally(() => setLoading(false))
@@ -660,6 +729,29 @@ export default function LiveWatchPage() {
     }
   }
 
+  async function handleAdmissionPayment() {
+    if (!currentMember) {
+      navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`)
+      return
+    }
+
+    setAdmissionSubmitting(true)
+    setAdmissionError('')
+    try {
+      await requestTossPayment({
+        methodLabel: admissionPaymentMethod,
+        domainPrefix: 'LIVE',
+        domainId: stream.streamId,
+        amount: Number(stream.entranceFee),
+        orderName: `${stream.title} 라이브 입장권`,
+        customerName: currentMember.nickname,
+      })
+    } catch (paymentError) {
+      setAdmissionError(paymentError.message)
+      setAdmissionSubmitting(false)
+    }
+  }
+
   function handleTemporaryAd() {
     openPreparedLink(TEMP_AD.url, '광고 상세 내용을 준비 중입니다.')
   }
@@ -757,6 +849,8 @@ export default function LiveWatchPage() {
     )
   }
 
+  const admissionLocked = !stream.owner && stream.admissionRequired
+
   return (
     <Layout>
       <div className="live-watch-page">
@@ -766,12 +860,23 @@ export default function LiveWatchPage() {
         </div>
 
         <div
-          className={`live-watch__layout ${chatOpen ? '' : 'live-watch__layout--chat-hidden'}`}
+          className={`live-watch__layout ${chatOpen && !admissionLocked ? '' : 'live-watch__layout--chat-hidden'}`}
           ref={fullscreenRef}
         >
           <section>
             <div className="live-player" ref={playerRef}>
-              {stream.status !== 'ENDED' && (stream.owner || viewerPlaying) ? (
+              {admissionLocked ? (
+                <LiveAdmissionGate
+                  stream={stream}
+                  member={currentMember}
+                  paymentMethod={admissionPaymentMethod}
+                  submitting={admissionSubmitting}
+                  error={admissionError}
+                  onPaymentMethodChange={setAdmissionPaymentMethod}
+                  onLogin={() => navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`)}
+                  onPay={handleAdmissionPayment}
+                />
+              ) : stream.status !== 'ENDED' && (stream.owner || viewerPlaying) ? (
                 <BrowserLivePlayer
                   streamId={stream.streamId}
                   owner={stream.owner}
@@ -800,7 +905,7 @@ export default function LiveWatchPage() {
                   </div>
                 </div>
               )}
-              {!stream.owner && stream.status === 'LIVE' && viewerPlaying && adVisible && (
+              {!admissionLocked && !stream.owner && stream.status === 'LIVE' && viewerPlaying && adVisible && (
                 <div className="live-player__ad" role="complementary" aria-label="광고">
                   <button
                     type="button"
@@ -824,7 +929,7 @@ export default function LiveWatchPage() {
                   </button>
                 </div>
               )}
-              {!stream.owner && (
+              {!admissionLocked && !stream.owner && (
                 <LiveMdPreorderPanel
                   open={mdPanelOpen}
                   eventName={stream.eventName}
@@ -835,7 +940,7 @@ export default function LiveWatchPage() {
                   onSelect={handleMdProductSelect}
                 />
               )}
-              <div className="live-player__hover-ui">
+              {!admissionLocked && <div className="live-player__hover-ui">
                 <div className="live-player__hover-top">
                   {!stream.owner && (
                     <button
@@ -974,7 +1079,7 @@ export default function LiveWatchPage() {
                     )}
                   </div>
                 </div>
-              </div>
+              </div>}
             </div>
 
             {stream.owner && (
@@ -1032,11 +1137,14 @@ export default function LiveWatchPage() {
               <span>{stream.eventName}</span>
               <h1>{stream.title}</h1>
               <div className="live-watch__host">방송자 <strong>{stream.hostNickname}</strong></div>
+              <div className={`live-watch__admission ${Number(stream.entranceFee) > 0 ? 'is-paid' : ''}`}>
+                {Number(stream.entranceFee) > 0 ? `유료 입장 ${formatPrice(stream.entranceFee)}` : '무료 입장'}
+              </div>
               {stream.description && <p>{stream.description}</p>}
             </div>
           </section>
 
-          {chatOpen && (
+          {chatOpen && !admissionLocked && (
             <aside className="live-side-panel">
               <LiveChatPanel
                 open
