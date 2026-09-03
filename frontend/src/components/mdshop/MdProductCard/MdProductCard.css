@@ -5,6 +5,23 @@
   text-align: left;
 }
 
+.md-product-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.md-product-card__body:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
 .md-product-card__poster {
   position: relative;
   width: 100%;
