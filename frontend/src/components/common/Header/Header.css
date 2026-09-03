@@ -26,67 +26,70 @@
   box-sizing: border-box;
 }
 
-/* 로고 — 지금은 텍스트만 (아이콘은 나중에 다시 정하면 추가).
-   IBM Plex Sans KR은 700(Bold)이 최대 굵기라, 그보다 더 두꺼워 보이도록
-   같은 색으로 살짝 테두리(text-stroke)를 둘러서 획을 두껍게 보이게 함 */
+/* 로고 — Archivo Black 워드마크. FEST는 짙은 그린 단색, LOG는 브랜드 그린 */
 .header__logo {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 2.25rem;
+  font-family: "Archivo Black", var(--font-heading);
+  font-size: 2.2rem;
+  letter-spacing: -0.005em;
+  display: inline-flex;
+}
+
+.header__logo-fest {
+  color: #3a5a48;
+}
+
+.header__logo-log {
   color: var(--color-primary);
-  letter-spacing: -0.02em;
-  -webkit-text-stroke: 0.6px var(--color-primary);
 }
 
 .header__actions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-lg);
+  justify-content: flex-end;
+  gap: 20px;
 }
 
-/* 둥근 검색창 */
+/* 둥근 알약 모양 검색창 */
 .header__search {
   position: relative;
   display: flex;
   align-items: center;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 12px 20px;
+  width: 260px;
 }
 
 .header__search form {
   display: flex;
   align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .header__search-icon {
-  position: absolute;
-  top: 50%;
-  left: 14px;
-  transform: translateY(-50%);
+  position: static;
+  flex-shrink: 0;
   color: var(--color-text-muted);
   pointer-events: none;
 }
 
 .header__search-input {
-  width: 200px;
-  padding: 10px 16px 10px 40px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--color-input), var(--color-input-soft));
-  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
   font-size: var(--font-size-sm);
   color: var(--color-text);
   outline: none;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 .header__search-input::placeholder {
   color: var(--color-text-muted);
 }
-.header__search-input:focus {
-  border-color: var(--color-text-muted);
-  background: var(--color-input);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 7%, transparent);
-}
 
-/* 로그인 버튼 (헤더 상단 + 메뉴 서랍 안에서 공용으로 사용) */
+/* 로그인 버튼 (메뉴 서랍 안에서 공용으로 사용) */
 .header__login-btn {
   display: inline-flex;
   align-items: center;
@@ -109,11 +112,43 @@
   font-size: var(--font-size-sm);
 }
 
-/* 로그인 상태: 헤더 상단의 내 프로필 + 로그아웃 */
-.header__account {
+/* 로그아웃 상태: 헤더 상단의 로그인 칩 (프로필 칩과 같은 크기로 맞춤) */
+.header__login-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  padding: 5px 20px 5px 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+.header__login-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.header__login-chip-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px dashed #cfe3d2;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
+  color: var(--color-primary-dark);
+  flex-shrink: 0;
+}
+.header__login-chip-avatar svg {
+  width: 13px;
+  height: 13px;
+}
+
+.header__login-chip-text {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
 }
 
 .header__theme-toggle {
@@ -148,23 +183,117 @@
   stroke-linejoin: round;
 }
 
-.header__profile-btn {
-  display: inline-flex;
+/* 로그인 상태: 알림 벨 + 다크모드 토글 + 프로필 칩 */
+.header__icon-cluster {
+  display: flex;
   align-items: center;
-  padding: 14px 30px;
+  gap: 10px;
+  padding-left: 10px;
+  border-left: 1px solid var(--color-border);
+}
+
+.header__profile-wrap {
+  position: relative;
+}
+
+.header__profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background-color: var(--color-primary);
-  color: var(--color-text-on-primary);
+  padding: 6px 14px 6px 6px;
+  cursor: pointer;
+}
+.header__profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(155deg, #35c073, var(--color-primary-dark));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.header__profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.header__profile-chip svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-muted);
+}
+
+/* 프로필 칩 드롭다운 */
+.header__profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.header__profile-dropdown-header {
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+.header__profile-dropdown-name {
   font-size: var(--font-size-md);
   font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(30, 158, 82, 0.35);
-  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  color: var(--color-text);
 }
-.header__profile-btn:hover {
-  background-color: var(--color-primary-dark);
-  box-shadow: 0 4px 12px rgba(30, 158, 82, 0.45);
-  transform: translateY(-1px);
+.header__profile-dropdown-sub {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.header__profile-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+.header__profile-dropdown-item:hover {
+  background: var(--color-surface);
+}
+.header__profile-dropdown-item svg {
+  width: 17px;
+  height: 17px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+.header__profile-dropdown-item--danger {
+  color: var(--color-error);
+}
+.header__profile-dropdown-item--danger svg {
+  color: var(--color-error);
+}
+
+.header__profile-dropdown-divider {
+  height: 1px;
+  background: var(--color-border);
 }
 
 .header__logout-btn {
@@ -332,7 +461,7 @@
 }
 
 @media (max-width: 640px) {
-  .header__search-input {
+  .header__search {
     width: 160px;
   }
   .header__subnav {
@@ -341,7 +470,7 @@
   .header__subnav-links {
     gap: var(--spacing-md);
   }
-  .header__account > .header__theme-toggle {
+  .header__top .header__theme-toggle {
     display: none;
   }
   .header__drawer-theme {
@@ -350,7 +479,7 @@
 }
 
 @media (max-width: 420px) {
-  .header__search-input {
+  .header__search {
     width: 120px;
   }
 }
