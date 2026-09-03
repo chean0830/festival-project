@@ -5,6 +5,38 @@
   padding: var(--spacing-xl) 16px var(--spacing-xl) 80px;
 }
 
+.program-calendar-page__intro {
+  margin: var(--spacing-sm) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+
+.program-calendar-page__quickfilters {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+}
+.program-calendar-page__qf {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+.program-calendar-page__qf:hover {
+  transform: translateY(-1px);
+}
+.program-calendar-page__qf--active {
+  /* 커뮤니티 카테고리 칩의 active 색(--cp-ink: #12291b)과 동일하게 맞춤 */
+  background: #12291b;
+  border-color: #12291b;
+  color: #fff;
+}
+
 .program-calendar-page__lower {
   display: flex;
   align-items: center;
