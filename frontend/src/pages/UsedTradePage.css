@@ -53,6 +53,8 @@
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 10px 12px;
+  background: var(--color-input);
+  color: var(--color-text);
   font-size: var(--font-size-sm);
 }
 
@@ -74,7 +76,7 @@
 
 .used-trade-page__search-clear {
   border: 1px solid var(--color-border) !important;
-  background: #fff !important;
+  background: var(--color-elevated) !important;
   color: var(--color-text-muted) !important;
   font-weight: 600 !important;
   white-space: nowrap;
@@ -96,8 +98,8 @@
 
 .used-trade-page__tab {
   border: 1px solid var(--color-border);
-  background: #fff;
-  color: var(--color-text-muted);
+  background: var(--color-elevated);
+  color: var(--color-text);
   border-radius: 999px;
   padding: 6px 16px;
   font-size: var(--font-size-sm);
@@ -137,6 +139,8 @@
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 8px 10px;
+  background: var(--color-input);
+  color: var(--color-text);
   font-size: var(--font-size-sm);
 }
 
@@ -146,7 +150,7 @@
 
 .used-trade-page__price-filter button {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text);
   border-radius: 6px;
   padding: 8px 14px;
@@ -172,7 +176,13 @@
   padding: 8px 10px;
   font-size: var(--font-size-sm);
   color: var(--color-text);
-  background: #fff;
+  background: var(--color-input);
+  color-scheme: inherit;
+}
+
+.used-trade-page__sort option {
+  background: var(--color-elevated);
+  color: var(--color-text);
 }
 
 .used-trade-page__empty {
@@ -197,7 +207,7 @@
 
 .used-trade-page__pagination button {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text);
   border-radius: 6px;
   padding: 8px 18px;

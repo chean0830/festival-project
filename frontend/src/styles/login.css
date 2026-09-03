@@ -648,6 +648,101 @@
   margin-top: 0;
 }
 
+/* 저장된 다크모드 설정은 헤더가 없는 로그인·회원가입 화면에도 그대로 적용한다. */
+:root[data-theme='dark'] .login-page,
+:root[data-theme='dark'] .recovery-page {
+  background:
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 38%),
+    var(--color-background);
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .login-card h1,
+:root[data-theme='dark'] .signup-card h1,
+:root[data-theme='dark'] .recovery-card > h1,
+:root[data-theme='dark'] .recovery-intro h1,
+:root[data-theme='dark'] .recovery-intro h2,
+:root[data-theme='dark'] .social-heading,
+:root[data-theme='dark'] .field-label,
+:root[data-theme='dark'] .recovery-field {
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .input-row,
+:root[data-theme='dark'] .field-group input,
+:root[data-theme='dark'] .recovery-input,
+:root[data-theme='dark'] .signup-button {
+  border-color: var(--color-border);
+  background: var(--color-input);
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .input-row:focus-within,
+:root[data-theme='dark'] .field-group input:focus,
+:root[data-theme='dark'] .recovery-input:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+:root[data-theme='dark'] .input-row input,
+:root[data-theme='dark'] .field-group input,
+:root[data-theme='dark'] .recovery-input input {
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .input-row input::placeholder,
+:root[data-theme='dark'] .field-group input::placeholder,
+:root[data-theme='dark'] .recovery-input input::placeholder {
+  color: var(--color-text-muted);
+}
+
+:root[data-theme='dark'] .primary-button,
+:root[data-theme='dark'] .recovery-submit {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+:root[data-theme='dark'] .primary-button:hover,
+:root[data-theme='dark'] .recovery-submit:hover {
+  background: var(--color-primary-dark);
+}
+
+:root[data-theme='dark'] .signup-button:hover,
+:root[data-theme='dark'] .field-group input[readonly] {
+  background: var(--color-input-soft);
+}
+
+:root[data-theme='dark'] .account-links,
+:root[data-theme='dark'] .page-description,
+:root[data-theme='dark'] .login-guide,
+:root[data-theme='dark'] .agreement-row,
+:root[data-theme='dark'] .recovery-login-link,
+:root[data-theme='dark'] .recovery-intro p,
+:root[data-theme='dark'] .social-login,
+:root[data-theme='dark'] .password-toggle {
+  color: var(--color-text-muted);
+}
+
+:root[data-theme='dark'] .login-guide a {
+  color: var(--color-primary-dark);
+}
+
+:root[data-theme='dark'] .social-heading::before,
+:root[data-theme='dark'] .social-heading::after,
+:root[data-theme='dark'] .recovery-tabs {
+  border-color: var(--color-border);
+  background: var(--color-border);
+}
+
+:root[data-theme='dark'] .recovery-tabs {
+  background: transparent;
+}
+
+:root[data-theme='dark'] .recovery-tabs button.active {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text);
+}
+
 @media (max-width: 520px) {
   .login-page {
     align-items: start;

@@ -1,7 +1,7 @@
 .visit-map-page {
-  --vm-ink: #12291b;
-  --vm-ink-soft: #5a7166;
-  --vm-line: #e4ece2;
+  --vm-ink: var(--color-text);
+  --vm-ink-soft: var(--color-text-muted);
+  --vm-line: var(--color-border);
   --vm-font-mono: "IBM Plex Mono", monospace;
 
   font-family: "Pretendard Variable", "Pretendard", var(--font-body);
@@ -80,7 +80,8 @@
 /* ── 빈 상태 카드 ── */
 .empty-card {
   position: relative;
-  background: #fff;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 22px;
   padding: 40px 36px 34px;
   text-align: center;
@@ -240,7 +241,8 @@
 /* ── 지도 카드 ── */
 .map-card {
   position: relative;
-  background: #fff;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 8px;
   box-shadow: 0 2px 4px rgba(18, 41, 27, 0.05), 0 16px 34px rgba(18, 41, 27, 0.1);
@@ -304,7 +306,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #fff;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   padding: 6px 12px;
   border-radius: 999px;
   box-shadow: 0 4px 10px rgba(18, 41, 27, 0.12);
@@ -349,7 +352,8 @@
 }
 
 .visit-panel {
-  background: #fff;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   box-shadow: 0 1px 2px rgba(18, 41, 27, 0.04), 0 8px 20px rgba(18, 41, 27, 0.06);
   overflow: hidden;
@@ -416,7 +420,7 @@
   margin: 0;
 }
 .visit-row__meta .sep {
-  color: #c7d2ca;
+  color: var(--color-border);
 }
 
 .visit-row__date {

@@ -70,7 +70,7 @@
   padding: 10px 16px 10px 40px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #fafafa, #f0f0f0);
+  background: linear-gradient(180deg, var(--color-input), var(--color-input-soft));
   font-family: "Pretendard Variable", "Pretendard", var(--font-body);
   font-size: var(--font-size-sm);
   color: var(--color-text);
@@ -81,9 +81,9 @@
   color: var(--color-text-muted);
 }
 .header__search-input:focus {
-  border-color: #c4c4c4;
-  background: linear-gradient(180deg, #ffffff, #f5f5f5);
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-text-muted);
+  background: var(--color-input);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-text) 7%, transparent);
 }
 
 /* 로그인 버튼 (헤더 상단 + 메뉴 서랍 안에서 공용으로 사용) */
@@ -114,6 +114,38 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.header__theme-toggle {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 3px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s ease, opacity .15s ease;
+}
+
+.header__theme-toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.header__theme-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .header__profile-btn {
@@ -252,6 +284,19 @@
   gap: var(--spacing-md);
 }
 
+.header__drawer-theme {
+  display: none;
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header__drawer-theme .header__theme-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 4px;
+}
+
 .header__drawer-profile-text {
   font-size: var(--font-size-lg);
   font-weight: 700;
@@ -295,6 +340,12 @@
   }
   .header__subnav-links {
     gap: var(--spacing-md);
+  }
+  .header__account > .header__theme-toggle {
+    display: none;
+  }
+  .header__drawer-theme {
+    display: block;
   }
 }
 

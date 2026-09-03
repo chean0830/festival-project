@@ -1,15 +1,15 @@
 .post-card {
-  --pc-primary: #1e9e52;
-  --pc-secondary: #ff8a3d;
-  --pc-ink: #12291b;
-  --pc-ink-soft: #5a7166;
-  --pc-line: #e4ece2;
-  --pc-surface: #f5faf2;
+  --pc-primary: var(--color-primary);
+  --pc-secondary: var(--color-secondary);
+  --pc-ink: var(--color-text);
+  --pc-ink-soft: var(--color-text-muted);
+  --pc-line: var(--color-border);
+  --pc-surface: var(--color-surface);
 
   display: block;
   width: 100%;
   text-align: left;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--pc-line);
   border-radius: 16px;
   padding: 20px 22px;
@@ -117,7 +117,7 @@
 }
 .post-card__author-time {
   font-size: 11.5px;
-  color: #a8b3ac;
+  color: var(--pc-ink-soft);
   font-weight: 400;
   margin-left: 6px;
 }

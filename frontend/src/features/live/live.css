@@ -210,7 +210,7 @@
 
 .live-button--primary { background: var(--color-primary); color: white; }
 .live-button--primary:hover { background: var(--color-primary-dark); }
-.live-button--ghost { border-color: var(--color-border); background: white; color: var(--color-text); }
+.live-button--ghost { border-color: var(--color-border); background: var(--color-elevated); color: var(--color-text); }
 .live-button--danger { background: #d93649; color: white; }
 .live-button--wide { width: 100%; margin-top: 10px; }
 .live-button:disabled { opacity: .55; cursor: not-allowed; }
@@ -259,7 +259,7 @@
   padding: 18px;
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  background: white;
+  background: var(--color-elevated);
   cursor: pointer;
   transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
@@ -272,7 +272,7 @@
 .live-mode-option:has(input:checked) {
   border: 2px solid var(--color-primary);
   padding: 17px;
-  background: color-mix(in srgb, var(--color-primary) 7%, white);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-elevated));
   box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 
@@ -327,7 +327,7 @@
   place-items: center;
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  background: white;
+  background: var(--color-elevated);
   color: transparent;
 }
 
@@ -371,7 +371,7 @@
   padding: 13px 14px;
   border: 1px solid var(--color-border);
   border-radius: 9px;
-  background: white;
+  background: var(--color-input);
   color: var(--color-text);
   font: inherit;
   outline: none;
@@ -399,7 +399,7 @@
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 9px;
-  background: white;
+  background: var(--color-input);
 }
 
 .live-price-input:focus-within { border-color: var(--color-primary); }
@@ -805,8 +805,8 @@
   display: flex;
   width: min(370px, 52%);
   flex-direction: column;
-  background: #fbfdf9;
-  color: #20251f;
+  background: var(--color-background);
+  color: var(--color-text);
   box-shadow: -18px 0 42px rgba(0, 0, 0, .3);
 }
 
@@ -816,7 +816,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 19px 18px 15px;
-  border-bottom: 1px solid #e1e9df;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .live-md-panel__header small {
@@ -824,7 +824,7 @@
   overflow: hidden;
   max-width: 260px;
   margin-bottom: 4px;
-  color: #278b50;
+  color: var(--color-primary-dark);
   font-size: 10px;
   font-weight: 800;
   text-overflow: ellipsis;
@@ -846,15 +846,16 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: #edf2ea;
-  color: #4d554e;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
   font-size: 22px;
   font-weight: 300;
   cursor: pointer;
 }
 
 .live-md-panel__header button:hover {
-  background: #dfe9dc;
+  background: var(--color-input);
+  color: var(--color-text);
 }
 
 .live-md-panel__body {
@@ -870,14 +871,14 @@
   margin: 0;
   padding: 20px;
   place-items: center;
-  color: #747d75;
+  color: var(--color-text-muted);
   text-align: center;
   font-size: 12px;
   line-height: 1.6;
 }
 
 .live-md-panel__state--error {
-  color: #d9434f;
+  color: var(--color-error);
 }
 
 .live-md-product {
@@ -888,10 +889,10 @@
   gap: 11px;
   margin-bottom: 9px;
   padding: 9px;
-  border: 1px solid #e1e9df;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: white;
-  color: #20251f;
+  background: var(--color-elevated);
+  color: var(--color-text);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -900,7 +901,8 @@
 
 .live-md-product:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: #43b873;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
   box-shadow: 0 7px 18px rgba(31, 157, 85, .12);
 }
 
@@ -916,8 +918,8 @@
   height: 74px;
   place-items: center;
   border-radius: 10px;
-  background: #edf5eb;
-  color: #278b50;
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
   font-size: 13px;
   font-weight: 900;
 }
@@ -955,25 +957,25 @@
   align-items: center;
   justify-content: space-between;
   gap: 7px;
-  color: #7b847c;
+  color: var(--color-text-muted);
   font-size: 9px;
 }
 
 .live-md-product__meta em {
-  color: #239657;
+  color: var(--color-primary-dark);
   font-style: normal;
   font-weight: 900;
 }
 
 .live-md-product__meta em.is-closed {
-  color: #d84b57;
+  color: var(--color-error);
 }
 
 .live-md-panel__footer {
   padding: 11px 14px;
-  border-top: 1px solid #e1e9df;
-  background: white;
-  color: #747d75;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-elevated);
+  color: var(--color-text-muted);
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -1746,7 +1748,8 @@
   padding: 30px;
   border: 1px solid rgba(31, 157, 85, .2);
   border-radius: 22px;
-  background: white;
+  background: var(--color-elevated);
+  color: var(--color-text);
   box-shadow: 0 24px 70px rgba(0, 0, 0, .25);
 }
 
@@ -1764,6 +1767,11 @@
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
+}
+
+.live-donation-modal__close:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .live-donation-modal__eyebrow {
@@ -1816,7 +1824,7 @@
   padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: white;
+  background: var(--color-input);
   color: var(--color-text);
   font: inherit;
   font-size: 12px;
@@ -1842,6 +1850,7 @@
   padding: 11px 13px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
+  background: var(--color-input);
   color: var(--color-text-muted);
   font-size: 12px;
   font-weight: 700;
@@ -1893,6 +1902,7 @@
   padding: 12px 13px 28px;
   border: 1px solid var(--color-border);
   border-radius: 10px;
+  background: var(--color-input);
   color: var(--color-text);
   font: inherit;
   font-size: 12px;
@@ -1938,13 +1948,17 @@
   font-size: 11px;
 }
 
+:root[data-theme='dark'] .live-donation-modal__error {
+  background: #3b1f24;
+}
+
 .live-donation-modal__submit {
   width: 100%;
   min-height: 48px;
   border: 0;
   border-radius: 12px;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
   font: inherit;
   font-size: 14px;
   font-weight: 900;
@@ -1977,7 +1991,8 @@
   padding: 30px 28px 26px;
   border: 1px solid rgba(31, 157, 85, .2);
   border-radius: 20px;
-  background: white;
+  background: var(--color-elevated);
+  color: var(--color-text);
   text-align: center;
   box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
 }
@@ -2015,7 +2030,7 @@
   border: 0;
   border-radius: 12px;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
   font: inherit;
   font-size: 14px;
   font-weight: 900;
