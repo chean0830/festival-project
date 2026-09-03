@@ -45,8 +45,17 @@ export default function NotificationBell() {
   }
 
   return (
-    <button type="button" className="notification-bell" onClick={() => navigate('/notifications')}>
-      🔔 알림{unreadCount > 0 ? ` ${unreadCount}` : ''}
+    <button
+      type="button"
+      className="notification-bell"
+      aria-label="알림"
+      onClick={() => navigate('/notifications')}
+    >
+      <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinejoin="round">
+        <path d="M12 3a5 5 0 00-5 5v3.5c0 .8-.3 1.6-.9 2.1L5 15h14l-1.1-1.4a3 3 0 01-.9-2.1V8a5 5 0 00-5-5z" />
+        <path d="M9.5 18a2.5 2.5 0 005 0" strokeLinecap="round" />
+      </svg>
+      {unreadCount > 0 && <span className="notification-bell__badge">{unreadCount}</span>}
     </button>
   )
 }
