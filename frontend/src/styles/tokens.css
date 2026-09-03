@@ -9,6 +9,8 @@
 */
 
 :root {
+  color-scheme: light;
+
   /* ---- Color: Brand (진한 초록) ---- */
   --color-primary: #1e9e52;        /* 메인 브랜드 컬러 (로고, 버튼, 강조) */
   --color-primary-dark: #147a3e;   /* hover/active 시 사용 */
@@ -29,7 +31,11 @@
   /* ---- Color: Neutral ---- */
   --color-background: #ffffff;
   --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
+  --color-elevated: #ffffff;
+  --color-input: #ffffff;
+  --color-input-soft: #f2f4f2;
   --color-border: #e2e8dd;
+  --card-bg: #fffdf8;             /* 카드 배경 (페이지보다 살짝 밝은 톤) */
 
   /* ---- Color: Text ---- */
   --color-text: #1c1b29;
@@ -66,4 +72,37 @@
   /* ---- Layout ---- */
   --header-height: 104px;
   --content-max-width: 1440px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #48c978;
+  --color-primary-dark: #71dc98;
+  --color-primary-light: #234c32;
+  --color-secondary: #ff9f61;
+
+  --color-cafe: #d1a071;
+  --color-cafe-light: #e2b88f;
+  --color-cafe-dark: #f0c69e;
+  --color-cafe-surface: #30261e;
+  --color-food: #ff7c68;
+  --color-food-light: #ff9c88;
+  --color-food-dark: #ffb4a5;
+  --color-food-surface: #35201d;
+
+  --color-background: #101512;
+  --color-surface: #18221b;
+  --color-elevated: #1d2820;
+  --color-input: #202a23;
+  --color-input-soft: #18201b;
+  --color-border: #344239;
+
+  --color-text: #f1f6f2;
+  --color-text-muted: #a9b5ac;
+  --color-text-on-primary: #09150d;
+
+  --color-success: #52d28a;
+  --color-error: #ff7185;
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.28);
 }

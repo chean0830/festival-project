@@ -26,9 +26,7 @@
   box-sizing: border-box;
 }
 
-/* 로고 — 지금은 텍스트만 (아이콘은 나중에 다시 정하면 추가).
-   IBM Plex Sans KR은 700(Bold)이 최대 굵기라, 그보다 더 두꺼워 보이도록
-   같은 색으로 살짝 테두리(text-stroke)를 둘러서 획을 두껍게 보이게 함 */
+/* 로고 — Archivo Black 워드마크. FEST는 짙은 그린 단색, LOG는 브랜드 그린 */
 .header__logo {
   font-family: "Archivo Black", var(--font-heading);
   font-size: 2.2rem;
@@ -56,7 +54,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 12px 20px;
@@ -91,7 +89,7 @@
   color: var(--color-text-muted);
 }
 
-/* 로그인 버튼 (헤더 상단 + 메뉴 서랍 안에서 공용으로 사용) */
+/* 로그인 버튼 (메뉴 서랍 안에서 공용으로 사용) */
 .header__login-btn {
   display: inline-flex;
   align-items: center;
@@ -119,7 +117,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--color-border);
   padding: 5px 20px 5px 5px;
   border-radius: 999px;
@@ -153,7 +151,39 @@
   color: var(--color-text);
 }
 
-/* 로그인 상태: 알림 벨 + 프로필 칩 */
+.header__theme-toggle {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 3px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s ease, opacity .15s ease;
+}
+
+.header__theme-toggle:hover {
+  color: var(--color-primary-dark);
+}
+
+.header__theme-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 로그인 상태: 알림 벨 + 다크모드 토글 + 프로필 칩 */
 .header__icon-cluster {
   display: flex;
   align-items: center;
@@ -170,7 +200,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   padding: 6px 14px 6px 6px;
@@ -198,7 +228,7 @@
 .header__profile-chip svg {
   width: 14px;
   height: 14px;
-  color: #a8b3ac;
+  color: var(--color-text-muted);
 }
 
 /* 프로필 칩 드롭다운 */
@@ -207,10 +237,10 @@
   top: calc(100% + 8px);
   right: 0;
   width: 200px;
-  background: #fff;
+  background: var(--color-elevated);
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(28, 27, 41, 0.14);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
   z-index: 10;
 }
@@ -383,6 +413,19 @@
   gap: var(--spacing-md);
 }
 
+.header__drawer-theme {
+  display: none;
+  padding-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header__drawer-theme .header__theme-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 4px;
+}
+
 .header__drawer-profile-text {
   font-size: var(--font-size-lg);
   font-weight: 700;
@@ -426,6 +469,12 @@
   }
   .header__subnav-links {
     gap: var(--spacing-md);
+  }
+  .header__top .header__theme-toggle {
+    display: none;
+  }
+  .header__drawer-theme {
+    display: block;
   }
 }
 

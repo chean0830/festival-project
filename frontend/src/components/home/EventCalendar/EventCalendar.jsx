@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUpcomingEvents, getEventWeather, formatEventDate } from "../../../api/eventApi";
 import "./EventCalendar.css";
@@ -68,6 +68,15 @@ function EventWeatherBadge({ eventId }) {
   );
 }
 
+// 빠른 필터(전체/국내 페스티벌/해외 페스티벌/콘서트) 키 -> 이벤트 필터 함수
+const CATEGORY_FILTERS = {
+  all: () => true,
+  "domestic-festival": (event) => event.kind === "festival" && event.region === "domestic",
+  "international-festival": (event) => event.kind === "festival" && event.region === "international",
+  "international-concert": (event) => event.kind === "performance" && event.region === "international",
+  "domestic-concert": (event) => event.kind === "performance" && event.region === "domestic",
+};
+
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
 function toDateKey(year, month, day) {
@@ -99,30 +108,40 @@ function buildCalendarCells(year, month) {
   return cells;
 }
 
-function EventCalendar() {
+function EventCalendar({ filterKey = "all" }) {
   const navigate = useNavigate();
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const [hoveredDateKey, setHoveredDateKey] = useState(null);
-  const [eventsByDate, setEventsByDate] = useState({});
+  const [events, setEvents] = useState([]);
   const [modalDateKey, setModalDateKey] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     getUpcomingEvents()
-      .then((events) => {
-        if (!cancelled) setEventsByDate(buildEventsByDate(events));
+      .then((data) => {
+        if (!cancelled) setEvents(data);
       })
       .catch(() => {
-        if (!cancelled) setEventsByDate({});
+        if (!cancelled) setEvents([]);
       });
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const eventsByDate = useMemo(() => {
+    const matchesFilter = CATEGORY_FILTERS[filterKey] ?? CATEGORY_FILTERS.all;
+    return buildEventsByDate(events.filter(matchesFilter));
+  }, [events, filterKey]);
+
+  useEffect(() => {
+    setModalDateKey(null);
+    setHoveredDateKey(null);
+  }, [filterKey]);
 
   const cells = buildCalendarCells(viewYear, viewMonth);
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
