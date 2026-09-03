@@ -94,61 +94,55 @@
 
 /* 2. 공연일정 캐러셀 스타일은 ProgramCarousel.css 에 있음 */
 
-/* ---- 3. 페스티벌 기록 홍보 (텍스트/이미지는 원래대로 좌우 배치,
-   "페스티벌 기록" 제목만 그 칸 안에서 중앙으로 옮김 — 너무 왼쪽에 붙어 있어서) ---- */
+/* ---- 3. 페스티벌 기록 홍보 — 배너 이미지 클릭 시 기록 만들기로 이동 ---- */
 .home__log-promo {
   margin-top: 120px;
   margin-bottom: 80px;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xl);
-  background-color: var(--color-surface);
+}
+
+.home__log-promo-banner {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
   border-radius: 0;
-  padding: var(--spacing-xl);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-.home__log-promo-text {
-  flex: 1;
-  text-align: center;
+.home__log-promo-banner:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
 }
 
-.home__log-promo-text h2 {
-  margin-bottom: var(--spacing-xs);
+.home__log-promo-banner:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
 }
 
-.home__log-promo-title {
+.home__log-promo-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- 5·6. 커뮤니티 / MD 중고거래 미리보기 ---- */
+.home__preview-list {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-xxl);
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
-.home__log-promo-icon {
-  font-size: 1em;
-  line-height: 1;
+.home__preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
 }
 
-.home__log-promo-text p {
-  color: var(--color-text-muted);
-  margin-bottom: var(--spacing-lg);
-}
-
-.home__log-promo-image {
-  flex: 1;
-  aspect-ratio: 16 / 10;
-  border: 1px dashed var(--color-border);
-  border-radius: 0;
-  background-color: var(--color-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.home__preview-empty {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-}
-
-@media (max-width: 768px) {
-  .home__log-promo {
-    flex-direction: column;
-  }
+  padding: var(--spacing-lg) 0;
 }

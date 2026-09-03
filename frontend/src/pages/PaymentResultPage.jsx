@@ -7,6 +7,7 @@ import { confirmMdOrderPayment } from "../api/mdShopApi";
 import { confirmUsedTransactionPayment } from "../api/usedTradeApi";
 import { confirmLiveDonation } from "../features/live/api/donationApi";
 import { confirmLiveAdmission } from "../features/live/api/admissionApi";
+import { confirmPosterCharge } from "../features/festivalrecord/api/festivalRecordApi";
 import { formatPrice } from "../utils/formatPrice";
 import { parseTossOrderId } from "../utils/tossPayment";
 import "./MdOrderPage.css";
@@ -32,7 +33,7 @@ function PaymentResultPage() {
   const paymentKey = params.get("paymentKey");
   const amount = Number(params.get("amount"));
   const { domainPrefix, domainId } = parseTossOrderId(tossOrderId);
-  const supportedDomains = ["MD", "USED", "DONATION", "LIVE"];
+  const supportedDomains = ["MD", "USED", "DONATION", "LIVE", "POSTER"];
   const isMalformed = !isDirectFail && (
     !supportedDomains.includes(domainPrefix) || !domainId || !paymentKey || !Number.isFinite(amount)
   );
@@ -48,6 +49,8 @@ function PaymentResultPage() {
       confirm = confirmUsedTransactionPayment(memberId, domainId, { paymentKey, orderId: tossOrderId, amount });
     } else if (domainPrefix === "DONATION") {
       confirm = confirmLiveDonation(domainId, { paymentKey, orderId: tossOrderId, amount });
+    } else if (domainPrefix === "POSTER") {
+      confirm = confirmPosterCharge(memberId, domainId, { paymentKey, orderId: tossOrderId, amount });
     } else {
       confirm = confirmLiveAdmission(domainId, { paymentKey, orderId: tossOrderId, amount });
     }
@@ -105,6 +108,14 @@ function PaymentResultPage() {
               >
                 방송으로 돌아가기
               </button>
+            ) : domainPrefix === "POSTER" && domainId ? (
+              <button
+                type="button"
+                className="md-order-page__complete-btn md-order-page__complete-btn--primary"
+                onClick={() => navigate(`/festival-log/${domainId}/poster`, { replace: true })}
+              >
+                기록으로 돌아가기
+              </button>
             ) : (
               <button
                 type="button"
@@ -131,6 +142,7 @@ function PaymentResultPage() {
   const isMd = data.domainPrefix === "MD";
   const isDonation = data.domainPrefix === "DONATION";
   const isLiveAdmission = data.domainPrefix === "LIVE";
+  const isPoster = data.domainPrefix === "POSTER";
   const { result } = data;
 
   return (
@@ -198,6 +210,21 @@ function PaymentResultPage() {
               <span>{result.paymentMethod}</span>
             </div>
           </div>
+        ) : isPoster ? (
+          <div className="md-order-page__recap">
+            <div className="md-order-page__recap-row">
+              <span>기록</span>
+              <span>{result.eventName}</span>
+            </div>
+            <div className="md-order-page__recap-row">
+              <span>충전 내용</span>
+              <span>AI 포스터 생성 {Math.max(1, Math.round(amount / 900))}회</span>
+            </div>
+            <div className="md-order-page__recap-row">
+              <span>결제 금액</span>
+              <strong>{formatPrice(amount)}</strong>
+            </div>
+          </div>
         ) : (
           <div className="md-order-page__summary">
             <div className="md-order-page__summary-thumb">
@@ -232,6 +259,14 @@ function PaymentResultPage() {
               onClick={() => navigate(`/live/${result.streamId}`, { replace: true })}
             >
               방송 입장하기
+            </button>
+          ) : isPoster ? (
+            <button
+              type="button"
+              className="md-order-page__complete-btn md-order-page__complete-btn--primary"
+              onClick={() => navigate(`/festival-log/${result.recordId}/poster`, { replace: true })}
+            >
+              포스터 만들러 가기
             </button>
           ) : (
             <button

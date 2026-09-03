@@ -7,6 +7,7 @@ import com.example.festival.festivalrecord.dto.PosterGenerateRequest;
 import com.example.festival.festivalrecord.dto.ReorderImagesRequest;
 import com.example.festival.festivalrecord.dto.ShareRequest;
 import com.example.festival.festivalrecord.service.FestivalRecordService;
+import com.example.festival.payment.dto.PaymentConfirmRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -98,6 +99,15 @@ public class FestivalRecordController {
     ) {
         String styleRequest = request != null ? request.styleRequest() : null;
         return festivalRecordService.generatePoster(memberId, recordId, styleRequest);
+    }
+
+    @PostMapping("/{recordId}/poster/charges/confirm")
+    public FestivalRecordResponse confirmPosterCharge(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody PaymentConfirmRequest request
+    ) {
+        return festivalRecordService.confirmPosterCharge(memberId, recordId, request);
     }
 
     @PostMapping("/{recordId}/poster/versions/{versionId}/select")

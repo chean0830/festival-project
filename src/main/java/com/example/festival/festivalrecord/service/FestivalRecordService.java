@@ -18,11 +18,13 @@ import com.example.festival.festivalrecord.entity.FestivalRecordAiQuota;
 import com.example.festival.festivalrecord.entity.RecordDiaryVersion;
 import com.example.festival.festivalrecord.entity.RecordFood;
 import com.example.festival.festivalrecord.entity.RecordImage;
+import com.example.festival.festivalrecord.entity.PosterChargePayment;
 import com.example.festival.festivalrecord.entity.RecordPosterVersion;
 import com.example.festival.festivalrecord.entity.RecordShare;
 import com.example.festival.festivalrecord.entity.RecordSong;
 import com.example.festival.festivalrecord.repository.FestivalRecordAiQuotaRepository;
 import com.example.festival.festivalrecord.repository.FestivalRecordRepository;
+import com.example.festival.festivalrecord.repository.PosterChargePaymentRepository;
 import com.example.festival.festivalrecord.repository.RecordDiaryVersionRepository;
 import com.example.festival.festivalrecord.repository.RecordFoodRepository;
 import com.example.festival.festivalrecord.repository.RecordImageRepository;
@@ -32,6 +34,9 @@ import com.example.festival.festivalrecord.repository.RecordSongRepository;
 import com.example.festival.member.entity.Member;
 import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.notification.service.NotificationService;
+import com.example.festival.payment.TossPaymentClient;
+import com.example.festival.payment.dto.PaymentConfirmRequest;
+import com.example.festival.payment.dto.TossConfirmResponse;
 import com.example.festival.visit.entity.EventVisit;
 import com.example.festival.visit.repository.EventVisitRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,8 +50,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -65,6 +72,10 @@ public class FestivalRecordService {
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
     private static final int FREE_POSTER_REGEN_LIMIT = 3;
     private static final int FREE_DIARY_REGEN_LIMIT = 3;
+    /** 무료 횟수 소진 후 포스터 생성 1회를 충전하는 단가. */
+    private static final BigDecimal POSTER_CHARGE_UNIT_AMOUNT = new BigDecimal("900");
+    /** 한 번의 결제로 충전할 수 있는 최대 횟수. */
+    private static final int MAX_POSTER_CHARGE_QUANTITY = 5;
     private static final int MAX_POSTER_REFERENCE_IMAGES = 6;
     private static final String RECORD_REMINDER_TYPE = "RECORD_REMINDER";
     private static final List<String> POSTER_STYLE_REFERENCE_PATHS = List.of(
@@ -75,6 +86,7 @@ public class FestivalRecordService {
 
     private final FestivalRecordRepository festivalRecordRepository;
     private final FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository;
+    private final PosterChargePaymentRepository posterChargePaymentRepository;
     private final RecordImageRepository recordImageRepository;
     private final RecordSongRepository recordSongRepository;
     private final RecordFoodRepository recordFoodRepository;
@@ -87,6 +99,7 @@ public class FestivalRecordService {
     private final NotificationService notificationService;
     private final GeminiPosterClient geminiPosterClient;
     private final GeminiTextClient geminiTextClient;
+    private final TossPaymentClient tossPaymentClient;
     private final Path uploadRoot;
     private final List<byte[]> posterStyleReferenceImages;
     private final List<String> posterStyleReferenceMimeTypes;
@@ -94,6 +107,7 @@ public class FestivalRecordService {
     public FestivalRecordService(
             FestivalRecordRepository festivalRecordRepository,
             FestivalRecordAiQuotaRepository festivalRecordAiQuotaRepository,
+            PosterChargePaymentRepository posterChargePaymentRepository,
             RecordImageRepository recordImageRepository,
             RecordSongRepository recordSongRepository,
             RecordFoodRepository recordFoodRepository,
@@ -106,10 +120,12 @@ public class FestivalRecordService {
             NotificationService notificationService,
             GeminiPosterClient geminiPosterClient,
             GeminiTextClient geminiTextClient,
+            TossPaymentClient tossPaymentClient,
             @Value("${file.upload-dir:uploads}") String uploadDir
     ) {
         this.festivalRecordRepository = festivalRecordRepository;
         this.festivalRecordAiQuotaRepository = festivalRecordAiQuotaRepository;
+        this.posterChargePaymentRepository = posterChargePaymentRepository;
         this.recordImageRepository = recordImageRepository;
         this.recordSongRepository = recordSongRepository;
         this.recordFoodRepository = recordFoodRepository;
@@ -122,6 +138,7 @@ public class FestivalRecordService {
         this.notificationService = notificationService;
         this.geminiPosterClient = geminiPosterClient;
         this.geminiTextClient = geminiTextClient;
+        this.tossPaymentClient = tossPaymentClient;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
         this.posterStyleReferenceImages = new ArrayList<>();
         this.posterStyleReferenceMimeTypes = new ArrayList<>();
@@ -269,8 +286,8 @@ public class FestivalRecordService {
     public FestivalRecordResponse generatePoster(Long memberId, Long recordId, String styleRequest) {
         FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
         FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
-        if (quota.getUsedCount() >= FREE_POSTER_REGEN_LIMIT) {
-            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "무료 생성 횟수를 모두 사용했습니다.");
+        if (quota.getUsedCount() >= FREE_POSTER_REGEN_LIMIT + quota.getPosterPaidCount()) {
+            throw new ResponseStatusException(HttpStatus.PAYMENT_REQUIRED, "생성 가능 횟수를 모두 사용했습니다. 1회 생성을 충전해 주세요.");
         }
         if (!geminiPosterClient.isConfigured()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI 포스터 생성 기능이 아직 설정되지 않았습니다.");
@@ -314,6 +331,48 @@ public class FestivalRecordService {
         RecordPosterVersion version = recordPosterVersionRepository.findByVersionIdAndRecord_RecordId(versionId, record.getRecordId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "포스터 버전을 찾을 수 없습니다."));
         record.changePosterImage(version.getImageUrl());
+        return toResponse(record);
+    }
+
+    /**
+     * "1회 생성 충전" Toss 결제창에서 돌아온 뒤 결제 승인을 확정하고, (회원, 공연) 포스터 생성 횟수를 1회 늘린다.
+     * 같은 Toss 주문번호로 이미 승인된 적 있으면 중복 충전 없이 현재 상태만 돌려준다.
+     */
+    @Transactional
+    public FestivalRecordResponse confirmPosterCharge(Long memberId, Long recordId, PaymentConfirmRequest request) {
+        FestivalRecord record = getOwnedRecordOrThrow(memberId, recordId);
+
+        Optional<PosterChargePayment> alreadyPaid = posterChargePaymentRepository.findByTossOrderId(request.orderId());
+        if (alreadyPaid.isPresent()) {
+            return toResponse(record);
+        }
+
+        BigDecimal[] quotientAndRemainder = request.amount().divideAndRemainder(POSTER_CHARGE_UNIT_AMOUNT);
+        if (quotientAndRemainder[1].signum() != 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 금액이 충전 단가(900원)의 배수가 아닙니다.");
+        }
+        int quantity = quotientAndRemainder[0].intValueExact();
+        if (quantity < 1 || quantity > MAX_POSTER_CHARGE_QUANTITY) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "한 번에 1~" + MAX_POSTER_CHARGE_QUANTITY + "회까지만 충전할 수 있습니다.");
+        }
+        if (!request.orderId().startsWith("POSTER_" + recordId + "_")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "포스터 충전 주문번호가 올바르지 않습니다.");
+        }
+
+        TossConfirmResponse confirmed = tossPaymentClient.confirm(request.paymentKey(), request.orderId(), request.amount());
+        posterChargePaymentRepository.save(new PosterChargePayment(
+                record,
+                record.getMember(),
+                request.orderId(),
+                request.paymentKey(),
+                confirmed.method(),
+                request.amount(),
+                LocalDateTime.now()
+        ));
+
+        FestivalRecordAiQuota quota = getOrCreateAiQuota(record.getMember(), record.getEvent());
+        quota.addPosterPaidGrants(quantity);
+
         return toResponse(record);
     }
 
@@ -604,6 +663,7 @@ public class FestivalRecordService {
                 .findByMember_IdAndEvent_EventId(record.getMember().getId(), event.getEventId());
         int aiUsedCount = quota.map(FestivalRecordAiQuota::getUsedCount).orElse(0);
         int aiDiaryUsedCount = quota.map(FestivalRecordAiQuota::getDiaryUsedCount).orElse(0);
+        int aiPosterPaidCount = quota.map(FestivalRecordAiQuota::getPosterPaidCount).orElse(0);
 
         List<PosterVersionResponse> posterVersions = recordPosterVersionRepository
                 .findAllByRecord_RecordIdOrderByCreatedAtDesc(record.getRecordId()).stream()
@@ -634,6 +694,7 @@ public class FestivalRecordService {
                 record.isShared(),
                 aiUsedCount,
                 FREE_POSTER_REGEN_LIMIT,
+                aiPosterPaidCount,
                 images,
                 songs,
                 foods,

@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../../components/common/Layout/Layout'
 import useCurrentMember from '../profile/hooks/useCurrentMember'
 import RequireLogin from '../profile/components/RequireLogin'
-import { fetchAttendedEvents } from '../profile/api/profileApi'
+import AddEventModal from '../profile/components/AddEventModal'
+import { addAttendedEvent, fetchAttendedEvents } from '../profile/api/profileApi'
 import {
   addRecordImage,
   createFestivalRecord,
@@ -14,6 +15,7 @@ import {
   updateFestivalRecord,
 } from './api/festivalRecordApi'
 import RecordForm from './components/RecordForm'
+import '../profile/profile.css'
 import './festivalrecord.css'
 
 export default function FestivalRecordFormPage() {
@@ -28,6 +30,7 @@ export default function FestivalRecordFormPage() {
   const [initialValues, setInitialValues] = useState(isEditMode ? null : undefined)
   const [existingImages, setExistingImages] = useState([])
   const [loadError, setLoadError] = useState(null)
+  const [showAddEventModal, setShowAddEventModal] = useState(false)
 
   useEffect(() => {
     if (!memberId) {
@@ -90,6 +93,13 @@ export default function FestivalRecordFormPage() {
     navigate(`/festival-log/${result.recordId}`)
   }
 
+  async function handleAddAttendedEvent(eventId) {
+    await addAttendedEvent(memberId, eventId)
+    // 추가되면 다녀온 페스티벌 목록을 다시 불러온다 → 목록이 채워지면 자동으로 기록 작성 폼으로 넘어간다.
+    const events = await fetchAttendedEvents(memberId)
+    setEligibleEvents(events)
+  }
+
   async function handleDeleteExistingImage(imageId) {
     await deleteRecordImage(memberId, recordId, imageId)
     setExistingImages((prev) => prev.filter((image) => image.imageId !== imageId))
@@ -113,7 +123,20 @@ export default function FestivalRecordFormPage() {
           {!loadError && isLoadingInitialValues && <p>불러오는 중입니다...</p>}
 
           {!loadError && !isLoadingInitialValues && eligibleEvents.length === 0 && (
-            <p className="record-empty-text">다녀온 공연이 있어야 기록을 작성할 수 있어요.</p>
+            <div className="record-empty-block">
+              <p className="record-empty-text">
+                다녀온 페스티벌이 없어요!
+                <br />
+                페스티벌 리스트에 추가하면 바로 기록을 만들 수 있어요.
+              </p>
+              <button
+                type="button"
+                className="record-btn-primary"
+                onClick={() => setShowAddEventModal(true)}
+              >
+                다녀온 페스티벌 추가하기 →
+              </button>
+            </div>
           )}
 
           {!loadError && !isLoadingInitialValues && eligibleEvents.length > 0 && (
@@ -131,6 +154,15 @@ export default function FestivalRecordFormPage() {
           )}
         </div>
       </div>
+
+      {showAddEventModal && (
+        <AddEventModal
+          title="다녀온 페스티벌 추가"
+          searchPlaceholder="다녀온 페스티벌 이름으로 검색"
+          onClose={() => setShowAddEventModal(false)}
+          onAdd={handleAddAttendedEvent}
+        />
+      )}
     </Layout>
   )
 }

@@ -23,6 +23,7 @@ public record FestivalRecordResponse(
         boolean shared,
         int aiRegeneratedCount,
         int aiPosterFreeLimit,
+        int aiPosterPaidCount,
         List<RecordImageResponse> images,
         List<RecordSongResponse> songs,
         List<String> foods,

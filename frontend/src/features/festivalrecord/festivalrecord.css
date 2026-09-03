@@ -47,6 +47,23 @@
   color: var(--color-error);
 }
 
+.record-empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.record-empty-block .record-empty-text {
+  margin: 0;
+  line-height: 1.7;
+}
+
 /* ---------- List / grid ---------- */
 
 .record-list-toolbar {
@@ -846,6 +863,94 @@
 .fr-ai-usage-count {
   font-size: 12px;
   color: var(--color-text-muted);
+  margin: 0;
+}
+
+.fr-charge-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.fr-charge-modal {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 22px 18px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.fr-charge-modal__title {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.fr-charge-modal__desc {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.fr-charge-modal__qty {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.fr-charge-qty-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.fr-charge-qty-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.fr-charge-qty-btn--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.fr-charge-qty-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.fr-charge-modal__total {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.fr-charge-modal__total strong {
+  font-size: 15px;
+}
+
+.fr-charge-modal__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fr-charge-modal__actions button {
+  flex: 1;
   margin: 0;
 }
 

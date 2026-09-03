@@ -45,11 +45,16 @@ public class FestivalRecordAiQuota {
     @Column(name = "diary_used_count", nullable = false)
     private int diaryUsedCount;
 
+    /** 무료 3회를 모두 쓴 뒤 900원씩 결제해 충전한 포스터 생성 횟수. */
+    @Column(name = "poster_paid_count", nullable = false)
+    private int posterPaidCount;
+
     private FestivalRecordAiQuota(Member member, Event event) {
         this.member = member;
         this.event = event;
         this.usedCount = 0;
         this.diaryUsedCount = 0;
+        this.posterPaidCount = 0;
     }
 
     public static FestivalRecordAiQuota create(Member member, Event event) {
@@ -62,5 +67,10 @@ public class FestivalRecordAiQuota {
 
     public void incrementDiary() {
         this.diaryUsedCount += 1;
+    }
+
+    /** 포스터 생성 충전 결제가 승인되면 결제한 횟수만큼 더해준다. (한 번에 1~5회) */
+    public void addPosterPaidGrants(int count) {
+        this.posterPaidCount += count;
     }
 }
