@@ -9,8 +9,25 @@
   cursor: pointer;
 }
 
+.program-card__poster-wrap {
+  position: relative;
+  margin-bottom: var(--spacing-sm);
+}
+.program-card__poster-wrap::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -14px;
+  height: 22px;
+  background: radial-gradient(ellipse at center, rgba(18, 41, 27, 0.38), transparent 72%);
+  filter: blur(4px);
+  z-index: 0;
+}
+
 .program-card__poster {
   position: relative;
+  z-index: 1;
   width: 220px;
   height: 330px;
   box-sizing: border-box;
@@ -22,12 +39,11 @@
   justify-content: center;
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
-  margin-bottom: var(--spacing-sm);
   overflow: hidden;
-  transition: box-shadow 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 6px 10px rgba(18, 41, 27, 0.18);
+  transition: transform 0.1s ease;
 }
 .program-card:hover .program-card__poster {
-  box-shadow: var(--shadow-card);
   transform: translateY(-2px);
 }
 
