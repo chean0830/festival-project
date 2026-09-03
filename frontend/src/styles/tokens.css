@@ -35,6 +35,7 @@
   --color-input: #ffffff;
   --color-input-soft: #f2f4f2;
   --color-border: #e2e8dd;
+  --card-bg: #fffdf8;             /* 카드 배경 (페이지보다 살짝 밝은 톤) */
 
   /* ---- Color: Text ---- */
   --color-text: #1c1b29;
