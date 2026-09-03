@@ -88,7 +88,7 @@ function Header({ hideSubnav = false }) {
           <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
         </svg>
       )}
-      <span>{isDarkMode ? "다크 모드" : "라이트 모드"}</span>
+      <span>다크 모드</span>
     </button>
   );
 
