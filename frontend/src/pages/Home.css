@@ -1,11 +1,287 @@
-/* ---- 1. 배너 (무대 조명 사진을 배경으로 까는 순수 디스플레이용, 클릭 안 됨) ---- */
+/* ---- FESTLOG 홈 전체 패럴랙스 배경 ---- */
+.home__page {
+  --home-parallax: 0;
+  --home-pointer-x: 0;
+  --home-pointer-y: 0;
+  position: relative;
+  isolation: isolate;
+  margin: 0 calc(var(--spacing-md) * -1);
+  padding-bottom: 120px;
+  background: linear-gradient(180deg, #78d6f5 0%, #b9edf2 43%, #67c99e 72%, #17684f 100%);
+}
+
+.home__parallax-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  height: 100vh;
+  min-height: 560px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(180deg, #78d6f5 0%, #b9edf2 43%, #67c99e 72%, #17684f 100%);
+}
+
+.home__foreground {
+  position: relative;
+  z-index: 5;
+  padding: var(--spacing-lg) var(--spacing-md) 0;
+}
+
+/* 홈에서만 공통 헤더 뒤까지 패럴랙스 배경을 노출 */
+body.home-parallax-active {
+  background-color: #76d4ef;
+}
+
+.home-parallax-active .header {
+  border-bottom-color: rgba(184, 226, 210, 0.72);
+  background: rgba(248, 255, 251, 0.82);
+  box-shadow: 0 8px 30px rgba(19, 91, 75, 0.1);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.home-parallax-active .header__top-bar,
+.home-parallax-active .header__subnav {
+  background: transparent;
+}
+
+.home-parallax-active .header__subnav {
+  border-top-color: rgba(184, 226, 210, 0.72);
+}
+
+.home__parallax-layer {
+  position: absolute;
+  inset: -5%;
+  width: 110%;
+  height: 110%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.home__parallax-photo {
+  z-index: -5;
+  object-fit: cover;
+  opacity: calc(0.34 - var(--home-parallax) * 0.18);
+  filter: saturate(0.7) hue-rotate(95deg) contrast(1.08);
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -12px),
+    calc(var(--home-parallax) * -55px + var(--home-pointer-y) * -8px),
+    0
+  ) scale(1.12);
+}
+
+/* 실제로 분리된 원경·무대·관객 PNG를 서로 다른 속도로 움직인다. */
+.home__parallax-photo--base {
+  z-index: 0;
+  opacity: 1;
+  filter: none;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -10px),
+    calc(var(--home-parallax) * -38px + var(--home-pointer-y) * -6px),
+    0
+  ) scale(1.13);
+}
+
+.home__parallax-photo--middle {
+  z-index: 1;
+  opacity: 1;
+  filter: none;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -24px),
+    calc(var(--home-parallax) * -88px + var(--home-pointer-y) * -10px),
+    0
+  ) scale(1.13);
+}
+
+.home__parallax-photo--front {
+  z-index: 2;
+  opacity: 1;
+  filter: none;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -42px),
+    calc(var(--home-parallax) * -148px + var(--home-pointer-y) * -15px),
+    0
+  ) scale(1.13);
+}
+
+/* 새 배경 이미지에 이미 포함된 산·무대·관객과 겹치지 않도록 이전 도형 레이어는 숨긴다. */
+.home__parallax-sky,
+.home__parallax-sun,
+.home__parallax-mountain,
+.home__parallax-valley,
+.home__parallax-festival,
+.home__parallax-stage,
+.home__parallax-crowd {
+  display: none;
+}
+
+.home__parallax-sky {
+  z-index: -4;
+  background:
+    radial-gradient(circle at 52% 50%, rgba(226, 255, 183, 0.92) 0 7%, rgba(109, 232, 203, 0.2) 8% 21%, transparent 42%),
+    radial-gradient(circle at 12% 18%, #eaffff 0 1px, transparent 2px),
+    radial-gradient(circle at 82% 27%, #caffda 0 1px, transparent 2px);
+  background-size: auto, 92px 92px, 137px 137px;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -18px),
+    calc(var(--home-parallax) * -95px + var(--home-pointer-y) * -10px),
+    0
+  ) scale(1.1);
+}
+
+.home__parallax-sun {
+  z-index: -3;
+  inset: auto;
+  left: 50%;
+  top: 44%;
+  width: clamp(110px, 12vw, 190px);
+  height: clamp(110px, 12vw, 190px);
+  border-radius: 50%;
+  background: #d8ffb6;
+  box-shadow: 0 0 90px rgba(136, 247, 203, 0.75);
+  transform: translate3d(-50%, calc(var(--home-parallax) * -155px), 0);
+}
+
+.home__parallax-mountain {
+  inset: auto -5% -6%;
+  height: 58%;
+  overflow: visible;
+}
+
+.home__parallax-mountain--back {
+  z-index: -2;
+  opacity: 0.92;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -28px),
+    calc(var(--home-parallax) * -215px + var(--home-pointer-y) * -12px),
+    0
+  ) scale(1.1);
+}
+
+.home__parallax-mountain--back .home__mountain-shape { fill: #2a9892; }
+.home__parallax-mountain--back .home__mountain-light { fill: #52b7a8; opacity: 0.42; }
+
+.home__parallax-valley {
+  z-index: -1;
+  inset: auto -5% -10%;
+  height: 56%;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -35px),
+    calc(var(--home-parallax) * -265px + var(--home-pointer-y) * -14px),
+    0
+  ) scale(1.1);
+}
+.home__parallax-valley path:first-child { fill: #1d7d7c; opacity: 0.88; }
+.home__parallax-valley path:last-child { fill: #176c73; opacity: 0.9; }
+
+.home__parallax-mountain--front {
+  z-index: 0;
+  bottom: -15%;
+  height: 55%;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -42px),
+    calc(var(--home-parallax) * -310px + var(--home-pointer-y) * -16px),
+    0
+  ) scale(1.1);
+}
+
+.home__parallax-mountain--front .home__mountain-shape { fill: #12626b; }
+.home__parallax-mountain--front .home__mountain-shadow { fill: #0b4b58; opacity: 0.72; }
+
+.home__parallax-festival {
+  z-index: 1;
+  inset: auto -5% -11%;
+  height: 68%;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -50px),
+    calc(var(--home-parallax) * -365px + var(--home-pointer-y) * -17px),
+    0
+  ) scale(1.07);
+}
+.home__festival-wheel circle,
+.home__festival-wheel path { fill: none; stroke: #a7ffe1; stroke-width: 7; filter: drop-shadow(0 0 10px #65e6d4); }
+.home__festival-wheel circle:nth-child(2) { fill: #d9ffc2; stroke: none; }
+.home__festival-tents path:nth-child(odd) { fill: #1aa078; }
+.home__festival-tents path:nth-child(even) { fill: #58cce0; opacity: .85; }
+.home__festival-bulbs path { fill: none; stroke: rgba(210, 255, 229, .55); stroke-width: 3; }
+.home__festival-bulbs circle { fill: #e8ffb9; filter: drop-shadow(0 0 11px #b7ffce); }
+
+.home__parallax-stage {
+  z-index: 1;
+  inset: auto auto -8%;
+  left: 50%;
+  width: min(48vw, 680px);
+  height: 38%;
+  background: linear-gradient(90deg, #062c3d 0 9%, #0b4e5d 9% 91%, #062c3d 91%);
+  clip-path: polygon(0 10%, 7% 10%, 12% 0, 88% 0, 93% 10%, 100% 10%, 96% 100%, 4% 100%);
+  transform: translate3d(
+    calc(-50% + var(--home-pointer-x) * -58px),
+    calc(var(--home-parallax) * -420px + var(--home-pointer-y) * -18px),
+    0
+  );
+  box-shadow: 0 -20px 80px rgba(67, 233, 187, 0.35);
+}
+
+.home__stage-roof {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 19%;
+  display: grid;
+  place-items: center;
+  color: #caffdd;
+  background: #052b39;
+  font-size: clamp(9px, 1vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.25em;
+}
+
+.home__parallax-stage i {
+  position: absolute;
+  top: 23%;
+  left: calc(30% + var(--light-index, 0) * 10%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 0 18px 7px #6dffd0, 0 90px 70px 28px rgba(65, 211, 220, 0.45);
+}
+.home__parallax-stage i:nth-of-type(1) { --light-index: 0; }
+.home__parallax-stage i:nth-of-type(2) { --light-index: 1; }
+.home__parallax-stage i:nth-of-type(3) { --light-index: 2; }
+.home__parallax-stage i:nth-of-type(4) { --light-index: 3; }
+.home__parallax-stage i:nth-of-type(5) { --light-index: 4; }
+
+.home__parallax-crowd {
+  z-index: 2;
+  inset: auto -5% -18%;
+  height: 43%;
+  overflow: visible;
+  transform: translate3d(
+    calc(var(--home-pointer-x) * -72px),
+    calc(var(--home-parallax) * -570px + var(--home-pointer-y) * -22px),
+    0
+  ) scale(1.08);
+}
+
+.home__crowd-ground { fill: #031c2b; }
+.home__crowd-people { fill: #041f2e; stroke: #041f2e; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+
+.home__parallax-shade {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(28, 122, 153, 0.04), rgba(16, 104, 83, 0.02) 45%, rgba(4, 56, 43, 0.34));
+  pointer-events: none;
+}
+
+/* 기존 공지 배너: 패럴랙스 아래에 별도 콘텐츠로 유지 */
 .home__banner {
   position: relative;
+  min-height: 480px;
+  margin-top: 0;
   overflow: hidden;
-  border-radius: 0;
-  padding: 128px var(--spacing-lg) 340px;
   text-align: center;
-  margin-top: var(--spacing-lg);
+  background: #082f3d;
 }
 
 .home__banner-photo {
@@ -19,46 +295,32 @@
 .home__banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 15, 20, 0.55) 0%, rgba(15, 15, 20, 0.35) 50%, rgba(15, 15, 20, 0.55) 100%);
+  background: linear-gradient(180deg, rgba(4, 39, 48, 0.4), rgba(4, 28, 39, 0.58));
 }
 
 .home__banner-inner {
   position: absolute;
-  inset: 0;
   z-index: 1;
+  inset: 0;
   display: flex;
   align-items: center;
   padding: 0 var(--spacing-lg);
 }
-.home__banner-inner .banner-notice {
-  width: 100%;
-}
 
-/* 점 2개는 배너 맨 아래로 고정, 가운데는 공지 문구만 보이게 */
-.home__banner .banner-notice__dots {
-  position: absolute;
-  left: 50%;
-  bottom: 28px;
-  transform: translateX(-50%);
-}
-
-/* 배너 안 공지 자동 슬라이드 스타일은 BannerNotice.css 에 있는데,
-   배경이 사진이라 텍스트/점 색을 여기서 밝은 톤으로 덮어씀 */
-.home__banner .banner-notice__text {
-  color: #fff;
-  font-size: var(--font-size-xl);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-}
-.home__banner .banner-notice__dot {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-.home__banner .banner-notice__dot--active {
-  background-color: #fff;
-}
+.home__banner-inner .banner-notice { width: 100%; }
+.home__banner .banner-notice__dots { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); }
+.home__banner .banner-notice__text { color: white; font-size: var(--font-size-xl); text-shadow: 0 1px 5px rgba(0, 0, 0, 0.48); }
+.home__banner .banner-notice__dot { background-color: rgba(255, 255, 255, 0.5); }
+.home__banner .banner-notice__dot--active { background-color: white; }
 
 /* ---- 공통 섹션 헤더 ---- */
 .home__section {
   margin-top: 120px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 /* 배너 바로 다음(공연일정) 섹션은 배너 자체가 커서 간격이 더 좁아 보이니 조금 더 띄움 */
@@ -81,15 +343,18 @@
 .home__section-header h2 {
   font-size: var(--font-size-xl);
   margin: 0;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(2, 34, 44, 0.55);
 }
 
 .home__section-more {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.86);
   font-weight: 600;
+  text-shadow: 0 1px 8px rgba(2, 34, 44, 0.5);
 }
 .home__section-more:hover {
-  color: var(--color-primary);
+  color: #c9ffdc;
 }
 
 /* 2. 공연일정 캐러셀 스타일은 ProgramCarousel.css 에 있음 */
@@ -102,9 +367,12 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xl);
-  background-color: var(--color-surface);
+  border: 0;
+  background: transparent;
   border-radius: 0;
-  padding: var(--spacing-xl);
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .home__log-promo-text {
@@ -122,6 +390,8 @@
   justify-content: center;
   gap: var(--spacing-sm);
   font-size: var(--font-size-xxl);
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(2, 34, 44, 0.55);
 }
 
 .home__log-promo-icon {
@@ -130,8 +400,9 @@
 }
 
 .home__log-promo-text p {
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.86);
   margin-bottom: var(--spacing-lg);
+  text-shadow: 0 1px 8px rgba(2, 34, 44, 0.5);
 }
 
 .home__log-promo-image {
@@ -148,7 +419,20 @@
 }
 
 @media (max-width: 768px) {
+  .home__page { padding-bottom: 80px; }
+  .home__parallax-background { min-height: 520px; }
+  .home__parallax-stage { width: 80vw; height: 31%; }
+  .home__parallax-crowd { height: 35%; }
+  .home__foreground { padding-inline: var(--spacing-sm); }
+  .home__banner { min-height: 330px; margin-top: 80px; }
+  .home__banner .banner-notice__text { font-size: var(--font-size-lg); }
+  .home__section { padding: var(--spacing-md); }
+
   .home__log-promo {
     flex-direction: column;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home__parallax-layer { transform: none !important; }
 }
