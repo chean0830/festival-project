@@ -30,6 +30,7 @@
   --color-background: #ffffff;
   --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
   --color-border: #e2e8dd;
+  --card-bg: #fffdf8;             /* 카드 배경 (페이지보다 살짝 밝은 톤) */
 
   /* ---- Color: Text ---- */
   --color-text: #1c1b29;
