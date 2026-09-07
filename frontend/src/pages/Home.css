@@ -1,59 +1,17 @@
-/* ---- 1. 배너 (무대 조명 사진을 배경으로 까는 순수 디스플레이용, 클릭 안 됨) ---- */
+/* ---- 1. 화면 전체 폭 메인 슬라이드 배너 ---- */
+.layout:has(.home__banner) {
+  overflow-x: clip;
+}
+
 .home__banner {
   position: relative;
-  overflow: hidden;
-  border-radius: 0;
-  padding: 128px var(--spacing-lg) 340px;
-  text-align: center;
-  margin-top: var(--spacing-lg);
-}
-
-.home__banner-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.home__banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(15, 15, 20, 0.55) 0%, rgba(15, 15, 20, 0.35) 50%, rgba(15, 15, 20, 0.55) 100%);
-}
-
-.home__banner-inner {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  padding: 0 var(--spacing-lg);
-}
-.home__banner-inner .banner-notice {
-  width: 100%;
-}
-
-/* 점 2개는 배너 맨 아래로 고정, 가운데는 공지 문구만 보이게 */
-.home__banner .banner-notice__dots {
-  position: absolute;
   left: 50%;
-  bottom: 28px;
-  transform: translateX(-50%);
-}
-
-/* 배너 안 공지 자동 슬라이드 스타일은 BannerNotice.css 에 있는데,
-   배경이 사진이라 텍스트/점 색을 여기서 밝은 톤으로 덮어씀 */
-.home__banner .banner-notice__text {
-  color: #fff;
-  font-size: var(--font-size-xl);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-}
-.home__banner .banner-notice__dot {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-.home__banner .banner-notice__dot--active {
-  background-color: #fff;
+  width: 100vw;
+  height: clamp(540px, 42vw, 720px);
+  margin-top: calc(var(--spacing-lg) * -1);
+  margin-left: -50vw;
+  overflow: hidden;
+  background: #0a2930;
 }
 
 /* ---- 공통 섹션 헤더 ---- */
@@ -148,6 +106,10 @@
 }
 
 @media (max-width: 768px) {
+  .home__banner {
+    height: 560px;
+  }
+
   .home__log-promo {
     flex-direction: column;
   }
