@@ -2,7 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  background-color: color-mix(in srgb, var(--color-background) 96%, transparent);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 /* ---- 1줄: 로고 + 검색 + 로그인 ----
@@ -323,7 +327,7 @@
   align-items: center;
   gap: var(--spacing-xl);
   border-top: 1px solid var(--color-border);
-  background-color: var(--color-background);
+  background-color: transparent;
   box-sizing: border-box;
 }
 
