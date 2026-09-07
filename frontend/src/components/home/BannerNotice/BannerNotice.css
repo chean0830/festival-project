@@ -1,53 +1,231 @@
 .banner-notice {
-  margin-top: var(--spacing-sm);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
+  position: relative;
+  width: 100%;
+  height: 100%;
+  color: #fff;
 }
 
-/* 텍스트끼리 서로 겹쳐서 자리 잡고, 활성화된 것만 페이드인 되는 방식 */
 .banner-notice__track {
   position: relative;
   width: 100%;
-  min-height: 1.6em;
+  height: 100%;
 }
 
-.banner-notice__text {
+.banner-notice__slide {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin: 0;
-  text-align: center;
-  font-size: var(--font-size-lg);
-  color: var(--color-text-muted);
+  inset: 0;
+  overflow: hidden;
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 700ms ease, visibility 700ms ease;
 }
 
-.banner-notice__text--active {
+.banner-notice__slide--active {
+  z-index: 1;
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
 }
+
+.banner-notice__link {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.banner-notice__link { cursor: pointer; }
+
+a.banner-notice__link:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -6px;
+}
+
+.banner-notice__image,
+.banner-notice__overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.banner-notice__image {
+  z-index: 1;
+  object-fit: cover;
+  transform: scale(1.035);
+  transition: transform 6.5s ease-out;
+}
+
+.banner-notice__slide--active .banner-notice__image { transform: scale(1); }
+
+.banner-notice__slide--violet .banner-notice__image {
+  object-position: center 18%;
+}
+
+.banner-notice__slide--green .banner-notice__image {
+  object-position: center 40%;
+}
+
+.banner-notice__slide--sunset .banner-notice__image {
+  object-fit: cover;
+  object-position: center;
+}
+
+.banner-notice__slide--violet .banner-notice__overlay,
+.banner-notice__slide--green .banner-notice__overlay,
+.banner-notice__slide--sunset .banner-notice__overlay {
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0.04) 48%, rgba(8, 12, 18, 0.5) 100%);
+}
+
+.banner-notice__slide--violet .banner-notice__content,
+.banner-notice__slide--green .banner-notice__content,
+.banner-notice__slide--sunset .banner-notice__content {
+  justify-content: flex-end;
+  padding-right: 0;
+  padding-bottom: 58px;
+}
+
+.banner-notice__slide--violet .banner-notice__eyebrow,
+.banner-notice__slide--violet .banner-notice__title,
+.banner-notice__slide--violet .banner-notice__description,
+.banner-notice__slide--green .banner-notice__eyebrow,
+.banner-notice__slide--green .banner-notice__title,
+.banner-notice__slide--green .banner-notice__description,
+.banner-notice__slide--sunset .banner-notice__eyebrow,
+.banner-notice__slide--sunset .banner-notice__title,
+.banner-notice__slide--sunset .banner-notice__description {
+  display: none;
+}
+
+.banner-notice__overlay {
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(4, 18, 26, 0.78) 0%, rgba(4, 18, 26, 0.48) 42%, rgba(4, 18, 26, 0.08) 72%),
+    linear-gradient(180deg, rgba(3, 18, 25, 0.06) 48%, rgba(3, 18, 25, 0.52) 100%);
+}
+
+.banner-notice__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: min(1180px, calc(100% - 128px));
+  height: 100%;
+  margin: 0 auto;
+  padding-right: min(42vw, 620px);
+  text-align: left;
+}
+
+.banner-notice__eyebrow {
+  margin: 0 0 18px;
+  color: #c6ffe4;
+  font-size: clamp(12px, 1.05vw, 15px);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.banner-notice__title {
+  max-width: 720px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(34px, 4vw, 68px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.24);
+}
+
+.banner-notice__description {
+  margin: 22px 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(15px, 1.35vw, 20px);
+  line-height: 1.65;
+}
+
+.banner-notice__arrow {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(5, 25, 31, 0.24);
+  font: inherit;
+  font-size: 38px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: background-color 180ms ease, transform 180ms ease;
+  backdrop-filter: blur(8px);
+}
+
+.banner-notice__arrow:hover {
+  background: rgba(5, 25, 31, 0.58);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.banner-notice__arrow--previous { left: 28px; }
+.banner-notice__arrow--next { right: 28px; }
 
 .banner-notice__dots {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 30px;
   display: flex;
-  gap: var(--spacing-xs);
+  align-items: center;
+  gap: 9px;
+  transform: translateX(-50%);
 }
 
 .banner-notice__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: var(--color-border);
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: width 240ms ease, background-color 240ms ease;
 }
 
 .banner-notice__dot--active {
-  background-color: var(--color-primary);
-  transform: scale(1.2);
+  width: 32px;
+  background: #fff;
+}
+
+@media (max-width: 768px) {
+  .banner-notice__content {
+    width: calc(100% - 48px);
+    padding: 48px 34px 72px;
+  }
+
+  .banner-notice__title {
+    max-width: 560px;
+    font-size: clamp(30px, 9vw, 48px);
+  }
+
+  .banner-notice__description { max-width: 500px; }
+  .banner-notice__arrow { width: 38px; height: 38px; font-size: 30px; }
+  .banner-notice__arrow--previous { left: 10px; }
+  .banner-notice__arrow--next { right: 10px; }
+  .banner-notice__dots { bottom: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner-notice__slide,
+  .banner-notice__image,
+  .banner-notice__arrow,
+  .banner-notice__dot {
+    transition: none;
+  }
 }

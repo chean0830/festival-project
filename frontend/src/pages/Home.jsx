@@ -8,16 +8,47 @@ import NewsSection from "../components/home/NewsSection/NewsSection";
 import PostCard from "../components/community/PostCard/PostCard";
 import UsedListingCard from "../components/usedtrade/UsedListingCard/UsedListingCard";
 import { getUpcomingEvents, toProgramItem } from "../api/eventApi";
-import { getRecentNews, getHomeBanner } from "../api/newsApi";
+import { getRecentNews } from "../api/newsApi";
 import { getPosts } from "../api/communityApi";
 import { fetchUsedListings } from "../api/usedTradeApi";
-import bannerPhoto from "../assets/home/banner-b.png";
 import festivalRecordBanner from "../assets/home/festival-record-banner.png";
+import gratefulYesterdaysBanner from "../assets/home/banner-grateful-yesterdays.png";
+import fujiRockBanner from "../assets/home/banner-fuji-rock.png";
+import coachellaBanner from "../assets/home/banner-coachella.webp";
 import "./Home.css";
 
 const CAROUSEL_MAX_COUNT = 5;
 const COMMUNITY_PREVIEW_COUNT = 3;
 const USED_PREVIEW_COUNT = 4;
+const HOME_BANNERS = [
+  {
+    id: "grateful-yesterdays-seoul",
+    eyebrow: "LIVE IN SEOUL · 2026",
+    title: "back number Grateful Yesterdays Tour 2026 in Seoul",
+    description: "오래 기다려 온 노래와 함께 다시 만나는 서울의 밤",
+    image: gratefulYesterdaysBanner,
+    href: "/program/event/7",
+    tone: "violet",
+  },
+  {
+    id: "fuji-rock-2026",
+    eyebrow: "NIIGATA, JAPAN · SUMMER 2026",
+    title: "Fuji Rock Festival 2026",
+    description: "푸른 자연 한가운데서 펼쳐지는 여름 음악 여행",
+    image: fujiRockBanner,
+    href: "/program/event/9",
+    tone: "green",
+  },
+  {
+    id: "coachella-2026",
+    eyebrow: "INDIO, CALIFORNIA · APRIL 2026",
+    title: "Coachella 2026",
+    description: "사막의 빛과 음악이 만나는 가장 뜨거운 주말",
+    image: coachellaBanner,
+    href: "/program/event/6",
+    tone: "sunset",
+  },
+];
 
 /**
  * 메인 화면
@@ -34,25 +65,9 @@ function Home() {
   const currentMember = useCurrentMember();
   const memberId = currentMember?.memberId;
   const [programItems, setProgramItems] = useState([]);
-  const [noticeItems, setNoticeItems] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
   const [communityPosts, setCommunityPosts] = useState([]);
   const [usedListings, setUsedListings] = useState([]);
-  const [bannerUrl, setBannerUrl] = useState(bannerPhoto);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getHomeBanner()
-      .then((banner) => {
-        if (!cancelled && banner?.imageUrl) setBannerUrl(banner.imageUrl);
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,16 +92,10 @@ function Home() {
     getRecentNews()
       .then((news) => {
         if (cancelled) return;
-        setNoticeItems(
-          news
-            .filter((item) => item.newsType === "NOTICE")
-            .map((item) => ({ id: item.id, text: item.title }))
-        );
         setNewsItems(news.filter((item) => item.newsType !== "NOTICE"));
       })
       .catch(() => {
         if (!cancelled) {
-          setNoticeItems([]);
           setNewsItems([]);
         }
       });
@@ -134,14 +143,10 @@ function Home() {
 
   return (
     <Layout>
-      {/* 1. 배너 — 공지사항 자리. 무대 조명 사진을 배경으로 깔아둔 순수 디스플레이용 배너, 클릭 안 됨 */}
-      <div className="home__banner">
-        <img src={bannerUrl} alt="" className="home__banner-photo" />
-        <div className="home__banner-overlay" />
-        <div className="home__banner-inner">
-          <BannerNotice items={noticeItems} intervalMs={7000} />
-        </div>
-      </div>
+      {/* 1. 화면 전체 폭을 사용하는 메인 페스티벌 배너 */}
+      <section className="home__banner" aria-label="주요 공연 및 페스티벌">
+        <BannerNotice items={HOME_BANNERS} intervalMs={6500} />
+      </section>
 
       {/* 2. 공연일정 미리보기 */}
       <section className="home__section">
