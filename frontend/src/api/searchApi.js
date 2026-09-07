@@ -14,3 +14,10 @@ export async function search(query) {
 
   return response.json()
 }
+
+// item.id는 "artist-5", "festival-4", "event-14"처럼 타입 접두사가 붙어서 오므로
+// 뒤쪽 숫자만 뽑아서 상세 페이지 경로를 만든다.
+export function getSearchResultPath(item) {
+  const numericId = item.id.slice(item.id.lastIndexOf('-') + 1)
+  return item.type === 'artist' ? `/artists/${numericId}` : `/program/event/${numericId}`
+}
