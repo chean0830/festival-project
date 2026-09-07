@@ -45,7 +45,7 @@
 
 .md-order-page__complete-btn {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text-muted);
   border-radius: 999px;
   padding: 8px 18px;
@@ -162,6 +162,7 @@
   border-radius: 6px;
   padding: 10px 12px;
   font-size: var(--font-size-sm);
+  background: var(--color-input);
   color: var(--color-text);
 }
 
@@ -285,7 +286,7 @@
 
 .md-order-page__payment-method {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text-muted);
   border-radius: 8px;
   padding: 12px 18px;
@@ -304,6 +305,7 @@
 .md-order-page__payment-method--active:hover:not(:disabled) {
   border-color: var(--color-primary-dark);
   color: var(--color-primary-dark);
+  background: var(--color-surface);
 }
 
 .md-order-page__payment-method--active:disabled {
@@ -358,13 +360,20 @@
 
 .md-order-page__btn-ghost {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text-muted);
 }
 
 .md-order-page__btn-ghost:hover {
   border-color: var(--color-text-muted);
   color: var(--color-text);
+  background: var(--color-surface);
+}
+
+:root[data-theme='dark'] .md-order-page__preparing {
+  background: #312419;
+  border-color: #6f4a2c;
+  color: #ffc08d;
 }
 
 .md-order-page__btn-primary {

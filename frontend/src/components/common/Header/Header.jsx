@@ -42,12 +42,18 @@ function Header({ hideSubnav = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => document.documentElement.dataset.theme === "dark",
+  );
   const searchRef = useRef(null);
+  const profileMenuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   const currentMember = useCurrentMember();
   const isLoggedIn = Boolean(currentMember?.memberId);
+  const profileInitial = currentMember?.nickname?.charAt(0) ?? "?";
 
   async function handleLogout() {
     await logout();
@@ -58,11 +64,45 @@ function Header({ hideSubnav = false }) {
     ? "/login?returnTo=%2Flive"
     : "/login";
 
-  // 검색창 바깥을 클릭하면 드롭다운을 닫는다.
+  function handleThemeToggle() {
+    setIsDarkMode((current) => !current);
+  }
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
+    localStorage.setItem("festlog-dark-mode", isDarkMode ? "on" : "off");
+  }, [isDarkMode]);
+
+  const themeToggle = (
+    <button
+      type="button"
+      className="header__theme-toggle"
+      aria-label={`다크모드 ${isDarkMode ? "끄기" : "켜기"}`}
+      aria-pressed={isDarkMode}
+      onClick={handleThemeToggle}
+    >
+      {isDarkMode ? (
+        <svg className="header__theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 15.2A8.6 8.6 0 0 1 8.8 4a8.6 8.6 0 1 0 11.2 11.2Z" />
+        </svg>
+      ) : (
+        <svg className="header__theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+        </svg>
+      )}
+      <span>다크 모드</span>
+    </button>
+  );
+
+  // 검색창/프로필 메뉴 바깥을 클릭하면 드롭다운을 닫는다.
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setIsProfileMenuOpen(false);
       }
     }
 
@@ -121,7 +161,8 @@ function Header({ hideSubnav = false }) {
         <div className="header__top">
           {/* 로고 — 아이콘 없이 워드마크(텍스트)만. 아이콘은 나중에 다시 정하면 추가하면 됨. */}
           <a href="/" className="header__logo">
-            FESTLOG
+            <span className="header__logo-fest">FEST</span>
+            <span className="header__logo-log">LOG</span>
           </a>
 
           <div className="header__actions">
@@ -166,32 +207,79 @@ function Header({ hideSubnav = false }) {
             </div>
 
             {isLoggedIn ? (
-              <div className="header__account">
+              <div className="header__icon-cluster">
                 <NotificationBell />
-                <a href="/profile" className="header__profile-btn">
-                  내 프로필
-                </a>
-                <button type="button" className="header__logout-btn" onClick={handleLogout}>
-                  로그아웃
-                </button>
+                {themeToggle}
+                <div className="header__profile-wrap" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    className="header__profile-chip"
+                    aria-label="내 프로필 메뉴"
+                    onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                  >
+                    <span className="header__profile-avatar">
+                      {currentMember?.profileImage ? (
+                        <img src={currentMember.profileImage} alt="" />
+                      ) : (
+                        profileInitial
+                      )}
+                    </span>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+
+                  {isProfileMenuOpen && (
+                    <div className="header__profile-dropdown">
+                      <div className="header__profile-dropdown-header">
+                        <div className="header__profile-dropdown-name">{currentMember?.nickname}님</div>
+                      </div>
+                      <button
+                        type="button"
+                        className="header__profile-dropdown-item"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          navigate("/profile");
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <circle cx="12" cy="8" r="4" />
+                          <path d="M4 20c0-4.5 3.5-7 8-7s8 2.5 8 7" strokeLinecap="round" />
+                        </svg>
+                        내 프로필
+                      </button>
+                      <div className="header__profile-dropdown-divider" />
+                      <button
+                        type="button"
+                        className="header__profile-dropdown-item header__profile-dropdown-item--danger"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleLogout();
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                          <path d="M16 17l5-5-5-5M21 12H9" />
+                        </svg>
+                        로그아웃
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              <a href={loginHref} className="header__login-btn">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Login
-              </a>
+              <div className="header__icon-cluster header__icon-cluster--guest">
+                {themeToggle}
+                <a href={loginHref} className="header__login-chip">
+                  <span className="header__login-chip-avatar">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 20c0-4.5 3.5-7 8-7s8 2.5 8 7" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <span className="header__login-chip-text">로그인</span>
+                </a>
+              </div>
             )}
           </div>
         </div>
@@ -266,6 +354,10 @@ function Header({ hideSubnav = false }) {
                   </a>
                 </>
               )}
+            </div>
+
+            <div className="header__drawer-theme">
+              {themeToggle}
             </div>
 
             <nav className="header__drawer-nav">

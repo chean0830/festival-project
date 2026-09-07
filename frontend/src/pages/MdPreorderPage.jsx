@@ -4,9 +4,11 @@ import RequireLogin from "../features/profile/components/RequireLogin";
 import useCurrentMember from "../features/profile/hooks/useCurrentMember";
 import MdProductCard from "../components/mdshop/MdProductCard/MdProductCard";
 import { fetchPreorderProducts } from "../api/mdShopApi";
+import { isReservable } from "../utils/mdPreorderStatus";
 import "./MdPreorderPage.css";
 
 const ALL_CATEGORY = "전체";
+const RESERVABLE_CATEGORY = "예약 가능";
 
 /**
  * MD 사전예약 페이지.
@@ -43,14 +45,22 @@ function MdPreorderPage() {
   }, [memberId]);
 
   const categories = useMemo(
-    () => [ALL_CATEGORY, ...new Set(products.map((product) => product.category).filter(Boolean))],
+    () => [
+      ALL_CATEGORY,
+      RESERVABLE_CATEGORY,
+      ...new Set(products.map((product) => product.category).filter(Boolean)),
+    ],
     [products]
   );
 
-  const visibleProducts =
-    activeCategory === ALL_CATEGORY
-      ? products
-      : products.filter((product) => product.category === activeCategory);
+  let visibleProducts;
+  if (activeCategory === ALL_CATEGORY) {
+    visibleProducts = products;
+  } else if (activeCategory === RESERVABLE_CATEGORY) {
+    visibleProducts = products.filter(isReservable);
+  } else {
+    visibleProducts = products.filter((product) => product.category === activeCategory);
+  }
 
   if (currentMember === undefined) {
     return (

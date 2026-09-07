@@ -106,6 +106,15 @@ export function generateAiDiary(memberId, recordId) {
   return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/ai-diary/generate`, 'POST')
 }
 
+// AI 포스터 "1회 생성 충전"(900원) Toss 결제 승인. 성공 시 갱신된 기록(FestivalRecordResponse)을 돌려준다.
+export function confirmPosterCharge(memberId, recordId, { paymentKey, orderId, amount }) {
+  return mutateJson(
+    `/api/members/${memberId}/festival-records/${recordId}/poster/charges/confirm`,
+    'POST',
+    { paymentKey, orderId, amount },
+  )
+}
+
 export function selectPosterVersion(memberId, recordId, versionId) {
   return mutateEmpty(`/api/members/${memberId}/festival-records/${recordId}/poster/versions/${versionId}/select`, 'POST')
 }

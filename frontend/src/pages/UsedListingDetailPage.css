@@ -150,7 +150,7 @@
 
 .used-listing-detail__like-button {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-text);
   border-radius: 6px;
   padding: 12px 18px;
@@ -203,7 +203,7 @@
 .used-listing-detail__chat-button {
   flex: 1;
   border: 1px solid var(--color-primary);
-  background: #fff;
+  background: var(--color-elevated);
   color: var(--color-primary-dark);
   border-radius: 6px;
   padding: 12px 18px;
@@ -265,7 +265,9 @@
 }
 
 .used-listing-detail__modal {
-  background: #fff;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: var(--spacing-lg);
   min-width: 260px;
@@ -281,7 +283,8 @@
 
 .used-listing-detail__modal-actions button {
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-input);
+  color: var(--color-text);
   border-radius: 999px;
   padding: 8px 18px;
   font-weight: 700;

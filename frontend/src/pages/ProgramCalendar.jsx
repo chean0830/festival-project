@@ -14,8 +14,17 @@ const UPCOMING_COUNT = 3;
  * 인기 페스티벌 / 다가오는 공연 목록은 GET /api/home/events로 받아온 실제 DB 데이터를 씀.
  * (인기 페스티벌은 DB에 인기도 데이터가 없어서, 페스티벌 중 최신순 상위 N개를 보여줌)
  */
+const QUICK_FILTERS = [
+  { key: "all", label: "전체" },
+  { key: "domestic-festival", label: "국내 페스티벌" },
+  { key: "international-festival", label: "해외 페스티벌" },
+  { key: "international-concert", label: "내한 공연" },
+  { key: "domestic-concert", label: "국내 공연" },
+];
+
 function ProgramCalendar() {
   const [items, setItems] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -42,10 +51,27 @@ function ProgramCalendar() {
     <Layout>
       <section className="program-calendar-page">
         <h1>공연 캘린더</h1>
+        <p className="program-calendar-page__intro">
+          날짜를 눌러 그날 열리는 공연과 날씨를 확인해보세요.
+        </p>
+
+        <div className="program-calendar-page__quickfilters">
+          {QUICK_FILTERS.map((filter) => (
+            <span
+              key={filter.key}
+              className={`program-calendar-page__qf${
+                activeFilter === filter.key ? " program-calendar-page__qf--active" : ""
+              }`}
+              onClick={() => setActiveFilter(filter.key)}
+            >
+              {filter.label}
+            </span>
+          ))}
+        </div>
 
         <div className="program-calendar-page__lower">
           <div className="program-calendar-page__calendar">
-            <EventCalendar />
+            <EventCalendar filterKey={activeFilter} />
           </div>
 
           <div className="program-calendar-page__side">

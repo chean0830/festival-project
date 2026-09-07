@@ -73,7 +73,11 @@ function Program() {
           </div>
 
           <Link to="/program/calendar" className="program-page__calendar-link">
-            <span aria-hidden="true">📅</span> 캘린더
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.9" />
+              <path d="M3 9.5h18M8 3v3.5M16 3v3.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+            </svg>
+            캘린더로 보기
           </Link>
         </nav>
 

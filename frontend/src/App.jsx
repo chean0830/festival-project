@@ -7,6 +7,7 @@ import ProgramCategory from './pages/ProgramCategory'
 import ProgramEventDetail from './pages/ProgramEventDetail'
 import ArtistDetailPage from './pages/ArtistDetailPage'
 import MdPreorderPage from './pages/MdPreorderPage'
+import MdProductDetailPage from './pages/MdProductDetailPage'
 import MdOrderShippingPage from './pages/MdOrderShippingPage'
 import MdOrderPaymentPage from './pages/MdOrderPaymentPage'
 import MdOrderPayPage from './pages/MdOrderPayPage'
@@ -77,6 +78,7 @@ function App() {
         <Route path="/shop/used/chat/room/:roomId" element={<TradeChatRoomPage />} />
         <Route path="/my-chats" element={<MyChatsPage />} />
         <Route path="/shop/preorder" element={<MdPreorderPage />} />
+        <Route path="/shop/preorder/:productId" element={<MdProductDetailPage />} />
         <Route path="/shop/preorder/:productId/order" element={<MdOrderShippingPage />} />
         <Route path="/shop/preorder/:productId/payment" element={<MdOrderPaymentPage />} />
         <Route path="/shop/preorder/order/:orderId/pay" element={<MdOrderPayPage />} />

@@ -15,8 +15,10 @@ function ProgramCard({ item }) {
       className="program-card"
       onClick={() => navigate(`/program/event/${item.id}`)}
     >
-      <div className="program-card__poster">
-        {item.poster ? <img src={item.poster} alt={item.name} /> : "예시 이미지"}
+      <div className="program-card__poster-wrap">
+        <div className="program-card__poster">
+          {item.poster ? <img src={item.poster} alt={item.name} /> : "예시 이미지"}
+        </div>
       </div>
       <p className="program-card__name">{item.name}</p>
       <p className="program-card__time">{item.time}</p>

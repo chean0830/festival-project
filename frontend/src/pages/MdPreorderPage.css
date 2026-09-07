@@ -30,8 +30,8 @@
 
 .md-preorder-page__tab {
   border: 1px solid var(--color-border);
-  background: #fff;
-  color: var(--color-text-muted);
+  background: var(--color-elevated);
+  color: var(--color-text);
   border-radius: 999px;
   padding: 6px 16px;
   font-size: var(--font-size-sm);
