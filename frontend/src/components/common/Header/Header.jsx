@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { search } from "../../../api/searchApi";
+import { search, getSearchResultPath } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
@@ -171,7 +171,8 @@ function Header({ hideSubnav = false }) {
 
   function handleSelectResult(item) {
     setSearchTerm(item.name);
-    goToSearchPage(item.name);
+    setIsSearchOpen(false);
+    navigate(getSearchResultPath(item));
   }
 
   return (
