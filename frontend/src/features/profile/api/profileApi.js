@@ -57,6 +57,14 @@ export function updateIntroduction(memberId, introduction) {
   return mutateJson(`/api/members/${memberId}/profile/introduction`, 'PATCH', { introduction })
 }
 
+export function fetchKakaoNotification(memberId) {
+  return getJson(`/api/members/${memberId}/profile/kakao-notification`)
+}
+
+export function updateKakaoNotification(memberId, enabled) {
+  return mutateJson(`/api/members/${memberId}/profile/kakao-notification`, 'PATCH', { enabled })
+}
+
 export async function uploadProfileImage(memberId, file) {
   await ensureCsrfToken()
   const formData = new FormData()

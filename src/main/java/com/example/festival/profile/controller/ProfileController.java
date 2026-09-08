@@ -3,6 +3,8 @@ package com.example.festival.profile.controller;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.BadgeResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
+import com.example.festival.profile.dto.KakaoNotificationResponse;
+import com.example.festival.profile.dto.KakaoNotificationUpdateRequest;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
@@ -51,6 +53,19 @@ public class ProfileController {
     @PatchMapping("/profile/nickname")
     public ProfileResponse updateNickname(@PathVariable Long memberId, @Valid @RequestBody NicknameUpdateRequest request) {
         return profileService.updateNickname(memberId, request);
+    }
+
+    @GetMapping("/profile/kakao-notification")
+    public KakaoNotificationResponse getKakaoNotification(@PathVariable Long memberId) {
+        return profileService.getKakaoNotification(memberId);
+    }
+
+    @PatchMapping("/profile/kakao-notification")
+    public KakaoNotificationResponse updateKakaoNotification(
+            @PathVariable Long memberId,
+            @RequestBody KakaoNotificationUpdateRequest request
+    ) {
+        return profileService.updateKakaoNotification(memberId, request);
     }
 
     @PatchMapping("/profile/introduction")

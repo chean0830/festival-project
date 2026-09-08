@@ -9,6 +9,7 @@ import com.example.festival.notification.entity.Notification;
 import com.example.festival.notification.entity.NotificationRead;
 import com.example.festival.notification.repository.NotificationReadRepository;
 import com.example.festival.notification.repository.NotificationRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,10 @@ import java.util.Set;
  * 알림 생성(notifyMember/notifyAll)은 각 알림을 발생시키는 도메인(AI/추천/MD/중고거래/커뮤니티 등)이
  * 자기 기능을 구현할 때 이 서비스를 주입받아 호출하는 용도로 열어둔 것이며,
  * 지금은 별도 REST 생성 API로는 노출하지 않는다.
+ * <p>
+ * notifyMember로 개인 알림이 생성될 때마다, 그 회원이 카카오톡 알림을 켜뒀으면
+ * KakaoTalkNotifier로 같은 내용을 카톡 "나에게 보내기"로도 보낸다. notifyAll(전체 공지)은
+ * 카톡으로 안 보낸다 — 전체 발송은 스팸처럼 느껴질 수 있어서 개인화된 알림만 대상으로 한다.
  */
 @Service
 @Transactional(readOnly = true)
@@ -32,17 +37,23 @@ public class NotificationService {
     private final NotificationReadRepository notificationReadRepository;
     private final MemberRepository memberRepository;
     private final EventRepository eventRepository;
+    private final KakaoTalkNotifier kakaoTalkNotifier;
+    private final String frontendUrl;
 
     public NotificationService(
             NotificationRepository notificationRepository,
             NotificationReadRepository notificationReadRepository,
             MemberRepository memberRepository,
-            EventRepository eventRepository
+            EventRepository eventRepository,
+            KakaoTalkNotifier kakaoTalkNotifier,
+            @Value("${app.frontend-url}") String frontendUrl
     ) {
         this.notificationRepository = notificationRepository;
         this.notificationReadRepository = notificationReadRepository;
         this.memberRepository = memberRepository;
         this.eventRepository = eventRepository;
+        this.kakaoTalkNotifier = kakaoTalkNotifier;
+        this.frontendUrl = frontendUrl;
     }
 
     public List<NotificationResponse> getNotifications(Long memberId) {
@@ -93,6 +104,9 @@ public class NotificationService {
         Member member = getMemberOrThrow(memberId);
         Event event = eventId == null ? null : eventRepository.findById(eventId).orElse(null);
         notificationRepository.save(Notification.forMember(member, event, type, title, content));
+
+        String linkUrl = event == null ? frontendUrl : frontendUrl + "/program/event/" + event.getEventId();
+        kakaoTalkNotifier.sendIfOptedIn(memberId, title, content, linkUrl);
     }
 
     @Transactional

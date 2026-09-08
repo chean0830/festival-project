@@ -5,6 +5,7 @@ import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.member.entity.SocialAccount;
 import com.example.festival.member.repository.SocialAccountRepository;
 import com.example.festival.member.entity.SocialProvider;
+import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -34,6 +35,16 @@ public class OAuth2AccountService {
         return socialAccountRepository.findByProviderAndProviderId(provider, profile.providerId())
                 .map(SocialAccount::getMember)
                 .orElseGet(() -> createOrLinkMember(provider, profile));
+    }
+
+    /**
+     * 카카오 로그인 성공 시 발급받은 access_token/refresh_token을 저장해둔다.
+     * "나에게 보내기" 알림 기능에서 나중에 이 토큰으로 카카오 API를 호출하기 위함.
+     */
+    @Transactional
+    public void saveKakaoTokens(Long memberId, String accessToken, String refreshToken, LocalDateTime expiresAt) {
+        socialAccountRepository.findByMember_IdAndProvider(memberId, SocialProvider.KAKAO)
+                .ifPresent(account -> account.updateKakaoTokens(accessToken, refreshToken, expiresAt));
     }
 
     private Member createOrLinkMember(SocialProvider provider, SocialProfile profile) {
