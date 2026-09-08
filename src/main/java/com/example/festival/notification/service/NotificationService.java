@@ -101,11 +101,27 @@ public class NotificationService {
 
     @Transactional
     public void notifyMember(Long memberId, Long eventId, String type, String title, String content) {
+        notifyMember(memberId, eventId, type, title, content, null);
+    }
+
+    /**
+     * linkPath를 지정하면(예: "/shop/used/chat/room/3") 카카오톡 알림의 링크가 이벤트 상세 대신
+     * 그 경로로 연결된다. 중고거래 채팅처럼 이벤트와 무관한 알림에서 특정 화면으로 바로 보내고 싶을 때 사용.
+     */
+    @Transactional
+    public void notifyMember(Long memberId, Long eventId, String type, String title, String content, String linkPath) {
         Member member = getMemberOrThrow(memberId);
         Event event = eventId == null ? null : eventRepository.findById(eventId).orElse(null);
         notificationRepository.save(Notification.forMember(member, event, type, title, content));
 
-        String linkUrl = event == null ? frontendUrl : frontendUrl + "/program/event/" + event.getEventId();
+        String linkUrl;
+        if (linkPath != null) {
+            linkUrl = frontendUrl + linkPath;
+        } else if (event != null) {
+            linkUrl = frontendUrl + "/program/event/" + event.getEventId();
+        } else {
+            linkUrl = frontendUrl;
+        }
         kakaoTalkNotifier.sendIfOptedIn(memberId, title, content, linkUrl);
     }
 
