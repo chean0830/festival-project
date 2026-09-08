@@ -71,6 +71,9 @@ public class Member {
     @Column(name = "email_enabled", nullable = false)
     private boolean emailEnabled;
 
+    @Column(name = "kakao_notification_enabled", nullable = false)
+    private boolean kakaoNotificationEnabled;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -168,6 +171,10 @@ public class Member {
         this.profileImage = profileImage;
     }
 
+    public void changeKakaoNotificationEnabled(boolean enabled) {
+        this.kakaoNotificationEnabled = enabled;
+    }
+
     public void clearProfileImage() {
         this.profileImage = null;
     }
@@ -218,5 +225,9 @@ public class Member {
 
     public MemberStatus getStatus() {
         return status;
+    }
+
+    public boolean isKakaoNotificationEnabled() {
+        return kakaoNotificationEnabled;
     }
 }

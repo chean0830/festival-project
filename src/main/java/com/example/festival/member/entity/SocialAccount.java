@@ -38,6 +38,15 @@ public class SocialAccount {
     @Column(name = "provider_id", nullable = false, length = 255)
     private String providerId;
 
+    @Column(name = "kakao_access_token", length = 500)
+    private String kakaoAccessToken;
+
+    @Column(name = "kakao_refresh_token", length = 500)
+    private String kakaoRefreshToken;
+
+    @Column(name = "kakao_token_expires_at")
+    private LocalDateTime kakaoTokenExpiresAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,7 +60,31 @@ public class SocialAccount {
         this.providerId = providerId;
     }
 
+    public void updateKakaoTokens(String accessToken, String refreshToken, LocalDateTime expiresAt) {
+        this.kakaoAccessToken = accessToken;
+        if (refreshToken != null) {
+            this.kakaoRefreshToken = refreshToken;
+        }
+        this.kakaoTokenExpiresAt = expiresAt;
+    }
+
     public Member getMember() {
         return member;
+    }
+
+    public SocialProvider getProvider() {
+        return provider;
+    }
+
+    public String getKakaoAccessToken() {
+        return kakaoAccessToken;
+    }
+
+    public String getKakaoRefreshToken() {
+        return kakaoRefreshToken;
+    }
+
+    public LocalDateTime getKakaoTokenExpiresAt() {
+        return kakaoTokenExpiresAt;
     }
 }

@@ -11,4 +11,6 @@ public interface SocialAccountRepository extends JpaRepository<SocialAccount, Lo
 
     @EntityGraph(attributePaths = "member")
     Optional<SocialAccount> findByProviderAndProviderId(SocialProvider provider, String providerId);
+
+    Optional<SocialAccount> findByMember_IdAndProvider(Long memberId, SocialProvider provider);
 }
