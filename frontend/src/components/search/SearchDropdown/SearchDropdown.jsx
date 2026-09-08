@@ -25,7 +25,11 @@ function SearchDropdown({ results, query, onSelect, onViewAll }) {
                 className="search-dropdown__item"
                 onClick={() => onSelect(item)}
               >
-                <span className="search-dropdown__item-thumb">
+                <span
+                  className={`search-dropdown__item-thumb search-dropdown__item-thumb--${
+                    item.type === "artist" ? "round" : "poster"
+                  }`}
+                >
                   {item.image && <img src={item.image} alt="" />}
                 </span>
                 <span

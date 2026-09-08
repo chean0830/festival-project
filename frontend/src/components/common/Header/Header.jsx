@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { search } from "../../../api/searchApi";
+import { search, getSearchResultPath } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
 import useCurrentMember from "../../../features/profile/hooks/useCurrentMember";
 import { logout } from "../../../api/authApi";
+import { fetchProfile } from "../../../features/profile/api/profileApi";
 import NotificationBell from "../../../features/notification/components/NotificationBell";
 import "./Header.css";
 
@@ -54,6 +55,7 @@ function Header({ hideSubnav = false }) {
   const currentMember = useCurrentMember();
   const isLoggedIn = Boolean(currentMember?.memberId);
   const profileInitial = currentMember?.nickname?.charAt(0) ?? "?";
+  const [drawerIntroduction, setDrawerIntroduction] = useState("");
 
   async function handleLogout() {
     await logout();
@@ -110,6 +112,24 @@ function Header({ hideSubnav = false }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 서랍(drawer)을 열 때만 자기소개를 불러온다 — /api/auth/me 응답에는 없는 필드라서.
+  useEffect(() => {
+    if (!isMenuOpen || !currentMember?.memberId) return undefined;
+    let cancelled = false;
+
+    fetchProfile(currentMember.memberId)
+      .then((profile) => {
+        if (!cancelled) setDrawerIntroduction(profile?.introduction ?? "");
+      })
+      .catch(() => {
+        if (!cancelled) setDrawerIntroduction("");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isMenuOpen, currentMember?.memberId]);
+
   const [searchResults, setSearchResults] = useState([]);
 
   // 입력할 때마다 바로 요청하지 않고, 타이핑이 멈추고 250ms 지나면 검색한다.
@@ -151,7 +171,8 @@ function Header({ hideSubnav = false }) {
 
   function handleSelectResult(item) {
     setSearchTerm(item.name);
-    goToSearchPage(item.name);
+    setIsSearchOpen(false);
+    navigate(getSearchResultPath(item));
   }
 
   return (
@@ -333,14 +354,26 @@ function Header({ hideSubnav = false }) {
                 <>
                   <a
                     href="/profile"
-                    className="header__drawer-profile-text"
+                    className="header__drawer-profile-link"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    내 프로필
+                    <span className="header__drawer-avatar">
+                      {currentMember?.profileImage ? (
+                        <img src={currentMember.profileImage} alt="프로필 사진" />
+                      ) : (
+                        profileInitial
+                      )}
+                    </span>
+                    <span className="header__drawer-profile-info">
+                      <span className="header__drawer-profile-name">{currentMember?.nickname}</span>
+                      {drawerIntroduction && (
+                        <span className="header__drawer-profile-sub">{drawerIntroduction}</span>
+                      )}
+                    </span>
                   </a>
                   <button
                     type="button"
-                    className="header__logout-btn header__login-btn--sm"
+                    className="header__drawer-logout"
                     onClick={handleLogout}
                   >
                     로그아웃
