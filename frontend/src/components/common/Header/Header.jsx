@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { search, getSearchResultPath } from "../../../api/searchApi";
 import SearchDropdown from "../../search/SearchDropdown/SearchDropdown";
@@ -308,7 +309,9 @@ function Header({ hideSubnav = false }) {
 
       {/* 2줄: 햄버거 메뉴 + 바로가기 (채팅방 등 몰입형 페이지에서는 hideSubnav로 숨김) */}
       {!hideSubnav && (
-        <div className="header__subnav">
+        <div
+          className={`header__subnav${isMenuOpen ? " header__subnav--hidden" : ""}`}
+        >
           <button
             type="button"
             className="header__menu-btn"
@@ -332,8 +335,11 @@ function Header({ hideSubnav = false }) {
         </div>
       )}
 
-      {/* 햄버거 눌렀을 때 열리는 메뉴 서랍 */}
-      {isMenuOpen && (
+      {/* 햄버거 눌렀을 때 열리는 메뉴 서랍
+          — .header 에 backdrop-filter 가 걸려 있어서, 그 안에 두면 position:fixed 가
+          헤더 박스를 기준으로 잡혀 서랍이 짧게 잘리고 배너가 비쳐 보인다.
+          document.body 로 포털을 내보내 뷰포트 기준으로 그린다. */}
+      {isMenuOpen && createPortal(
         <>
           <div
             className="header__drawer-backdrop"
@@ -406,7 +412,8 @@ function Header({ hideSubnav = false }) {
               ))}
             </nav>
           </aside>
-        </>
+        </>,
+        document.body,
       )}
     </header>
   );
