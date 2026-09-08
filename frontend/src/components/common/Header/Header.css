@@ -331,6 +331,12 @@
   box-sizing: border-box;
 }
 
+/* 왼쪽 세로 메뉴(drawer)가 열려 있는 동안에는 가로 메뉴바 전체를 없앤다.
+   (글자만이 아니라 흰 바 자체가 사라지도록 display:none — 헤더가 윗줄만 남는다) */
+.header__subnav--hidden {
+  display: none;
+}
+
 .header__menu-btn {
   display: inline-flex;
   align-items: center;
@@ -390,6 +396,7 @@
   padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   animation: slideIn 0.2s ease;
 }
 
