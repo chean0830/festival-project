@@ -1,0 +1,1119 @@
+.record-page {
+  width: 100%;
+  min-height: 100svh;
+  box-sizing: border-box;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.record-content {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 56px) clamp(20px, 5vw, 48px) 80px;
+}
+
+.record-content h1 {
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 700;
+  margin: 0;
+}
+
+.record-content > h1 {
+  max-width: 640px;
+  margin: 0 auto 24px;
+}
+
+.record-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.record-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.record-empty-text,
+.record-error-text {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.record-error-text {
+  color: var(--color-error);
+}
+
+.record-empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 56px 24px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.record-empty-block .record-empty-text {
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* ---------- List / grid ---------- */
+
+.record-list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.record-list-search {
+  flex: 1;
+  min-width: 160px;
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text);
+  outline: none;
+}
+
+.record-list-search:focus {
+  border-color: var(--color-primary);
+}
+
+.record-list-toolbar select {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-background);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.record-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.record-card:hover {
+  border-color: var(--color-primary);
+}
+
+.record-card-thumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--color-surface);
+}
+
+.record-card-thumb--placeholder {
+  background: var(--color-surface);
+}
+
+.record-card-body {
+  padding: 10px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.record-card-event {
+  font-size: 11px;
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.record-card-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.record-card-review {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ---------- Star rating ---------- */
+
+.record-star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.record-star {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 16px;
+  color: var(--color-border);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.record-star-rating--readonly .record-star {
+  cursor: default;
+}
+
+.record-star--filled {
+  color: var(--color-secondary);
+}
+
+/* ---------- Form ---------- */
+
+.record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.record-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.record-form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.record-form-field input[type='text'],
+.record-form-field select,
+.record-form-field textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-text);
+  outline: none;
+}
+
+.record-form-field input[type='text']:focus,
+.record-form-field select:focus,
+.record-form-field textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.record-form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.record-form-row input {
+  flex: 1;
+}
+
+.record-form-row-remove,
+.record-form-row-add {
+  font-size: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.record-form-row-add {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.record-form-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.record-form-photo-item {
+  position: relative;
+}
+
+.record-form-photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.record-form-photo-item-actions {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.record-form-photo-item-actions button {
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.record-form-photo-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.record-form-photo-add {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.record-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.record-bottom-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.record-btn-primary {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.record-btn-primary:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.record-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.record-btn-ghost {
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.record-btn-ghost:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+.record-btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.record-btn-ghost:disabled:hover {
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* ---------- Detail ---------- */
+
+.record-detail-event {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin: 4px 0 8px;
+}
+
+.record-detail-one-line {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.record-detail-content {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.record-detail-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.record-detail-section h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.record-detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.record-detail-hashtag {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--color-primary-dark);
+}
+
+.record-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.record-image-item {
+  position: relative;
+}
+
+.record-image-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.record-image-item-actions {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.record-image-item-actions button {
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.record-image-item-actions button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.record-form-photo-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.record-form-photo-hint strong {
+  color: var(--color-text);
+}
+
+.record-form-photo-slot-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  background: rgba(17, 24, 39, 0.65);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.record-form-photo-slot-badge--main {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.record-detail-song-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-detail-song-list img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.record-image-add {
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.record-share-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ================= 페스티벌 다이어리 북 / 포스터 ================= */
+
+.fr-book-page-wrap .record-content {
+  max-width: 780px;
+}
+
+/* ---- 페이지 플립북 (react-pageflip) ---- */
+
+.fr-flipbook-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.fr-flipbook {
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.25));
+}
+
+.fr-flip-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #fffdf8;
+  box-sizing: border-box;
+  padding: 28px 22px 36px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+}
+
+.fr-flip-page-number {
+  position: absolute;
+  bottom: 10px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* 표지(앞/뒤) — 얇은 낱장이 아니라 두꺼운 "하드커버"처럼 보이도록 진한 배경 사용.
+   react-pageflip이 data-density="hard"인 페이지는 실제로 더 두껍게 넘겨준다. */
+.fr-flip-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #1c1b29 0%, #33314a 100%);
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.fr-flip-cover-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 28px;
+  text-align: center;
+}
+
+.fr-flip-cover-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.fr-flip-cover-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.fr-flip-cover-event {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.fr-flip-cover-hint {
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.fr-page-content h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+.fr-page-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.fr-page-cover-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.fr-page-event-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 8px 0 6px;
+}
+
+.fr-page-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.fr-page-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.fr-page-photo-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.fr-page-side-photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.fr-page-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.fr-page-song-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fr-page-song-cover {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.fr-page-song-note {
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.fr-page-food-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.fr-page-food-tags span {
+  font-size: 12px;
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.fr-page-memo {
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.fr-page-review {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.fr-page-hashtag {
+  font-size: 12px;
+  color: var(--color-primary-dark);
+}
+
+.fr-page-ai-diary {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+/* 마지막 내지: 스크랩북처럼 사진을 아무렇게나 모아둔 느낌 (인터랙션 없음) */
+.fr-page-collage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 10px;
+  padding-top: 6px;
+}
+
+.fr-page-collage img {
+  width: calc(50% - 8px);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 4px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.fr-page-collage-photo--0 {
+  transform: rotate(-3deg);
+}
+.fr-page-collage-photo--1 {
+  transform: rotate(2deg);
+}
+.fr-page-collage-photo--2 {
+  transform: rotate(3deg);
+}
+.fr-page-collage-photo--3 {
+  transform: rotate(-2deg);
+}
+
+.fr-book-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.fr-book-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- 책 다음: 포스터 생성 CTA ---- */
+
+.fr-poster-cta {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.fr-poster-cta p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fr-poster-cta-hint {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--color-text-muted);
+  margin-bottom: 8px !important;
+}
+
+.fr-poster-cta .record-btn-primary {
+  margin-top: 4px;
+}
+
+/* ---- 완성 포스터 ---- */
+
+.fr-poster-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.fr-poster {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.25);
+  --fr-poster-accent: var(--color-primary);
+  --fr-poster-bg: #2c2c3a;
+}
+
+.fr-poster--ai {
+  background: var(--fr-poster-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fr-poster-ai-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fr-poster-photo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  text-align: center;
+  padding: 20px;
+}
+
+.fr-poster-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.fr-poster-share-message {
+  font-size: 12px;
+  color: var(--color-primary-dark);
+}
+
+.fr-poster-regen-limit {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.fr-poster-regen-limit button {
+  margin-top: 8px;
+}
+
+.fr-ai-usage-count {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.fr-charge-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.fr-charge-modal {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 22px 18px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.fr-charge-modal__title {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.fr-charge-modal__desc {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.fr-charge-modal__qty {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.fr-charge-qty-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.fr-charge-qty-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.fr-charge-qty-btn--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.fr-charge-qty-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.fr-charge-modal__total {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.fr-charge-modal__total strong {
+  font-size: 15px;
+}
+
+.fr-charge-modal__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fr-charge-modal__actions button {
+  flex: 1;
+  margin: 0;
+}
+
+.fr-version-gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 4px 0;
+}
+
+.fr-version-thumb {
+  flex: none;
+  width: 56px;
+  height: 74px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.fr-version-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fr-version-thumb:disabled {
+  cursor: not-allowed;
+}
+
+.fr-version-thumb--active {
+  opacity: 1;
+  border-color: var(--color-primary);
+}
+
+.fr-diary-version-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.fr-diary-version-item {
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fr-diary-version-item:disabled {
+  cursor: not-allowed;
+}
+
+.fr-diary-version-item--active {
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ---- 곡 자동완성 행 ---- */
+
+.record-form-song-row {
+  align-items: flex-start;
+}
+
+.record-form-song-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+}
+
+.record-form-song-cover--empty {
+  background: var(--color-surface);
+}
+
+.record-form-song-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.record-form-song-autocomplete {
+  position: relative;
+}
+
+.record-form-song-autocomplete input {
+  width: 100%;
+}
+
+.record-form-song-loading {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.record-form-song-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.record-form-song-suggestions li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.record-form-song-suggestions li:hover {
+  background: var(--color-surface);
+}
+
+.record-form-song-suggestions img {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.record-form-song-suggestion-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.record-form-song-suggestion-artist {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}

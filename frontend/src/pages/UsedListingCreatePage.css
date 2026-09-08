@@ -1,0 +1,144 @@
+.used-listing-create {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.used-listing-create h1 {
+  margin: 0 0 var(--spacing-lg);
+}
+
+.used-listing-create__row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+.used-listing-create__field {
+  margin-bottom: var(--spacing-md);
+}
+
+.used-listing-create__field label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.used-listing-create__field input,
+.used-listing-create__field select,
+.used-listing-create__field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: var(--font-size-sm);
+  background: var(--color-input);
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.used-listing-create__field select[multiple],
+.used-listing-create__field select[size] {
+  margin-top: 8px;
+}
+
+.used-listing-create__field input:focus,
+.used-listing-create__field select:focus,
+.used-listing-create__field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.used-listing-create__error {
+  color: var(--color-error);
+  font-size: var(--font-size-xs);
+  margin: 6px 0 0;
+}
+
+.used-listing-create__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  margin: 6px 0 0;
+}
+
+.used-listing-create__status-row {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.used-listing-create__status-btn {
+  flex: 1;
+  border: 1px solid var(--color-border);
+  background: var(--color-elevated);
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  padding: 10px 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.used-listing-create__status-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.used-listing-create__status-btn--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.used-listing-create__fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.used-listing-create__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.used-listing-create__btn-ghost,
+.used-listing-create__btn-primary {
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.used-listing-create__btn-ghost {
+  border: 1px solid var(--color-border);
+  background: var(--color-elevated);
+  color: var(--color-text-muted);
+}
+
+.used-listing-create__btn-ghost:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
+}
+
+.used-listing-create__btn-primary {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.used-listing-create__btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.used-listing-create__btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

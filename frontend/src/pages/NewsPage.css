@@ -1,0 +1,32 @@
+.news-page {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px;
+}
+
+.news-page__back {
+  display: inline-block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+.news-page__back:hover {
+  color: var(--color-primary-dark);
+}
+
+.news-page__empty {
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-lg);
+}
+
+.news-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+.news-page__grid .news-card {
+  width: 100%;
+}

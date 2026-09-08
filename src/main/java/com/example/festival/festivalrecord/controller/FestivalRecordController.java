@@ -1,0 +1,144 @@
+package com.example.festival.festivalrecord.controller;
+
+import com.example.festival.festivalrecord.dto.FestivalRecordRequest;
+import com.example.festival.festivalrecord.dto.FestivalRecordResponse;
+import com.example.festival.festivalrecord.dto.FestivalRecordSummaryResponse;
+import com.example.festival.festivalrecord.dto.PosterGenerateRequest;
+import com.example.festival.festivalrecord.dto.ReorderImagesRequest;
+import com.example.festival.festivalrecord.dto.ShareRequest;
+import com.example.festival.festivalrecord.service.FestivalRecordService;
+import com.example.festival.payment.dto.PaymentConfirmRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/members/{memberId}/festival-records")
+public class FestivalRecordController {
+
+    private final FestivalRecordService festivalRecordService;
+
+    public FestivalRecordController(FestivalRecordService festivalRecordService) {
+        this.festivalRecordService = festivalRecordService;
+    }
+
+    @GetMapping
+    public List<FestivalRecordSummaryResponse> getRecords(@PathVariable Long memberId) {
+        return festivalRecordService.getRecords(memberId);
+    }
+
+    @GetMapping("/{recordId}")
+    public FestivalRecordResponse getRecord(@PathVariable Long memberId, @PathVariable Long recordId) {
+        return festivalRecordService.getRecord(memberId, recordId);
+    }
+
+    @PostMapping
+    public FestivalRecordResponse createRecord(@PathVariable Long memberId, @Valid @RequestBody FestivalRecordRequest request) {
+        return festivalRecordService.createRecord(memberId, request);
+    }
+
+    @PatchMapping("/{recordId}")
+    public FestivalRecordResponse updateRecord(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody FestivalRecordRequest request
+    ) {
+        return festivalRecordService.updateRecord(memberId, recordId, request);
+    }
+
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<Void> deleteRecord(@PathVariable Long memberId, @PathVariable Long recordId) {
+        festivalRecordService.deleteRecord(memberId, recordId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{recordId}/images")
+    public FestivalRecordResponse addImage(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return festivalRecordService.addImage(memberId, recordId, file);
+    }
+
+    @DeleteMapping("/{recordId}/images/{imageId}")
+    public ResponseEntity<Void> deleteImage(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @PathVariable Long imageId
+    ) {
+        festivalRecordService.deleteImage(memberId, recordId, imageId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{recordId}/images/order")
+    public FestivalRecordResponse reorderImages(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody ReorderImagesRequest request
+    ) {
+        return festivalRecordService.reorderImages(memberId, recordId, request.imageIds());
+    }
+
+    @PostMapping("/{recordId}/poster/generate")
+    public FestivalRecordResponse generatePoster(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody(required = false) PosterGenerateRequest request
+    ) {
+        String styleRequest = request != null ? request.styleRequest() : null;
+        return festivalRecordService.generatePoster(memberId, recordId, styleRequest);
+    }
+
+    @PostMapping("/{recordId}/poster/charges/confirm")
+    public FestivalRecordResponse confirmPosterCharge(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody PaymentConfirmRequest request
+    ) {
+        return festivalRecordService.confirmPosterCharge(memberId, recordId, request);
+    }
+
+    @PostMapping("/{recordId}/poster/versions/{versionId}/select")
+    public FestivalRecordResponse selectPosterVersion(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @PathVariable Long versionId
+    ) {
+        return festivalRecordService.selectPosterVersion(memberId, recordId, versionId);
+    }
+
+    @PostMapping("/{recordId}/ai-diary/generate")
+    public FestivalRecordResponse generateAiDiary(@PathVariable Long memberId, @PathVariable Long recordId) {
+        return festivalRecordService.generateAiDiary(memberId, recordId);
+    }
+
+    @PostMapping("/{recordId}/ai-diary/versions/{versionId}/select")
+    public FestivalRecordResponse selectDiaryVersion(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @PathVariable Long versionId
+    ) {
+        return festivalRecordService.selectDiaryVersion(memberId, recordId, versionId);
+    }
+
+    @PostMapping("/{recordId}/share")
+    public FestivalRecordResponse shareRecord(
+            @PathVariable Long memberId,
+            @PathVariable Long recordId,
+            @Valid @RequestBody ShareRequest request
+    ) {
+        return festivalRecordService.shareRecord(memberId, recordId, request);
+    }
+}

@@ -1,0 +1,117 @@
+.search-dropdown {
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 320px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  z-index: 150;
+}
+
+.search-dropdown__empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.search-dropdown__list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.search-dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-bottom: 1px solid rgba(28, 27, 41, 0.12);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.search-dropdown__list li:last-child .search-dropdown__item {
+  border-bottom: none;
+}
+.search-dropdown__item:hover {
+  background-color: var(--color-surface);
+}
+
+.search-dropdown__item-thumb {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+.search-dropdown__item-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-dropdown__item-type {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background-color: transparent;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.search-dropdown__item-type--artist {
+  border-color: var(--color-primary-dark);
+  color: var(--color-primary-dark);
+}
+
+.search-dropdown__item-type--festival {
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+.search-dropdown__item-type--event {
+  border-color: var(--color-text-muted);
+  color: var(--color-text-muted);
+}
+
+.search-dropdown__item-name {
+  flex: 1;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-dropdown__item-subtitle {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.search-dropdown__view-all {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.search-dropdown__view-all:hover {
+  background-color: var(--color-primary-light);
+}

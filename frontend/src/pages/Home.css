@@ -1,0 +1,112 @@
+/* ---- 1. 화면 전체 폭 메인 슬라이드 배너 ---- */
+.layout:has(.home__banner) {
+  overflow-x: clip;
+}
+
+.home__banner {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  height: clamp(540px, 42vw, 720px);
+  margin-top: calc(var(--spacing-lg) * -1);
+  margin-left: -50vw;
+  overflow: hidden;
+  background: #0a2930;
+}
+
+/* ---- 공통 섹션 헤더 ---- */
+.home__section {
+  margin-top: 120px;
+}
+
+/* 배너 바로 다음(공연일정) 섹션은 배너 자체가 커서 간격이 더 좁아 보이니 조금 더 띄움 */
+.home__banner + .home__section {
+  margin-top: 160px;
+}
+
+/* 페스티벌 기록 다음(뉴스) 섹션도 간격을 더 띄움 */
+.home__log-promo + .home__section {
+  margin-top: 160px;
+}
+
+.home__section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.home__section-header h2 {
+  font-size: var(--font-size-xl);
+  margin: 0;
+}
+
+.home__section-more {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.home__section-more:hover {
+  color: var(--color-primary);
+}
+
+/* 2. 공연일정 캐러셀 스타일은 ProgramCarousel.css 에 있음 */
+
+/* ---- 3. 페스티벌 기록 홍보 — 배너 이미지 클릭 시 기록 만들기로 이동 ---- */
+.home__log-promo {
+  margin-top: 120px;
+  margin-bottom: 80px;
+}
+
+.home__log-promo-banner {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 0;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.home__log-promo-banner:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.home__log-promo-banner:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.home__log-promo-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ---- 5·6. 커뮤니티 / MD 중고거래 미리보기 ---- */
+.home__preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.home__preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.home__preview-empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-lg) 0;
+}
+
+@media (max-width: 768px) {
+  .home__banner {
+    height: 560px;
+  }
+}

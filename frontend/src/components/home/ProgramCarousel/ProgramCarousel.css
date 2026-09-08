@@ -1,0 +1,146 @@
+/* 카드들을 flex가 아니라 절대좌표(absolute)로 겹쳐서 배치함.
+   그래야 카드가 "그 자리 내용만 바뀌는" 게 아니라, 같은 카드가 실제로
+   이 위치에서 저 위치로 옮겨가며 회전하는 애니메이션이 보임.
+   perspective는 그 회전/이동에 원근감(입체감)을 줌. */
+.program-carousel {
+  position: relative;
+  height: 560px;
+  overflow: hidden;
+  perspective: 1400px;
+}
+
+.program-carousel__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  cursor: pointer;
+  /* width/opacity/transform(위치 이동 + 회전 + 깊이)를 한번에 부드럽게 애니메이션 */
+  transition: width 0.6s cubic-bezier(0.22, 0.68, 0, 1.01),
+    opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 0.68, 0, 1.01);
+}
+
+/* 3:4 세로 비율 — 나중에 실제 포스터 이미지를 통째로 넣을 자리라 포스터 비율에 맞춰둠.
+   이 네모 자체가 카드의 전체 영역이고, 안에 따로 여백/테두리를 두지 않는다(네모 안에 네모 X). */
+.program-carousel__thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: box-shadow 0.4s ease;
+}
+
+.program-carousel__thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.program-carousel__card--pos0 .program-carousel__thumb {
+  box-shadow: var(--shadow-card);
+}
+
+/* 네모 안이 아니라, 네모 밑에 따로 떨어진 텍스트 영역 */
+.program-carousel__label {
+  margin-top: var(--spacing-sm);
+  padding: 0 var(--spacing-xs);
+}
+
+.program-carousel__name {
+  font-weight: 700;
+  margin: 0 0 var(--spacing-xs);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.program-carousel__time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+/* 가운데(0): 가장 크게, 정면을 보고 있음, 강조 */
+.program-carousel__card--pos0 {
+  width: 380px;
+  opacity: 1;
+  z-index: 7;
+  transform: translate(-50%, -50%) translateX(0) translateZ(0) rotateY(0deg) scale(1);
+}
+
+/* 바로 옆(-1 / 1): 중간 크기, 뒤로 살짝 물러나면서 가운데를 바라보듯 회전 */
+.program-carousel__card--pos-1 {
+  width: 270px;
+  opacity: 0.8;
+  z-index: 6;
+  transform: translate(-50%, -50%) translateX(-250px) translateZ(-70px) rotateY(24deg) scale(0.92);
+}
+.program-carousel__card--pos1 {
+  width: 270px;
+  opacity: 0.8;
+  z-index: 6;
+  transform: translate(-50%, -50%) translateX(250px) translateZ(-70px) rotateY(-24deg) scale(0.92);
+}
+
+/* 맨 끝(-2 / 2): 가장 작게, 더 뒤로 물러나며 더 많이 회전, 살짝 흐리게 */
+.program-carousel__card--pos-2 {
+  width: 200px;
+  opacity: 0.4;
+  z-index: 5;
+  transform: translate(-50%, -50%) translateX(-440px) translateZ(-140px) rotateY(34deg) scale(0.82);
+}
+.program-carousel__card--pos2 {
+  width: 200px;
+  opacity: 0.4;
+  z-index: 5;
+  transform: translate(-50%, -50%) translateX(440px) translateZ(-140px) rotateY(-34deg) scale(0.82);
+}
+
+/* 화면에는 안 보이지만(-2 ~ 2 범위 밖) 계속 DOM에 남아있는 카드들.
+   더 바깥쪽/더 뒤쪽에 투명하게 대기하고 있다가, 순서가 되면 안쪽으로
+   회전하며 자연스럽게 들어옴 — 이게 없으면 카드 내용이 툭 하고 바뀌어 보임 */
+.program-carousel__card--pos-3 {
+  width: 200px;
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transform: translate(-50%, -50%) translateX(-600px) translateZ(-200px) rotateY(40deg) scale(0.7);
+}
+.program-carousel__card--pos3 {
+  width: 200px;
+  opacity: 0;
+  z-index: 4;
+  pointer-events: none;
+  transform: translate(-50%, -50%) translateX(600px) translateZ(-200px) rotateY(-40deg) scale(0.7);
+}
+
+/* 가운데 카드 밑에 깔리는 둥근 그림자 — 카드가 바닥에 떠 있는 느낌을 줌 */
+.program-carousel__ground-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 100px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.3) 45%, transparent 75%);
+  filter: blur(2px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .program-carousel {
+    height: 460px;
+  }
+  .program-carousel__card--pos-2,
+  .program-carousel__card--pos2 {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

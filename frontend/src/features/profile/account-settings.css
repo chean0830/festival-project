@@ -1,0 +1,52 @@
+.account-settings-page { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 52px 0 90px; color: var(--color-text); }
+.account-settings-heading { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; }
+.account-settings-heading > button { border: 0; background: transparent; font-size: 28px; cursor: pointer; color: var(--color-text-muted); }
+.account-settings-heading h1 { margin: 0; font-size: 28px; }
+.account-settings-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+.account-settings-nav, .account-settings-panel { border: 1px solid var(--color-border); border-radius: 18px; background: #fff; overflow: hidden; }
+.account-settings-nav { display: flex; flex-direction: column; padding: 10px; }
+.account-settings-nav button { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 15px 16px; border: 0; border-radius: 10px; background: transparent; font: inherit; font-weight: 650; text-align: left; color: var(--color-text); cursor: pointer; }
+.account-settings-nav button:hover, .account-settings-nav button.is-active { color: var(--color-primary-dark); background: var(--color-primary-light); }
+.account-settings-nav button.is-danger { margin-top: 10px; border-top: 1px solid var(--color-border); border-radius: 0 0 10px 10px; color: var(--color-error); }
+.account-settings-panel { min-height: 500px; padding: clamp(24px, 5vw, 48px); }
+.account-settings-panel-title { padding-bottom: 22px; margin-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+.account-settings-panel-title h2 { margin: 0 0 8px; font-size: 23px; }
+.account-settings-panel-title p { margin: 0; color: var(--color-text-muted); font-size: 14px; }
+.account-settings-field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; font-size: 14px; font-weight: 700; }
+.account-settings-field input { width: 100%; min-height: 46px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 10px; font: inherit; outline: none; }
+.account-settings-field input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.account-settings-field input[aria-invalid="true"] { border-color: var(--color-error); }
+.account-settings-field input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px #fff1f2; }
+.account-settings-field-error { color: var(--color-error); font-size: 12px; font-weight: 600; }
+.account-settings-field input:disabled { background: #f5f6f5; color: var(--color-text-muted); }
+.account-settings-address-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; }
+.account-settings-submit, .account-settings-primary-link { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; padding: 0 22px; border: 0; border-radius: 10px; background: var(--color-primary); color: #fff; font-weight: 750; text-decoration: none; cursor: pointer; }
+.account-settings-submit:disabled { opacity: .55; cursor: default; }
+.account-settings-text > p { line-height: 1.8; color: var(--color-text-muted); }
+.account-settings-text h3 { margin: 22px 0 8px; }
+.account-settings-withdraw { margin-top: 6px; min-height: 44px; padding: 0 22px; border: 1px solid var(--color-error); border-radius: 10px; color: var(--color-error); background: #fff; font-weight: 750; cursor: pointer; }
+.account-settings-message, .account-settings-error { margin: 22px 0 0; padding: 12px 14px; border-radius: 10px; font-size: 14px; }
+.account-settings-message { color: var(--color-primary-dark); background: var(--color-primary-light); }
+.account-settings-error { color: var(--color-error); background: #fff1f2; }
+.account-settings-state { padding: 70px 20px; text-align: center; color: var(--color-text-muted); }
+.account-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(18, 22, 20, .5); backdrop-filter: blur(2px); }
+.account-confirm-modal { width: min(420px, 100%); padding: 34px 32px 28px; border: 1px solid var(--color-border); border-radius: 20px; background: #fff; box-shadow: 0 22px 70px rgba(17, 24, 20, .22); text-align: center; animation: account-confirm-in .18s ease-out; }
+.account-confirm-modal--wide { width: min(580px, 100%); }
+.account-confirm-modal--wide > p { white-space: nowrap; }
+.account-confirm-icon { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 18px; border-radius: 50%; color: var(--color-error); background: #fff1f2; font-size: 28px; font-weight: 800; }
+.account-confirm-question { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 18px; border-radius: 50%; color: var(--color-primary-dark); background: var(--color-primary-light); font-size: 27px; font-weight: 800; }
+.account-confirm-modal h2 { margin: 0 0 10px; font-size: 22px; }
+.account-confirm-modal p { margin: 0; color: var(--color-text-muted); line-height: 1.6; }
+.account-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
+.account-confirm-actions--single { grid-template-columns: 1fr; }
+.account-confirm-actions button { min-height: 46px; border-radius: 11px; font: inherit; font-weight: 750; cursor: pointer; }
+.account-confirm-actions button:disabled { opacity: .55; cursor: default; }
+.account-confirm-cancel { border: 1px solid var(--color-border); color: var(--color-text); background: #fff; }
+.account-confirm-cancel:hover:not(:disabled) { background: #f5f6f5; }
+.account-confirm-danger { border: 1px solid var(--color-error); color: #fff; background: var(--color-error); }
+.account-confirm-danger:hover:not(:disabled) { filter: brightness(.92); }
+.account-confirm-primary { border: 1px solid var(--color-primary); color: #fff; background: var(--color-primary); }
+.account-confirm-primary:hover:not(:disabled) { filter: brightness(.94); }
+@keyframes account-confirm-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 620px) { .account-confirm-modal--wide > p { white-space: normal; } }
+@media (max-width: 720px) { .account-settings-layout { grid-template-columns: 1fr; } .account-settings-nav { display: grid; grid-template-columns: repeat(2, 1fr); } .account-settings-nav button.is-danger { margin-top: 0; border-top: 0; border-radius: 10px; } .account-settings-address-row { grid-template-columns: 1fr; } }

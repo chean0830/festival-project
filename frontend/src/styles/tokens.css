@@ -1,0 +1,108 @@
+/*
+  디자인 토큰 (Design Tokens)
+  ---------------------------------
+  색상, 폰트, 간격을 여기서만 관리한다.
+  컴포넌트 CSS에서는 직접 색상 코드(#fff 등)를 쓰지 말고
+  아래 변수(var(--color-primary) 등)를 사용할 것.
+
+  아래 값은 예시 색상이다. 팀에서 확정한 브랜드 컬러로 교체하면 된다.
+*/
+
+:root {
+  color-scheme: light;
+
+  /* ---- Color: Brand (진한 초록) ---- */
+  --color-primary: #1e9e52;        /* 메인 브랜드 컬러 (로고, 버튼, 강조) */
+  --color-primary-dark: #147a3e;   /* hover/active 시 사용 */
+  --color-primary-light: #b8e6c6;  /* 옅은 연두 (배경, hover 배경 등) */
+  --color-secondary: #ff8a3d;      /* 포인트 컬러 */
+
+  /* ---- Color: Category (내 주변 쉼표) ---- */
+  --color-cafe: #a9744a;
+  --color-cafe-light: #c99968;
+  --color-cafe-dark: #6f4a2c;
+  --color-cafe-surface: #f7f0e6;
+
+  --color-food: #e6543f;
+  --color-food-light: #ff8a6b;
+  --color-food-dark: #a83824;
+  --color-food-surface: #fdeeea;
+
+  /* ---- Color: Neutral ---- */
+  --color-background: #ffffff;
+  --color-surface: #f5faf2;       /* 카드, 섹션 배경 등 (살짝 연두 톤) */
+  --color-elevated: #ffffff;
+  --color-input: #ffffff;
+  --color-input-soft: #f2f4f2;
+  --color-border: #e2e8dd;
+  --card-bg: #fffdf8;             /* 카드 배경 (페이지보다 살짝 밝은 톤) */
+
+  /* ---- Color: Text ---- */
+  --color-text: #1c1b29;
+  --color-text-muted: #6b6879;
+  --color-text-on-primary: #ffffff;
+
+  /* ---- Color: Status ---- */
+  --color-success: #2fb673;
+  --color-error: #e0435c;
+
+  /* ---- Font ---- */
+  --font-heading: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", sans-serif;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+  --font-size-xxl: 2.5rem;
+
+  /* ---- Spacing ---- */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+
+  /* ---- Radius / Shadow ---- */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --shadow-card: 0 4px 16px rgba(28, 27, 41, 0.08);
+
+  /* ---- Layout ---- */
+  --header-height: 104px;
+  --content-max-width: 1440px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #48c978;
+  --color-primary-dark: #71dc98;
+  --color-primary-light: #234c32;
+  --color-secondary: #ff9f61;
+
+  --color-cafe: #d1a071;
+  --color-cafe-light: #e2b88f;
+  --color-cafe-dark: #f0c69e;
+  --color-cafe-surface: #30261e;
+  --color-food: #ff7c68;
+  --color-food-light: #ff9c88;
+  --color-food-dark: #ffb4a5;
+  --color-food-surface: #35201d;
+
+  --color-background: #101512;
+  --color-surface: #18221b;
+  --color-elevated: #1d2820;
+  --color-input: #202a23;
+  --color-input-soft: #18201b;
+  --color-border: #344239;
+
+  --color-text: #f1f6f2;
+  --color-text-muted: #a9b5ac;
+  --color-text-on-primary: #09150d;
+
+  --color-success: #52d28a;
+  --color-error: #ff7185;
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.28);
+}

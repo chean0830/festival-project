@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Uploaded files (local dev) ###
+/uploads/
+
+### Local dev server logs ###
+*.log
+
+### Local secrets ###
+.env
+.env.*
+!.env.example
+README.md

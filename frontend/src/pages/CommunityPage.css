@@ -1,0 +1,208 @@
+.community-page {
+  --cp-primary: var(--color-primary);
+  --cp-primary-light: var(--color-success);
+  --cp-primary-dark: var(--color-primary-dark);
+  --cp-surface: var(--color-surface);
+  --cp-secondary: var(--color-secondary);
+  --cp-ink: var(--color-text);
+  --cp-ink-soft: var(--color-text-muted);
+  --cp-line: var(--color-border);
+
+  font-family: "Pretendard Variable", "Pretendard", var(--font-body);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-xl) 32px calc(var(--spacing-xl) * 2);
+}
+
+/* ── 헤더 (배너 없이 텍스트만) ── */
+.community-page__header {
+  margin-bottom: 4px;
+}
+.community-page__header h1 {
+  margin: 0;
+}
+.community-page__title {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 8px;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  color: var(--cp-ink);
+  cursor: pointer;
+}
+.community-page__title:hover {
+  color: var(--cp-primary-dark);
+}
+
+.community-page__desc {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--cp-ink-soft);
+  line-height: 1.6;
+}
+
+/* ── 카테고리 필터 ── */
+.community-page__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 26px 0 22px;
+}
+.community-page__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--color-elevated);
+  border: 1px solid var(--cp-line);
+  color: var(--cp-ink);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+.community-page__chip:hover {
+  transform: translateY(-1px);
+}
+.community-page__chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.community-page__chip--active {
+  background: var(--cp-primary);
+  border-color: var(--cp-primary);
+  color: var(--color-text-on-primary);
+}
+
+/* ── 검색 + 정렬 + 글쓰기 ── */
+.community-page__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.community-page__search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.community-page__search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-input);
+  border: 1px solid var(--cp-line);
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+.community-page__search svg {
+  width: 16px;
+  height: 16px;
+  color: var(--cp-ink-soft);
+  flex-shrink: 0;
+}
+.community-page__search input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  width: 100%;
+  background: none;
+  color: var(--cp-ink);
+}
+.community-page__search input::placeholder {
+  color: var(--cp-ink-soft);
+}
+.community-page__search-btn {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-line);
+  color: var(--cp-primary-dark);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.community-page__search-btn:hover {
+  background: var(--color-primary-light);
+}
+
+.community-page__sort-write {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.community-page__sort {
+  display: flex;
+  gap: 14px;
+}
+.community-page__sort-link {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--cp-ink-soft);
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+}
+.community-page__sort-link--active {
+  color: var(--cp-ink);
+  font-weight: 700;
+}
+
+/* ── 목록 ── */
+.community-page__posts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.community-page__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: var(--spacing-lg);
+}
+.community-page__skeleton-card {
+  height: 108px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, var(--cp-surface) 25%, var(--color-input) 37%, var(--cp-surface) 63%);
+  background-size: 400% 100%;
+  animation: community-page-shimmer 1.4s ease infinite;
+}
+@keyframes community-page-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.community-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--cp-ink-soft);
+  margin-top: calc(var(--spacing-xl) * 1.5);
+  text-align: center;
+}
+.community-page__empty-icon {
+  font-size: 40px;
+}
