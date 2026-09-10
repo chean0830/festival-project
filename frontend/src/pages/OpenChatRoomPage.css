@@ -361,11 +361,12 @@
   height: 13px;
 }
 
-/* ── 드롭다운 메뉴: 옵션 버튼 기준으로 위치 ── */
+/* ── 드롭다운 메뉴: 말풍선을 가리지 않도록 오른쪽으로 펼쳐짐 ── */
 .open-chat-page__menu {
   position: absolute;
-  top: 16px;
-  right: -8px;
+  top: -8px;
+  left: 100%;
+  margin-left: 8px;
   width: 150px;
   background: #fff;
   border-radius: 14px;
