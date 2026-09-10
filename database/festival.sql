@@ -44,6 +44,7 @@ CREATE TABLE member (
     marketing_agree BOOLEAN NOT NULL DEFAULT FALSE,
     push_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     email_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    kakao_notification_enabled BOOLEAN NOT NULL DEFAULT FALSE,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -65,6 +66,11 @@ CREATE TABLE social_account (
         COMMENT 'GOOGLE, KAKAO, NAVER',
 
     provider_id VARCHAR(255) NOT NULL,
+
+    -- 카카오톡 "나에게 보내기" 알림용 토큰 (KAKAO provider일 때만 채워짐)
+    kakao_access_token VARCHAR(500),
+    kakao_refresh_token VARCHAR(500),
+    kakao_token_expires_at DATETIME,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -621,6 +627,8 @@ CREATE TABLE festival_record_ai_quota (
 
     used_count INT NOT NULL DEFAULT 0,
     diary_used_count INT NOT NULL DEFAULT 0,
+    -- AI 포스터 유료 충전 횟수. 생성 가능 = 3(무료) + poster_paid_count
+    poster_paid_count INT NOT NULL DEFAULT 0,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1403,4 +1411,64 @@ CREATE TABLE donation_payment (
 
     FOREIGN KEY (donation_id)
         REFERENCES donation(donation_id)
+);
+
+
+-- ============================================================
+-- 40. NOTIFICATION READ (전체 공지 회원별 읽음)
+-- member가 null인 전체 공지는 is_read 하나로 회원별 읽음을 표현 못 해서,
+-- 회원이 전체 공지를 읽으면 (notification, member) 조합을 여기 기록한다.
+-- ============================================================
+
+CREATE TABLE notification_read (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    notification_id BIGINT NOT NULL,
+    member_id BIGINT NOT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (notification_id, member_id),
+
+    FOREIGN KEY (notification_id)
+        REFERENCES notification(notification_id),
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id)
+);
+
+
+-- ============================================================
+-- 41. POST COMMENT LIKE (댓글 좋아요)
+-- ============================================================
+
+CREATE TABLE post_comment_like (
+    comment_like_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    comment_id BIGINT NOT NULL,
+    member_id BIGINT NOT NULL,
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (comment_id, member_id),
+
+    FOREIGN KEY (comment_id)
+        REFERENCES post_comment(comment_id),
+
+    FOREIGN KEY (member_id)
+        REFERENCES member(member_id)
+);
+
+
+-- ============================================================
+-- 42. HOME BANNER (홈 상단 배너 이미지)
+-- ============================================================
+
+CREATE TABLE home_banner (
+    banner_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+    image_url VARCHAR(500) NOT NULL,
+
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
 );
