@@ -4,6 +4,7 @@ import Layout from '../../components/common/Layout/Layout'
 import RequireLogin from './components/RequireLogin'
 import useCurrentMember from './hooks/useCurrentMember'
 import { changeAccountPassword, fetchAccount, updateAccount, withdrawAccount } from './api/accountApi'
+import { fetchKakaoNotification, updateKakaoNotification } from './api/profileApi'
 import './account-settings.css'
 
 const menus = [
@@ -30,6 +31,8 @@ export default function AccountSettingsPage() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [kakaoNotification, setKakaoNotification] = useState(null)
+  const [kakaoBusy, setKakaoBusy] = useState(false)
 
   useEffect(() => {
     if (!currentMember) return
@@ -40,7 +43,24 @@ export default function AccountSettingsPage() {
         roadAddress: data.roadAddress ?? '', detailAddress: data.detailAddress ?? '',
       })
     }).catch((err) => setError(err.message))
+    fetchKakaoNotification(currentMember.memberId)
+      .then((data) => setKakaoNotification(data.kakaoNotificationEnabled))
+      .catch(() => setKakaoNotification(false))
   }, [currentMember])
+
+  const toggleKakaoNotification = async () => {
+    if (!currentMember || kakaoBusy) return
+    const next = !kakaoNotification
+    setKakaoBusy(true)
+    try {
+      const data = await updateKakaoNotification(currentMember.memberId, next)
+      setKakaoNotification(data.kakaoNotificationEnabled)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setKakaoBusy(false)
+    }
+  }
 
   useEffect(() => {
     if (!withdrawConfirmOpen && !passwordMismatchOpen && !passwordChangeConfirmOpen && !currentPasswordErrorOpen) return undefined
@@ -121,6 +141,27 @@ export default function AccountSettingsPage() {
               <Field label="상세주소"><input value={form.detailAddress} onChange={(e) => setForm({ ...form, detailAddress: e.target.value })} /></Field>
               <SubmitButton busy={busy}>변경사항 저장</SubmitButton>
             </form>}
+            {active === 'info' && (
+              <div className="account-settings-kakao">
+                <PanelTitle title="카카오톡 알림" description="중고거래 채팅, 관심 공연 알림 등을 카카오톡으로도 받아볼 수 있어요." />
+                <div className="account-settings-kakao-row">
+                  <span>카카오톡으로 알림 받기</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!kakaoNotification}
+                    className={`account-settings-switch ${kakaoNotification ? 'is-on' : ''}`}
+                    disabled={kakaoNotification === null || kakaoBusy}
+                    onClick={toggleKakaoNotification}
+                  >
+                    <span className="account-settings-switch-knob" />
+                  </button>
+                </div>
+                <p className="account-settings-kakao-hint">
+                  카카오 계정으로 로그인한 경우에만 사용할 수 있어요. 카카오톡 &quot;나와의 채팅&quot;으로 알림이 도착해요.
+                </p>
+              </div>
+            )}
             {active === 'password' && <form onSubmit={savePassword}>
               <PanelTitle title="비밀번호 변경" description="안전한 계정 사용을 위해 8자 이상의 비밀번호를 사용해 주세요." />
               <Field label="현재 비밀번호"><input type="password" value={password.currentPassword} onChange={(e) => setPassword({ ...password, currentPassword: e.target.value })} required /></Field>

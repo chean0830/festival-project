@@ -8,6 +8,8 @@ import com.example.festival.member.repository.MemberRepository;
 import com.example.festival.notification.service.NotificationService;
 import com.example.festival.profile.dto.AttendedEventResponse;
 import com.example.festival.profile.dto.IntroductionUpdateRequest;
+import com.example.festival.profile.dto.KakaoNotificationResponse;
+import com.example.festival.profile.dto.KakaoNotificationUpdateRequest;
 import com.example.festival.profile.dto.NicknameUpdateRequest;
 import com.example.festival.profile.dto.ProfileImageResponse;
 import com.example.festival.profile.dto.ProfileResponse;
@@ -91,6 +93,18 @@ public class ProfileService {
 
         member.changeNickname(request.nickname());
         return toProfileResponse(member);
+    }
+
+    public KakaoNotificationResponse getKakaoNotification(Long memberId) {
+        Member member = getMemberOrThrow(memberId);
+        return new KakaoNotificationResponse(member.isKakaoNotificationEnabled());
+    }
+
+    @Transactional
+    public KakaoNotificationResponse updateKakaoNotification(Long memberId, KakaoNotificationUpdateRequest request) {
+        Member member = getMemberOrThrow(memberId);
+        member.changeKakaoNotificationEnabled(request.enabled());
+        return new KakaoNotificationResponse(member.isKakaoNotificationEnabled());
     }
 
     @Transactional

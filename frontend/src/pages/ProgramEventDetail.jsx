@@ -19,6 +19,27 @@ const EVENT_TYPE_LABEL = {
   CONCERT: "콘서트",
 };
 
+// 예매 사이트 도메인 -> 버튼에 표시할 이름. 새 예매처가 생기면 여기 한 줄만 추가하면 됨.
+const TICKET_SITE_NAMES = [
+  [/yes24\.com$/, "YES24"],
+  [/nol\.yanolja\.com$/, "NOL"],
+  [/interpark\.com$/, "인터파크"],
+  [/ticket\.melon\.com$/, "멜론티켓"],
+  [/ticketlink\.co\.kr$/, "티켓링크"],
+];
+
+function getTicketSiteName(ticketUrl) {
+  if (!ticketUrl) return null;
+  let hostname;
+  try {
+    hostname = new URL(ticketUrl).hostname;
+  } catch {
+    return null;
+  }
+  const matched = TICKET_SITE_NAMES.find(([pattern]) => pattern.test(hostname));
+  return matched ? matched[1] : null;
+}
+
 const NEWS_TYPE_LABEL = {
   LINEUP: "라인업",
   SCHEDULE: "일정변경",
@@ -348,7 +369,9 @@ function ProgramEventDetail() {
                 window.open(event.ticketUrl, "_blank", "noopener,noreferrer")
               }
             >
-              {event.ticketUrl ? "YES24에서 예매하기 →" : "예매 링크 준비 중"}
+              {event.ticketUrl
+                ? `${getTicketSiteName(event.ticketUrl) ?? "예매처"}에서 예매하기 →`
+                : "예매 링크 준비 중"}
             </Button>
 
             <button

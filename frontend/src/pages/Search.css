@@ -35,13 +35,23 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .search-page__item {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
 }
 .search-page__item:hover {
   background-color: var(--color-surface);
@@ -50,8 +60,8 @@
 
 .search-page__item-thumb {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-sm);
   background-color: var(--color-surface);
   overflow: hidden;
@@ -62,13 +72,25 @@
   object-fit: cover;
 }
 
+/* 아티스트는 원형, 공연/페스티벌은 세로 포스터 비율(3:4)로 구분 */
+.search-page__item-thumb--round {
+  border-radius: 50%;
+}
+.search-page__item-thumb--poster {
+  width: 152px;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  border-radius: 0;
+}
+
 .search-page__item-name {
   flex: 1;
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--color-text);
 }
 
 .search-page__item-subtitle {
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
+  font-size: 0.95rem;
 }

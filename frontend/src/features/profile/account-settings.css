@@ -29,6 +29,14 @@
 .account-settings-message { color: var(--color-primary-dark); background: var(--color-primary-light); }
 .account-settings-error { color: var(--color-error); background: #fff1f2; }
 .account-settings-state { padding: 70px 20px; text-align: center; color: var(--color-text-muted); }
+.account-settings-kakao { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+.account-settings-kakao-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; }
+.account-settings-kakao-hint { margin: 10px 0 0; color: var(--color-text-muted); font-size: 13px; }
+.account-settings-switch { position: relative; width: 46px; height: 26px; padding: 0; border: 1px solid var(--color-border); border-radius: 999px; background: #e5e7eb; cursor: pointer; transition: background .15s ease; }
+.account-settings-switch:disabled { opacity: .55; cursor: default; }
+.account-settings-switch.is-on { border-color: var(--color-primary); background: var(--color-primary); }
+.account-settings-switch-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .15s ease; }
+.account-settings-switch.is-on .account-settings-switch-knob { transform: translateX(20px); }
 .account-confirm-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(18, 22, 20, .5); backdrop-filter: blur(2px); }
 .account-confirm-modal { width: min(420px, 100%); padding: 34px 32px 28px; border: 1px solid var(--color-border); border-radius: 20px; background: #fff; box-shadow: 0 22px 70px rgba(17, 24, 20, .22); text-align: center; animation: account-confirm-in .18s ease-out; }
 .account-confirm-modal--wide { width: min(580px, 100%); }

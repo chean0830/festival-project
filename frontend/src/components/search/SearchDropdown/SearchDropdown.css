@@ -22,6 +22,9 @@
 .search-dropdown__list {
   max-height: 320px;
   overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .search-dropdown__item {
@@ -45,8 +48,8 @@
 
 .search-dropdown__item-thumb {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 50px;
+  height: 50px;
   border-radius: var(--radius-sm);
   background-color: var(--color-surface);
   overflow: hidden;
@@ -55,6 +58,17 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 아티스트는 원형, 공연/페스티벌은 세로 포스터 비율(3:4)로 구분 */
+.search-dropdown__item-thumb--round {
+  border-radius: 50%;
+}
+.search-dropdown__item-thumb--poster {
+  width: 96px;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  border-radius: 0;
 }
 
 .search-dropdown__item-type {
@@ -86,7 +100,7 @@
 .search-dropdown__item-name {
   flex: 1;
   color: var(--color-text);
-  font-size: var(--font-size-sm);
+  font-size: 0.95rem;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,7 +110,7 @@
 .search-dropdown__item-subtitle {
   flex-shrink: 0;
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .search-dropdown__view-all {

@@ -316,7 +316,8 @@ public class TradeChatService {
                 ? sender.getNickname() + "님이 사진을 보냈어요"
                 : sender.getNickname() + "님: " + truncate(messageText, NOTIFICATION_PREVIEW_MAX_LENGTH);
 
-        notificationService.notifyMember(recipient.getId(), null, NOTIFICATION_TYPE_NEW_MESSAGE, listingTitle + " 채팅", preview);
+        notificationService.notifyMember(recipient.getId(), null, NOTIFICATION_TYPE_NEW_MESSAGE, listingTitle + " 채팅", preview,
+                "/shop/used/chat/room/" + room.getRoomId());
     }
 
     private String truncate(String text, int maxLength) {

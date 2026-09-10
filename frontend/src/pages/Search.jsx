@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../components/common/Layout/Layout";
-import { SEARCH_TYPE_LABEL, search } from "../api/searchApi";
+import { SEARCH_TYPE_LABEL, search, getSearchResultPath } from "../api/searchApi";
 import "./Search.css";
 
 // 결과를 어떤 순서로 묶어서 보여줄지
 const SECTION_TYPES = ["artist", "festival", "event"];
 
 function Search() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
   const [results, setResults] = useState([]);
@@ -54,14 +55,24 @@ function Search() {
                 </h2>
                 <ul className="search-page__list">
                   {items.map((item) => (
-                    <li key={item.id} className="search-page__item">
-                      <span className="search-page__item-thumb">
-                        {item.image && <img src={item.image} alt="" />}
-                      </span>
-                      <span className="search-page__item-name">{item.name}</span>
-                      <span className="search-page__item-subtitle">
-                        {item.subtitle}
-                      </span>
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className="search-page__item"
+                        onClick={() => navigate(getSearchResultPath(item))}
+                      >
+                        <span
+                          className={`search-page__item-thumb search-page__item-thumb--${
+                            item.type === "artist" ? "round" : "poster"
+                          }`}
+                        >
+                          {item.image && <img src={item.image} alt="" />}
+                        </span>
+                        <span className="search-page__item-name">{item.name}</span>
+                        <span className="search-page__item-subtitle">
+                          {item.subtitle}
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
