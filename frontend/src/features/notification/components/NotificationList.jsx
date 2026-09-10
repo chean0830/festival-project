@@ -16,6 +16,7 @@ const TYPE_LABEL = {
   MD_CANCELED: 'MD 사전예약',
   MD_PAYMENT_REMINDER: 'MD 사전예약',
   MD_NEW_PRODUCT: 'MD 사전예약',
+  TRADE_CHAT_MESSAGE: '중고거래 채팅',
 }
 
 // MD 사전예약 알림은 eventId가 있어도 공연 상세가 아니라 MD 쪽으로 보낸다.
@@ -32,6 +33,12 @@ export default function NotificationList({ notifications, onRead }) {
   function handleClick(notification) {
     if (!notification.read) {
       onRead(notification.notificationId)
+    }
+
+    // linkPath가 있으면(중고거래 채팅 등) 그 경로로 바로 이동한다 — 가장 명시적인 대상.
+    if (notification.linkPath) {
+      navigate(notification.linkPath)
+      return
     }
 
     if (MD_ORDER_STATUS_TYPES.has(notification.type)) {
