@@ -1,0 +1,20 @@
+# Single public domain. Caddy gets a Let's Encrypt cert for $APP_DOMAIN
+# automatically (works with duckdns.org subdomains).
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	# Anything the backend owns: REST API, OAuth start + callback, uploaded
+	# files, and the chat WebSocket. reverse_proxy handles the WS upgrade.
+	@backend path /api/* /oauth2/* /login/oauth2/* /uploads/* /ws-chat/*
+	handle @backend {
+		reverse_proxy backend:8080
+	}
+
+	# Everything else is the React SPA; unknown paths fall back to index.html
+	# so client-side routing (/login, /profile, ...) works on refresh.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

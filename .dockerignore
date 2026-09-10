@@ -1,0 +1,19 @@
+# Keep the backend build context small and free of local/dev cruft.
+.git
+.github
+.idea
+target
+ai-proxy-server
+frontend
+database
+db
+docs
+uploads
+*.log
+.env
+.env.*
+!.env.production.example
+HELP.md
+README.md
+docker-compose.yml
+Caddyfile
