@@ -8,6 +8,7 @@ public record NotificationResponse(
         String title,
         String content,
         Long eventId,
+        String linkPath,
         boolean read,
         LocalDateTime createdAt
 ) {

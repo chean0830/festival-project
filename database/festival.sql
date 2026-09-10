@@ -474,6 +474,10 @@ CREATE TABLE notification (
 
     content VARCHAR(1000),
 
+    -- 알림 클릭 시 이동할 프론트 경로(예: /shop/used/chat/room/3). event_id로
+    -- 화면을 유추할 수 없는 알림(중고거래 채팅 등)에서 사용.
+    link_path VARCHAR(255),
+
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
 
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
