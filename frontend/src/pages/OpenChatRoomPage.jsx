@@ -177,6 +177,7 @@ function OpenChatRoomPage() {
   const inputRef = useRef(null);
   const initialScrollDoneRef = useRef(false);
   const joinedRoomIdRef = useRef(null);
+  const wasNearBottomRef = useRef(true);
 
   useEffect(() => {
     if (!memberId) return undefined;
@@ -272,19 +273,17 @@ function OpenChatRoomPage() {
   }, [menuOpenFor]);
 
   useEffect(() => {
-    const container = messagesRef.current;
-
     if (!initialScrollDoneRef.current) {
       if (messages.length > 0) {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
         initialScrollDoneRef.current = true;
+        wasNearBottomRef.current = true;
       }
     } else {
-      const nearBottom = container
-        ? container.scrollHeight - container.scrollTop - container.clientHeight < NEAR_BOTTOM_THRESHOLD
-        : true;
-
-      if (nearBottom) {
+      // 새 메시지가 이미 DOM에 추가된 뒤라 container 크기로 판단하면 긴 메시지 자체의
+      // 높이 때문에 "아래 근처"가 아니라고 오판할 수 있어서, 메시지 도착 "전" 스크롤 위치
+      // (handleMessagesScroll이 갱신해 둔 값)로 판단한다.
+      if (wasNearBottomRef.current) {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       } else {
         setShowScrollButton(true);
@@ -300,11 +299,13 @@ function OpenChatRoomPage() {
     const container = messagesRef.current;
     if (!container) return;
     const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < NEAR_BOTTOM_THRESHOLD;
+    wasNearBottomRef.current = nearBottom;
     setShowScrollButton(!nearBottom);
   }
 
   function scrollToBottom() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    wasNearBottomRef.current = true;
     setShowScrollButton(false);
   }
 
