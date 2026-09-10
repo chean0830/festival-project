@@ -26,5 +26,7 @@ USER spring
 
 COPY --from=build /build/target/demo-0.0.1-SNAPSHOT.jar app.jar
 
+ENV TZ=Asia/Seoul
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
