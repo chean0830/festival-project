@@ -1,5 +1,6 @@
 package com.example.festival.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -8,16 +9,22 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 /**
  * 오픈채팅 실시간 메시지용 STOMP 엔드포인트.
- * 프론트(Vite, localhost:5173)는 /ws-chat 로 SockJS 연결한다.
+ * 허용 Origin은 app.frontend-url (로컬은 http://localhost:5173, 배포는 https://<도메인>) 을 따른다.
  */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final String frontendUrl;
+
+    public WebSocketConfig(@Value("${app.frontend-url:http://localhost:5173}") String frontendUrl) {
+        this.frontendUrl = frontendUrl;
+    }
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("http://localhost:5173")
+                .setAllowedOriginPatterns(frontendUrl)
                 .withSockJS();
     }
 
