@@ -10,6 +10,7 @@ USE festival;
 -- (본인 계정을 가장 먼저 만들어서 낮은 번호를 차지하고 있는 경우 등) 충돌이 날 수 있다.
 -- 그럴 땐 이 스크립트를 그대로 쓰지 말고, 알려주면 본인 환경에 맞게 다시 만들어줄게.
 --
+-- 1 sample1@example.com(공연러버) / 2 sample2@example.com(페스티벌러) -- 커뮤니티 샘플글 작성자
 -- 3 test@example.com(테스트유저) / 4 testuser1@example.com(테스트가입)
 -- 5 aaa@naver.com(메롱) / 8 aa@naver.com(이름)
 -- (원래 있던 6, 7번은 실제 팀원 개인 계정이라 공유 데이터에서 제외했다.)
@@ -20,12 +21,16 @@ USE festival;
 -- 하면 된다).
 
 LOCK TABLES `member` WRITE;
-INSERT INTO `member` (
+-- INSERT IGNORE: 이미 존재하는 번호(로컬에서 직접 가입한 계정 등)는 건너뛴다.
+INSERT IGNORE INTO `member` (
     `member_id`, `email`, `password`, `phone_number`, `postal_code`, `road_address`, `detail_address`,
     `nickname`, `profile_image`, `introduction`, `role`, `status`,
     `dark_mode`, `notification_enabled`, `marketing_agree`, `push_enabled`, `email_enabled`,
     `created_at`, `updated_at`
 ) VALUES
+-- 1, 2번은 seed_community_sample_data.sql(커뮤니티 글/댓글)의 작성자로 쓰인다.
+(1,'sample1@example.com','sample',NULL,NULL,NULL,NULL,'공연러버',NULL,'공연 후기 자주 남겨요.','USER','ACTIVE',0,1,0,1,1,'2026-08-17 10:00:00','2026-08-17 10:00:00'),
+(2,'sample2@example.com','sample',NULL,NULL,NULL,NULL,'페스티벌러',NULL,NULL,'USER','ACTIVE',0,1,0,1,1,'2026-08-17 10:05:00','2026-08-17 10:05:00'),
 (3,'test@example.com','test1234',NULL,NULL,NULL,NULL,'테스트유저',NULL,'반가워요, 프로필 미리보기용 테스트 계정입니다.','USER','ACTIVE',0,1,0,1,1,'2026-08-19 15:47:35','2026-08-19 16:29:40'),
 (4,'testuser1@example.com','$2a$10$iULHH8yACcu/CZOeGkRuQ.KOBLglHYCWpLJUq206MEh2HPYRzoxoG','01012345678','12345','인천 연수구','101동 101호','테스트가입',NULL,NULL,'USER','ACTIVE',0,1,0,1,1,'2026-08-19 18:42:05','2026-08-19 18:42:05'),
 (5,'aaa@naver.com','$2a$10$1M8zyoX/KAJjLa4WlKjhp.YiBl2d42F1bz4A1kkHplXTrpU4ojdiG','01011111111','01067','서울 강북구 한천로 965','111','메롱',NULL,NULL,'USER','ACTIVE',0,1,0,1,1,'2026-08-19 18:50:51','2026-08-19 18:50:51'),
