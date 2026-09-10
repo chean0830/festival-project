@@ -112,7 +112,7 @@ public class NotificationService {
     public void notifyMember(Long memberId, Long eventId, String type, String title, String content, String linkPath) {
         Member member = getMemberOrThrow(memberId);
         Event event = eventId == null ? null : eventRepository.findById(eventId).orElse(null);
-        notificationRepository.save(Notification.forMember(member, event, type, title, content));
+        notificationRepository.save(Notification.forMember(member, event, type, title, content, linkPath));
 
         String linkUrl;
         if (linkPath != null) {
@@ -153,6 +153,7 @@ public class NotificationService {
                 notification.getTitle(),
                 notification.getContent(),
                 notification.getEvent() != null ? notification.getEvent().getEventId() : null,
+                notification.getLinkPath(),
                 read,
                 notification.getCreatedAt()
         );
