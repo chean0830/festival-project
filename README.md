@@ -6,19 +6,19 @@
 
 <br>
 
-<img src="https://img.shields.io/badge/java%2025-000000.svg?style=for-the-badge&logo=openjdk&logoColor=white" />
-<img src="https://img.shields.io/badge/spring%20boot%204-6DB33F.svg?style=for-the-badge&logo=springboot&logoColor=white" />
-<img src="https://img.shields.io/badge/spring%20security-6DB33F.svg?style=for-the-badge&logo=springsecurity&logoColor=white" />
-<img src="https://img.shields.io/badge/jpa-59666C.svg?style=for-the-badge&logo=hibernate&logoColor=white" />
-<img src="https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white" />
-<img src="https://img.shields.io/badge/redis-FF4438.svg?style=for-the-badge&logo=redis&logoColor=white" />
+<img src="docs/badges/java-25-000000.svg" />
+<img src="docs/badges/spring-boot-4-6db33f.svg" />
+<img src="docs/badges/spring-security-6db33f.svg" />
+<img src="docs/badges/jpa-59666c.svg" />
+<img src="docs/badges/mysql-4479a1.svg" />
+<img src="docs/badges/redis-ff4438.svg" />
 <br>
-<img src="https://img.shields.io/badge/react%2019-61DAFB.svg?style=for-the-badge&logo=react&logoColor=20232a" />
-<img src="https://img.shields.io/badge/vite-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white" />
-<img src="https://img.shields.io/badge/websocket%20(stomp)-010101.svg?style=for-the-badge&logo=socketdotio&logoColor=white" />
-<img src="https://img.shields.io/badge/livekit-1F1F1F.svg?style=for-the-badge&logo=webrtc&logoColor=white" />
-<img src="https://img.shields.io/badge/gemini-8E75B2.svg?style=for-the-badge&logo=googlegemini&logoColor=white" />
-<img src="https://img.shields.io/badge/toss%20payments-0064FF.svg?style=for-the-badge&logo=toss&logoColor=white" />
+<img src="docs/badges/react-19-61dafb.svg" />
+<img src="docs/badges/vite-646cff.svg" />
+<img src="docs/badges/websocket-stomp-010101.svg" />
+<img src="docs/badges/livekit-1f1f1f.svg" />
+<img src="docs/badges/gemini-8e75b2.svg" />
+<img src="docs/badges/toss-payments-0064ff.svg" />
 
 </div>
 
