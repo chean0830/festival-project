@@ -24,6 +24,86 @@
 
 <br>
 
+## 📑 프로젝트 포트폴리오
+
+<div align="center">
+  <img src="docs/portfolio/slide-01.jpg" width="800" />
+</div>
+
+<details>
+<summary><b>01. 프로젝트 개요</b></summary>
+<br>
+
+<img src="docs/portfolio/slide-02.jpg" width="800" />
+<img src="docs/portfolio/slide-03.jpg" width="800" />
+<img src="docs/portfolio/slide-04.jpg" width="800" />
+<img src="docs/portfolio/slide-05.jpg" width="800" />
+<img src="docs/portfolio/slide-06.jpg" width="800" />
+<img src="docs/portfolio/slide-07.jpg" width="800" />
+
+</details>
+
+<details>
+<summary><b>02. 설계와 기술</b></summary>
+<br>
+
+<img src="docs/portfolio/slide-08.jpg" width="800" />
+<img src="docs/portfolio/slide-09.jpg" width="800" />
+<img src="docs/portfolio/slide-10.jpg" width="800" />
+<img src="docs/portfolio/slide-11.jpg" width="800" />
+<img src="docs/portfolio/slide-12.jpg" width="800" />
+
+</details>
+
+<details>
+<summary><b>03. 구현 결과</b></summary>
+<br>
+
+<img src="docs/portfolio/slide-13.jpg" width="800" />
+<img src="docs/portfolio/slide-14.jpg" width="800" />
+<img src="docs/portfolio/slide-15.jpg" width="800" />
+<img src="docs/portfolio/slide-16.jpg" width="800" />
+<img src="docs/portfolio/slide-17.jpg" width="800" />
+<img src="docs/portfolio/slide-18.jpg" width="800" />
+<img src="docs/portfolio/slide-19.jpg" width="800" />
+<img src="docs/portfolio/slide-20.jpg" width="800" />
+<img src="docs/portfolio/slide-21.jpg" width="800" />
+<img src="docs/portfolio/slide-22.jpg" width="800" />
+<img src="docs/portfolio/slide-23.jpg" width="800" />
+<img src="docs/portfolio/slide-24.jpg" width="800" />
+<img src="docs/portfolio/slide-25.jpg" width="800" />
+<img src="docs/portfolio/slide-26.jpg" width="800" />
+<img src="docs/portfolio/slide-27.jpg" width="800" />
+<img src="docs/portfolio/slide-28.jpg" width="800" />
+
+</details>
+
+<details>
+<summary><b>04. 트러블슈팅</b></summary>
+<br>
+
+<img src="docs/portfolio/slide-29.jpg" width="800" />
+<img src="docs/portfolio/slide-30.jpg" width="800" />
+<img src="docs/portfolio/slide-31.jpg" width="800" />
+<img src="docs/portfolio/slide-32.jpg" width="800" />
+<img src="docs/portfolio/slide-33.jpg" width="800" />
+<img src="docs/portfolio/slide-34.jpg" width="800" />
+<img src="docs/portfolio/slide-35.jpg" width="800" />
+
+</details>
+
+<details>
+<summary><b>05. 평가와 개선</b></summary>
+<br>
+
+<img src="docs/portfolio/slide-36.jpg" width="800" />
+<img src="docs/portfolio/slide-37.jpg" width="800" />
+<img src="docs/portfolio/slide-38.jpg" width="800" />
+
+</details>
+
+<br>
+
 ## 📌 주요 기능
 
 | 분류 | 기능 |
