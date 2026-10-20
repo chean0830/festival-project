@@ -147,7 +147,7 @@ festival-project
 | --- | --- |
 | 서버 | AWS EC2 (서울, t3.micro · 메모리 1GB) 한 대에 Docker Compose로 전체 서비스 배포 |
 | HTTPS | Caddy가 Let's Encrypt 인증서를 자동 발급 · 갱신 — [festlog.duckdns.org](https://festlog.duckdns.org/) |
-| 메모리 튜닝 | 1GB 환경에서 백엔드가 반복 종료되던 문제를 JVM 힙 제한(-Xmx340m) · SerialGC · 스왑 · 스레드·커넥션 풀 축소로 해결, 재시작 없이 24초 안에 전체 기동 |
+| 메모리 | 1GB 환경에서 백엔드가 반복 종료되던 문제를 JVM 힙 제한(-Xmx340m) · SerialGC · 스왑 · 스레드·커넥션 풀 축소로 해결, 재시작 없이 24초 안에 전체 기동 |
 
 <br>
 
