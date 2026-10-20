@@ -30,6 +30,12 @@
   <img src="docs/portfolio/slide-01.jpg" width="800" />
 </div>
 
+<div align="center">
+
+[📥 포트폴리오 PDF 내려받기](docs/portfolio/FESTLOG_Portfolio.pdf) · [🌐 서비스 바로가기](https://festlog.duckdns.org/)
+
+</div>
+
 <details>
 <summary><b>01. 프로젝트 개요</b></summary>
 <br>
