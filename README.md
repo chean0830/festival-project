@@ -141,6 +141,14 @@ festival-project
 - 채팅은 WebSocket(STOMP)으로 주고받고, Redis Pub/Sub으로 여러 서버에 메시지를 전달합니다.
 - 프론트엔드 개발 서버는 `/api`, `/oauth2`, `/uploads`, `/ws-chat` 요청을 백엔드(8080)로 넘깁니다.
 
+### 운영 환경
+
+| 구성 | 내용 |
+| --- | --- |
+| 서버 | AWS EC2 (서울, t3.micro · 메모리 1GB) 한 대에 Docker Compose로 전체 서비스 배포 |
+| HTTPS | Caddy가 Let's Encrypt 인증서를 자동 발급 · 갱신 — [festlog.duckdns.org](https://festlog.duckdns.org/) |
+| 메모리 튜닝 | 1GB 환경에서 백엔드가 반복 종료되던 문제를 JVM 힙 제한(-Xmx340m) · SerialGC · 스왑 · 스레드·커넥션 풀 축소로 해결, 재시작 없이 24초 안에 전체 기동 |
+
 <br>
 
 ## 🚀 실행 방법
@@ -189,18 +197,24 @@ cd frontend && npm install && npm run dev
         <img src="https://github.com/chean0830.png" width="100" /><br>
         <b>chean0830</b>
       </a>
+      <br>임채은<br>
+      <sub>서비스 기획 · 프로필 · 페스티벌 기록<br>배지·알림 · MD 사전예약 · 중고거래 1:1 채팅<br>AI 챗봇·추천 · AWS 배포</sub>
     </td>
     <td align="center">
       <a href="https://github.com/nae442939-prog">
         <img src="https://github.com/nae442939-prog.png" width="100" /><br>
         <b>nae442939-prog</b>
       </a>
+      <br>조승희<br>
+      <sub>메인 · 공연 탐색 · 검색·캘린더<br>공연 오픈채팅 · 커뮤니티<br>날씨·GPS · 카카오 알림</sub>
     </td>
     <td align="center">
       <a href="https://github.com/stone-iron">
         <img src="https://github.com/stone-iron.png" width="100" /><br>
         <b>stone-iron</b>
       </a>
+      <br>김석철<br>
+      <sub>인증 · 회원 권한 · 소셜 로그인<br>라이브 스트리밍 · 실시간 채팅<br>후원·유료 입장 · 다크모드</sub>
     </td>
   </tr>
 </table>
